@@ -1,28 +1,8 @@
 import React from "react";
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect } from "vitest";
 import { render } from "ink-testing-library";
 import { Box } from "ink";
 import { TableHeader, JobRow } from "./components/job-table.js";
-
-// Patch ink-testing-library's mock stdout to use 140 columns (row needs ~126).
-// The mock Stdout class hardcodes columns=100 on its prototype.
-let origColumnsDescriptor: PropertyDescriptor | undefined;
-beforeAll(() => {
-  const inst = render(React.createElement(Box, null));
-  const proto = Object.getPrototypeOf(inst.stdout);
-  origColumnsDescriptor = Object.getOwnPropertyDescriptor(proto, "columns");
-  Object.defineProperty(proto, "columns", { get: () => 140, configurable: true });
-  inst.cleanup();
-});
-afterAll(() => {
-  if (origColumnsDescriptor) {
-    const inst = render(React.createElement(Box, null));
-    const proto = Object.getPrototypeOf(inst.stdout);
-    Object.defineProperty(proto, "columns", origColumnsDescriptor);
-    inst.cleanup();
-  }
-});
-
 import {
   normalJob,
   unfriendlyBgJob,
@@ -43,7 +23,7 @@ describe("TableHeader", () => {
     expect(frame).toContain("AGENT");
     expect(frame).toContain("SCHEDULE");
     expect(frame).toContain("SOURCE");
-    expect(frame).toContain("LAST RUN");
+    expect(frame).toContain("AGE");
     expect(frame).toContain("RESULT");
   });
 
@@ -63,8 +43,8 @@ describe("JobRow", () => {
     // Join lines to handle ink word-wrap in narrow test terminal
     const joined = frame.replace(/\n\s*/g, " ");
     expect(joined).toContain("my-web-server");
-    expect(joined).toContain("claude-code");
-    expect(joined).toContain("always-on");
+    expect(joined).toContain("claude-cod"); // truncated at COL.agent-1=11 chars
+    expect(joined).toContain("daemon"); // cronToHuman("always-on") → "daemon"
     expect(joined).toContain("registered");
     expect(joined).toContain("success");
   });
@@ -119,7 +99,7 @@ describe("JobRow", () => {
         <JobRow job={longNameJob} selected={false} expanded={false} />
       );
       const frame = lastFrame()!;
-      // The full name should NOT appear since COL.name=30
+      // The full name should NOT appear since COL.name=24
       expect(frame).not.toContain(longNameJob.name);
       expect(frame).toContain("…");
     });
@@ -137,10 +117,10 @@ describe("JobRow", () => {
         <JobRow job={jsonResidueJob} selected={false} expanded={false} />
       );
       const frame = lastFrame()!;
-      // The name field has JSON residue. When truncated to 29 chars it
-      // should still show partial garbage — documenting the bug.
+      // The name field has JSON residue. When truncated to COL.name-1=23 chars
+      // it still shows partial garbage — documenting the bug.
       // The name is: pm2 api.js"},"tool_result":"started process [api]\nid: 0"
-      // Truncated at 29: pm2 api.js"},"tool_result…
+      // Truncated at 19: pm2 api.js"},"to…
       expect(frame).toContain("pm2 api.js");
     });
   });
@@ -161,7 +141,7 @@ describe("JobRow", () => {
       );
       const frame = lastFrame()!;
       expect(frame).toContain("pew sync");
-      expect(frame).toContain("claude-code");
+      expect(frame).toContain("claude-cod"); // truncated
       expect(frame).toContain("success");
     });
 

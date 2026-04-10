@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Text } from "ink";
 import type { Job } from "../types.js";
-import { formatTime, statusIcon, resultColor } from "../utils.js";
+import { formatTime, formatRelativeTime, cronToHuman, statusIcon, resultColor } from "../utils.js";
 
 interface Props {
   job: Job;
@@ -13,10 +13,12 @@ export function JobDetail({ job }: Props) {
 
   const fields: Array<{ label: string; value: string; valueColor?: string }> = [
     { label: "Description", value: job.description || "-" },
+    { label: "Agent", value: job.agent },
+    { label: "Schedule", value: cronToHuman(job.schedule) },
     { label: "Project", value: job.project || "-" },
     { label: "Source", value: job.source },
     { label: "Status", value: job.status, valueColor: color },
-    { label: "Created", value: formatTime(job.created_at) },
+    { label: "Created", value: `${formatTime(job.created_at)} (${formatRelativeTime(job.created_at)})` },
     { label: "Next Run", value: formatTime(job.next_run) },
     { label: "Run Count", value: runCount },
     { label: "Last Result", value: job.last_result, valueColor: resultColor(job.last_result) },

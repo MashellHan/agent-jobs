@@ -1,31 +1,37 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`Full table snapshot > renders a complete table with header and all fixture jobs 1`] = `
-"    ST   JOB NAME              AGENT         SCHEDULE      SOURCE      LAST RUN          RESULT
-────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-▶   ●    my-web-server         claude-code   always-on     registered  2026-04-10 18:00  success
-    ●    node server.js        claude-code   always-on     registered  2026-04-10 19:00  success
-    ●    pm2 api.js"},"tool…   claude-code   always-on     registered  2026-04-10 20:00  success
-    ○    my-very-long-conta…   claude-code   always-on     registered  2026-04-10 21:00  error
-    ●    server.js :4000       manual        always-on     live        2026-04-10 22:00  success
-    ✗    flask-server          claude-code   always-on     registered  2026-04-10 16:30  error"
+"    ST   JOB NAME                  AGENT         SCHEDULE      SOURCE      AGE         RESULT
+────────────────────────────────────────────────────────────────────────────────────────────────────
+────────────────────
+▶   ●    my-web-server             claude-code   daemon        registered  7h ago      success
+    ●    node server.js            claude-code   daemon        registered  6h ago      success
+    ●    pm2 api.js"},"tool_res…   claude-code   daemon        registered  5h ago      success
+    ○    my-very-long-container…   claude-code   daemon        registered  4h ago      error
+    ●    server.js :4000           manual        daemon        live        8h ago      success
+    ✗    flask-server              claude-code   daemon        registered  9h ago      error
+    ●    pew sync                  claude-code   daemon        registered  just now    success
+    ●    backup script             claude-code   daily 2am     cron        1d ago      success"
 `;
 
 exports[`Full table snapshot > renders a table with expanded detail 1`] = `
-"    ST   JOB NAME              AGENT         SCHEDULE      SOURCE      LAST RUN          RESULT
-────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-▼   ●    my-web-server         claude-code   always-on     registered  2026-04-10 18:00  success
-   ╭───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-   │  Description:   node src/server.js --port 3000                                                                                        │
-   │  Project:       /Users/dev/my-project                                                                                                 │
-   │  Source:        registered                                                                                                            │
-   │  Status:        active                                                                                                                │
-   │  Created:       2026-04-10 18:00                                                                                                      │
-   │  Next Run:      -                                                                                                                     │
-   │  Run Count:     5                                                                                                                     │
-   │  Last Result:   success                                                                                                               │
-   │  Port:          3000                                                                                                                  │
-   │                                                                                                                                       │
-   │  ESC or d to close                                                                                                                    │
-   ╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯"
+"    ST   JOB NAME                  AGENT         SCHEDULE      SOURCE      AGE         RESULT
+────────────────────────────────────────────────────────────────────────────────────────────────────
+────────────────────
+▼   ●    my-web-server             claude-code   daemon        registered  7h ago      success
+   ╭───────────────────────────────────────────────────────────────────────────────────────────────╮
+   │  Description:   node src/server.js --port 3000                                                │
+   │  Agent:         claude-code                                                                   │
+   │  Schedule:      daemon                                                                        │
+   │  Project:       /Users/dev/my-project                                                         │
+   │  Source:        registered                                                                    │
+   │  Status:        active                                                                        │
+   │  Created:       2026-04-10 18:00 (7h ago)                                                     │
+   │  Next Run:      -                                                                             │
+   │  Run Count:     5                                                                             │
+   │  Last Result:   success                                                                       │
+   │  Port:          3000                                                                          │
+   │                                                                                               │
+   │  ESC or d to close                                                                            │
+   ╰───────────────────────────────────────────────────────────────────────────────────────────────╯"
 `;

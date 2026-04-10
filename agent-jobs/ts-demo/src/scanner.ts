@@ -60,6 +60,7 @@ function inferAgent(fullCmd: string): string {
   if (lower.includes("claude")) return "claude-code";
   if (lower.includes("cursor")) return "cursor";
   if (lower.includes("copilot")) return "github-copilot";
+  if (lower.includes("openclaw") || lower.includes("claw")) return "openclaw";
   return "manual";
 }
 

@@ -1,6 +1,6 @@
 # agent-jobs
 
-TUI dashboard to monitor and manage background services created by AI coding agents (Claude Code, Cursor, Copilot).
+TUI dashboard to monitor and manage background services created by AI coding agents (Claude Code, Cursor, Copilot, OpenClaw).
 
 ## Features
 
@@ -86,10 +86,11 @@ TUI dashboard auto-refreshes (fs.watch)
 
 ```bash
 git clone https://github.com/MashellHan/agent-jobs.git
-cd agent-jobs
+cd agent-jobs/ts-demo
 npm install
 npm run dev    # Watch mode
 npm run build  # Production build
+npm test       # Run tests
 ```
 
 ## License

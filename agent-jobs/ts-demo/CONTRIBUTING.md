@@ -4,7 +4,7 @@
 
 ```bash
 git clone https://github.com/MashellHan/agent-jobs.git
-cd agent-jobs
+cd agent-jobs/ts-demo
 npm install
 npm run dev
 ```
@@ -36,8 +36,9 @@ src/
 1. Fork the repo
 2. Create a feature branch
 3. Make your changes
-4. Run `npm run build` to verify
-5. Submit a PR
+4. Run `npm test` to verify tests pass
+5. Run `npm run build` to verify build
+6. Submit a PR
 
 ## Reporting Issues
 
