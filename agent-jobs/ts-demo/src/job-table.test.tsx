@@ -1,5 +1,5 @@
 import React from "react";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render } from "ink-testing-library";
 import { Box } from "ink";
 import { TableHeader, JobRow } from "./components/job-table.js";
@@ -13,6 +13,20 @@ import {
   pewSyncJob,
   allFixtureJobs,
 } from "./fixtures.js";
+
+// Freeze clock so formatRelativeTime produces stable output for snapshot tests.
+// The fixture created_at dates are relative to 2026-04-10T17:00:00Z:
+//   normalJob  "2026-04-10T10:00:00Z" -> 7h ago
+//   unfriendlyBgJob "2026-04-10T11:00:00Z" -> 6h ago
+//   etc.
+beforeEach(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date("2026-04-10T17:00:00Z"));
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe("TableHeader", () => {
   it("renders all column headers", () => {
