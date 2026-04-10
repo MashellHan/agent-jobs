@@ -1,20 +1,28 @@
 import { defineConfig } from "tsup";
 
-export default defineConfig({
-  entry: {
-    "cli/index": "src/cli/index.ts",
-    "cli/detect": "src/cli/detect.ts",
-    index: "src/index.tsx",
-  },
-  format: "esm",
-  target: "node18",
-  platform: "node",
+const shared = {
+  format: "esm" as const,
+  target: "node18" as const,
+  platform: "node" as const,
   outDir: "dist",
-  clean: true,
-  splitting: true,
   sourcemap: true,
   external: ["ink", "react", "yoga-wasm-web"],
-  banner: {
-    js: "#!/usr/bin/env node",
+};
+
+export default defineConfig([
+  {
+    ...shared,
+    entry: {
+      "cli/index": "src/cli/index.ts",
+      "cli/detect": "src/cli/detect.ts",
+    },
+    clean: true,
+    splitting: true,
+    banner: { js: "#!/usr/bin/env node" },
   },
-});
+  {
+    ...shared,
+    entry: { index: "src/index.tsx" },
+    // No shebang for the TUI entry
+  },
+]);

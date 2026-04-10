@@ -11,8 +11,10 @@
  */
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync, renameSync } from "fs";
+import { randomUUID } from "crypto";
 import { join, dirname } from "path";
 import { homedir } from "os";
+import { pathToFileURL } from "url";
 import type { JobsFile } from "../types.js";
 
 const JOBS_DIR = join(homedir(), ".agent-jobs");
@@ -178,7 +180,7 @@ function registerJob(label: string, opts: {
 
   const now = new Date().toISOString();
   file.jobs.push({
-    id: `hook-${Date.now()}`,
+    id: `hook-${randomUUID()}`,
     name: label,
     description: opts.description.slice(0, 200),
     agent: "claude-code",
@@ -271,7 +273,7 @@ export function detect(input: HookInput): boolean {
 
 // ── CLI entry ────────────────────────────────────────────────────────
 
-function main(): void {
+export function main(): void {
   let raw = "";
   try {
     raw = readFileSync(0, "utf-8");
@@ -300,10 +302,9 @@ function main(): void {
 }
 
 // Only run main() when executed directly (not when imported as a module)
-const isDirectRun =
-  import.meta.url === `file://${process.argv[1]}` ||
-  process.argv[1]?.endsWith("detect.js");
-
-if (isDirectRun) {
+if (
+  process.argv[1] != null &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
   main();
 }

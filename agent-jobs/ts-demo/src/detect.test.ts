@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { detect } from "./cli/detect.js";
+import { writeFileSync, existsSync, readFileSync } from "fs";
 
 // Mock fs to prevent writing to real ~/.agent-jobs/jobs.json
 vi.mock("fs", async (importOriginal) => {
@@ -8,7 +9,6 @@ vi.mock("fs", async (importOriginal) => {
     ...actual,
     existsSync: vi.fn(() => false),
     readFileSync: vi.fn((...args: unknown[]) => {
-      // For stdin (fd 0) return empty — shouldn't be called since main() is guarded
       if (args[0] === 0) return "";
       throw new Error("ENOENT");
     }),
@@ -153,6 +153,10 @@ describe("detect - File pattern matching", () => {
 });
 
 describe("detect - tool filtering", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("ignores Read tool calls", () => {
     const result = detect({
       tool_name: "Read",
@@ -166,5 +170,75 @@ describe("detect - tool filtering", () => {
       tool_input: { command: "pm2 start api.js" },
     });
     expect(result).toBe(false);
+  });
+});
+
+describe("detect - job registration", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    // Reset default mock implementations
+    vi.mocked(existsSync).mockReturnValue(false);
+    vi.mocked(readFileSync).mockImplementation((...args: unknown[]) => {
+      if (args[0] === 0) return "";
+      throw new Error("ENOENT");
+    });
+  });
+
+  it("writes correct job payload to disk", () => {
+    detect({
+      tool_name: "Bash",
+      tool_input: { command: "pm2 start api.js" },
+      tool_result: "[PM2] Starting api.js",
+    });
+
+    const mockWrite = vi.mocked(writeFileSync);
+    expect(mockWrite).toHaveBeenCalledTimes(1);
+
+    const written = JSON.parse(mockWrite.mock.calls[0]![1] as string);
+    expect(written.jobs).toHaveLength(1);
+    expect(written.jobs[0].name).toBe("pm2 api.js");
+    expect(written.jobs[0].agent).toBe("claude-code");
+    expect(written.jobs[0].status).toBe("active");
+    expect(written.jobs[0].id).toMatch(/^hook-/);
+  });
+
+  it("deduplicates by name — second detect returns false", () => {
+    // First call: empty jobs file (existsSync returns false)
+    const first = detect({
+      tool_name: "Bash",
+      tool_input: { command: "pm2 start api.js" },
+      tool_result: "[PM2] Starting api.js",
+    });
+    expect(first).toBe(true);
+
+    // Capture what was written so the second call sees the existing job
+    const mockWrite = vi.mocked(writeFileSync);
+    const writtenJson = mockWrite.mock.calls[0]![1] as string;
+
+    // Now simulate the file existing with that content
+    vi.mocked(existsSync).mockReturnValue(true);
+    vi.mocked(readFileSync).mockReturnValue(writtenJson);
+
+    // Second call with same pattern should be deduped
+    const second = detect({
+      tool_name: "Bash",
+      tool_input: { command: "pm2 start api.js" },
+      tool_result: "[PM2] Starting api.js",
+    });
+    expect(second).toBe(false);
+  });
+
+  it("extracts port from --port flag", () => {
+    detect({
+      tool_name: "Bash",
+      tool_input: { command: "flask run --port 5000" },
+      tool_result: "Running on http://127.0.0.1:5000",
+    });
+
+    const mockWrite = vi.mocked(writeFileSync);
+    const written = JSON.parse(mockWrite.mock.calls[0]![1] as string);
+    const flaskJob = written.jobs.find((j: { name: string }) => j.name === "flask-server");
+    expect(flaskJob).toBeDefined();
+    expect(flaskJob.port).toBe(5000);
   });
 });

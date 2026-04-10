@@ -22,10 +22,11 @@ switch (cmd) {
     teardown();
     break;
 
-  case "detect":
-    // detect.ts reads stdin and self-executes
-    import("./detect.js");
+  case "detect": {
+    const { main } = await import("./detect.js");
+    main();
     break;
+  }
 
   case "dashboard":
   case undefined:
