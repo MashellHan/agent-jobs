@@ -2,6 +2,9 @@ export type JobStatus = "active" | "stopped" | "error";
 export type JobResult = "success" | "error" | "unknown";
 export type JobSource = "registered" | "live" | "cron" | "launchd";
 
+/** Max characters for job description field */
+export const MAX_DESCRIPTION_LENGTH = 200;
+
 export interface Job {
   id: string;
   name: string;

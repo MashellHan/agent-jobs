@@ -3,6 +3,7 @@ import { readFile } from "fs";
 import { join } from "path";
 import { homedir } from "os";
 import type { Job } from "./types.js";
+import { MAX_DESCRIPTION_LENGTH } from "./types.js";
 
 const RELEVANT_CMDS = new Set([
   "node", "python", "python3", "go", "ruby", "java",
@@ -108,7 +109,7 @@ export function scanLiveProcesses(): Promise<Job[]> {
             return {
               id: `live-${entry.pid}`,
               name,
-              description: fullCmd.slice(0, 120),
+              description: fullCmd.slice(0, MAX_DESCRIPTION_LENGTH),
               agent: inferAgent(fullCmd),
               schedule: "always-on",
               status: "active",

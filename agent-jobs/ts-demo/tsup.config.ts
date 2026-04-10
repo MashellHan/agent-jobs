@@ -6,6 +6,7 @@ const shared = {
   platform: "node" as const,
   outDir: "dist",
   sourcemap: true,
+  dts: true,
   external: ["ink", "react", "yoga-wasm-web"],
 };
 
@@ -17,7 +18,7 @@ export default defineConfig([
       "cli/detect": "src/cli/detect.ts",
     },
     clean: true,
-    splitting: true,
+    splitting: false,
     banner: { js: "#!/usr/bin/env node" },
   },
   {

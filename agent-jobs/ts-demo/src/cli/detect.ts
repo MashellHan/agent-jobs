@@ -16,6 +16,7 @@ import { join, dirname } from "path";
 import { homedir } from "os";
 import { pathToFileURL } from "url";
 import type { JobsFile } from "../types.js";
+import { MAX_DESCRIPTION_LENGTH } from "../types.js";
 
 const JOBS_DIR = join(homedir(), ".agent-jobs");
 const JOBS_PATH = join(JOBS_DIR, "jobs.json");
@@ -182,7 +183,7 @@ function registerJob(label: string, opts: {
   file.jobs.push({
     id: `hook-${randomUUID()}`,
     name: label,
-    description: opts.description.slice(0, 200),
+    description: opts.description.slice(0, MAX_DESCRIPTION_LENGTH),
     agent: "claude-code",
     schedule: "always-on",
     status: "active",
@@ -233,7 +234,7 @@ function detectBash(input: HookInput): boolean {
     const name = label(m, cmd);
     const port = extractPort(cmd, output);
     return registerJob(name, {
-      description: cmd.slice(0, 200),
+      description: cmd.slice(0, MAX_DESCRIPTION_LENGTH),
       port,
       source: "hook-bash",
     });

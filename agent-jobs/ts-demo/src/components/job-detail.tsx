@@ -17,10 +17,14 @@ export function JobDetail({ job }: Props) {
     { label: "Source", value: job.source },
     { label: "Status", value: job.status, valueColor: color },
     { label: "Created", value: formatTime(job.created_at) },
-    { label: "Next Run", value: job.port ? `:${job.port}` : formatTime(job.next_run) },
+    { label: "Next Run", value: formatTime(job.next_run) },
     { label: "Run Count", value: runCount },
     { label: "Last Result", value: job.last_result, valueColor: resultColor(job.last_result) },
   ];
+
+  if (job.port) {
+    fields.push({ label: "Port", value: String(job.port) });
+  }
 
   if (job.pid) {
     fields.push({ label: "PID", value: String(job.pid) });
