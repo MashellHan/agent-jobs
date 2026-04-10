@@ -45,7 +45,11 @@ function loadSettings(): Settings {
   if (!existsSync(SETTINGS_PATH)) {
     return {};
   }
-  return JSON.parse(readFileSync(SETTINGS_PATH, "utf-8")) as Settings;
+  try {
+    return JSON.parse(readFileSync(SETTINGS_PATH, "utf-8")) as Settings;
+  } catch {
+    return {};
+  }
 }
 
 function saveSettings(settings: Settings): void {
