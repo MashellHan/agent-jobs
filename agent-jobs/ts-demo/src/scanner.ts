@@ -1,5 +1,5 @@
-import { execFileSync, execSync } from "child_process";
-import { readFileSync, existsSync } from "fs";
+import { execFile } from "child_process";
+import { readFile } from "fs";
 import { join } from "path";
 import { homedir } from "os";
 import type { Job } from "./types.js";
@@ -46,12 +46,12 @@ function parseLsofOutput(output: string): LsofEntry[] {
   return entries;
 }
 
-function getFullCommand(pid: number): string {
-  try {
-    return execSync(`ps -p ${pid} -o args=`, { encoding: "utf-8" }).trim();
-  } catch {
-    return "";
-  }
+function getFullCommand(pid: number): Promise<string> {
+  return new Promise((resolve) => {
+    execFile("ps", ["-p", String(pid), "-o", "args="], { encoding: "utf-8", timeout: 3000 }, (err, stdout) => {
+      resolve(err ? "" : stdout.trim());
+    });
+  });
 }
 
 function inferAgent(fullCmd: string): string {
@@ -62,82 +62,88 @@ function inferAgent(fullCmd: string): string {
   return "manual";
 }
 
-export function scanLiveProcesses(): Job[] {
-  let output: string;
-  try {
-    output = execFileSync("lsof", ["-i", "-P", "-n", "-sTCP:LISTEN"], {
-      encoding: "utf-8",
-      timeout: 5000,
-      stdio: ["pipe", "pipe", "pipe"],
+export function scanLiveProcesses(): Promise<Job[]> {
+  return new Promise((resolve) => {
+    execFile("lsof", ["-i", "-P", "-n", "-sTCP:LISTEN"], { encoding: "utf-8", timeout: 5000 }, async (err, stdout) => {
+      const output = stdout || (err as { stdout?: string } | null)?.stdout || "";
+      if (!output.includes("COMMAND")) {
+        resolve([]);
+        return;
+      }
+
+      try {
+        const entries = parseLsofOutput(output);
+        const now = new Date().toISOString();
+
+        const jobs = await Promise.all(
+          entries.map(async (entry): Promise<Job> => {
+            const fullCmd = await getFullCommand(entry.pid);
+            const name = entry.port > 0
+              ? `${entry.command} (:${entry.port})`
+              : entry.command;
+
+            return {
+              id: `live-${entry.pid}`,
+              name,
+              description: fullCmd.slice(0, 120),
+              agent: inferAgent(fullCmd),
+              schedule: "always-on",
+              status: "active",
+              source: "live",
+              project: "",
+              port: entry.port > 0 ? entry.port : undefined,
+              pid: entry.pid,
+              created_at: now,
+              last_run: now,
+              next_run: null,
+              last_result: "success",
+              run_count: -1,
+            };
+          }),
+        );
+        resolve(jobs);
+      } catch {
+        resolve([]);
+      }
     });
-  } catch (err: unknown) {
-    // lsof returns exit code 1 when it finds results but also writes to stderr,
-    // or when there are no matches. Check if stdout has content.
-    const e = err as { stdout?: string };
-    if (e.stdout && e.stdout.includes("COMMAND")) {
-      output = e.stdout;
-    } else {
-      return [];
-    }
-  }
-
-  try {
-    const entries = parseLsofOutput(output);
-    const now = new Date().toISOString();
-
-    return entries.map((entry): Job => {
-      const fullCmd = getFullCommand(entry.pid);
-      const name = entry.port > 0
-        ? `${entry.command} (:${entry.port})`
-        : entry.command;
-
-      return {
-        id: `live-${entry.pid}`,
-        name,
-        description: fullCmd.slice(0, 120),
-        agent: inferAgent(fullCmd),
-        schedule: "always-on",
-        status: "active",
-        source: "live",
-        project: "",
-        port: entry.port > 0 ? entry.port : undefined,
-        pid: entry.pid,
-        created_at: now,
-        last_run: now,
-        next_run: null,
-        last_result: "success",
-        run_count: -1,
-      };
-    });
-  } catch {
-    return [];
-  }
+  });
 }
 
-export function scanClaudeScheduledTasks(): Job[] {
+export function scanClaudeScheduledTasks(): Promise<Job[]> {
   const tasksPath = join(homedir(), ".claude", "scheduled_tasks.json");
-  if (!existsSync(tasksPath)) return [];
 
-  try {
-    const raw = JSON.parse(readFileSync(tasksPath, "utf-8"));
-    if (!Array.isArray(raw)) return [];
+  return new Promise((resolve) => {
+    readFile(tasksPath, "utf-8", (err, data) => {
+      if (err) {
+        resolve([]);
+        return;
+      }
+      try {
+        const raw = JSON.parse(data);
+        if (!Array.isArray(raw)) {
+          resolve([]);
+          return;
+        }
 
-    return raw.map((t: Record<string, unknown>, i: number): Job => ({
-      id: `cron-${i}`,
-      name: (t.prompt as string ?? "").slice(0, 50) || `Cron task #${i}`,
-      description: t.prompt as string ?? "",
-      agent: "claude-code",
-      schedule: t.cron as string ?? "?",
-      status: "active",
-      source: "cron",
-      project: "",
-      created_at: new Date().toISOString(),
-      last_run: null,
-      next_run: null,
-      last_result: "unknown",
-      run_count: -1,
-    }));
-  } catch {
-    return [];
-  }
+        const jobs = raw.map((t: Record<string, unknown>, i: number): Job => ({
+          id: `cron-${i}`,
+          name: (t.prompt as string ?? "").slice(0, 50) || `Cron task #${i}`,
+          description: t.prompt as string ?? "",
+          agent: "claude-code",
+          schedule: t.cron as string ?? "?",
+          status: "active",
+          source: "cron",
+          project: "",
+          created_at: new Date().toISOString(),
+          last_run: null,
+          next_run: null,
+          last_result: "unknown",
+          run_count: -1,
+        }));
+        resolve(jobs);
+      } catch {
+        resolve([]);
+      }
+    });
+  });
 }

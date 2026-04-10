@@ -7,14 +7,13 @@ import { scanLiveProcesses, scanClaudeScheduledTasks } from "./scanner.js";
 const JOBS_PATH = join(homedir(), ".agent-jobs", "jobs.json");
 const CLAUDE_TASKS_PATH = join(homedir(), ".claude", "scheduled_tasks.json");
 
-export function loadAllJobs(): Promise<Job[]> {
-  return new Promise((resolve) => {
-    loadRegisteredJobs().then((registered) => {
-      const live = scanLiveProcesses();
-      const cron = scanClaudeScheduledTasks();
-      resolve([...registered, ...cron, ...live]);
-    });
-  });
+export async function loadAllJobs(): Promise<Job[]> {
+  const [registered, live, cron] = await Promise.all([
+    loadRegisteredJobs(),
+    scanLiveProcesses(),
+    scanClaudeScheduledTasks(),
+  ]);
+  return [...registered, ...cron, ...live];
 }
 
 function loadRegisteredJobs(): Promise<Job[]> {

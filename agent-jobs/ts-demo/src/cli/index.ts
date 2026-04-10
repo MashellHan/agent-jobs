@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * agent-jobs CLI
  *
@@ -35,18 +34,10 @@ switch (cmd) {
     break;
 
   case "list": {
-    const { readFileSync, existsSync } = await import("fs");
-    const { join } = await import("path");
-    const { homedir } = await import("os");
-    const jobsPath = join(homedir(), ".agent-jobs", "jobs.json");
-    if (!existsSync(jobsPath)) {
-      process.stdout.write("No jobs registered.\n");
-      break;
-    }
-    const data = JSON.parse(readFileSync(jobsPath, "utf-8"));
-    const jobs = data.jobs ?? [];
+    const { loadAllJobs } = await import("../loader.js");
+    const jobs = await loadAllJobs();
     if (jobs.length === 0) {
-      process.stdout.write("No jobs registered.\n");
+      process.stdout.write("No jobs found.\n");
       break;
     }
     for (const j of jobs) {

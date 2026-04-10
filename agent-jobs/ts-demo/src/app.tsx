@@ -65,7 +65,7 @@ export default function App() {
     refresh();
   }, [refresh]);
 
-  // Auto-refresh live processes every 15 seconds
+  // Auto-refresh live processes every 10 seconds
   useEffect(() => {
     const timer = setInterval(refresh, 10_000);
     return () => clearInterval(timer);

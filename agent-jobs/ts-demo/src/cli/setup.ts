@@ -56,7 +56,7 @@ function saveSettings(settings: Settings): void {
 
 function isAgentJobsHook(inner: { command: string }): boolean {
   return inner.command.includes(HOOK_TAG) ||
-    inner.command.includes("agent-jobs") && inner.command.includes("detect");
+    (inner.command.includes("agent-jobs") && inner.command.includes("detect"));
 }
 
 function hasHook(settings: Settings): boolean {

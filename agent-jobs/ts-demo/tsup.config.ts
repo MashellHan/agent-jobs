@@ -14,4 +14,7 @@ export default defineConfig({
   splitting: true,
   sourcemap: true,
   external: ["ink", "react", "yoga-wasm-web"],
+  banner: {
+    js: "#!/usr/bin/env node",
+  },
 });
