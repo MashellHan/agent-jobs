@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+
+# Legacy demo directories (not part of the active project)
+agent-jobs/agent-jobs/
+agent-jobs/go-demo/
+agent-jobs/python-demo/
+agent-jobs/shared/

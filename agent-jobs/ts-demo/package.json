@@ -1,0 +1,58 @@
+{
+  "name": "agent-jobs",
+  "version": "1.0.0",
+  "description": "AI Agent Job Dashboard — monitor and manage background services created by AI coding agents",
+  "type": "module",
+  "bin": {
+    "agent-jobs": "./dist/cli/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup && node -e \"const fs=require('fs');const f='dist/cli/index.js';const c=fs.readFileSync(f,'utf8');if(!c.startsWith('#!'))fs.writeFileSync(f,'#!/usr/bin/env node\\n'+c)\"",
+    "start": "node dist/index.js",
+    "dev": "npx tsx --watch src/index.tsx",
+    "setup": "node dist/cli/index.js setup",
+    "teardown": "node dist/cli/index.js teardown",
+    "list": "node dist/cli/index.js list",
+    "postinstall": "node dist/cli/index.js setup || true",
+    "preuninstall": "node dist/cli/index.js teardown || true",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "ink": "^5.1.0",
+    "react": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@types/react": "^18.3.12",
+    "@vitest/coverage-v8": "^4.1.4",
+    "ink-testing-library": "^4.0.0",
+    "tsup": "^8.5.1",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^4.1.4"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "claude-code",
+    "dashboard",
+    "tui",
+    "cli",
+    "jobs",
+    "services",
+    "monitoring"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MashellHan/agent-jobs.git"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
