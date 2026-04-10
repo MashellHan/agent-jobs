@@ -1,6 +1,6 @@
 {
   "name": "agent-jobs",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "AI Agent Job Dashboard — monitor and manage background services created by AI coding agents",
   "type": "module",
   "bin": {
@@ -20,7 +20,8 @@
     "preuninstall": "node dist/cli/index.js teardown || true",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "prepublishOnly": "npm test && npm run build"
   },
   "dependencies": {
     "ink": "^5.1.0",
