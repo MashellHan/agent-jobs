@@ -16,7 +16,7 @@
     "setup": "node dist/cli/index.js setup",
     "teardown": "node dist/cli/index.js teardown",
     "list": "node dist/cli/index.js list",
-    "postinstall": "node dist/cli/index.js setup || true",
+    "postinstall": "node dist/cli/index.js setup 2>/dev/null || true",
     "preuninstall": "node dist/cli/index.js teardown || true",
     "test": "vitest run",
     "test:watch": "vitest",

@@ -10,14 +10,14 @@ const RELEVANT_CMDS = new Set([
   "deno", "bun", "uvicorn", "gunicorn", "tsx",
 ]);
 
-interface LsofEntry {
+export interface LsofEntry {
   pid: number;
   command: string;
   port: number;
   user: string;
 }
 
-function parseLsofOutput(output: string): LsofEntry[] {
+export function parseLsofOutput(output: string): LsofEntry[] {
   const seen = new Set<number>();
   const entries: LsofEntry[] = [];
 
@@ -55,7 +55,7 @@ function getFullCommand(pid: number): Promise<string> {
   });
 }
 
-function inferAgent(fullCmd: string): string {
+export function inferAgent(fullCmd: string): string {
   const lower = fullCmd.toLowerCase();
   if (lower.includes("claude")) return "claude-code";
   if (lower.includes("cursor")) return "cursor";
