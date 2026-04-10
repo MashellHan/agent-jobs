@@ -1,39 +1,31 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`Full table snapshot > renders a complete table with header and all fixture jobs 1`] = `
-"ST   JOB NAME                  AGENT         SCHEDULE          SOURCE     LAST RUN          RESULT
-────────────────────────────────────────────────────────────────────────────────────────────────────
-────────────────────
-▶   ●    my-web-server           claude-code   always-on        registere  2026-04-10       success
-                                                                d          18:00
-   ●    node server.js           claude-code   always-on        registere  2026-04-10       success
-                                                                d          19:00
-   ●    pm2 api.js"},"tool_res   claude-code   always-on        registere  2026-04-10       success
-        ult":"…                                                 d          20:00
-   ○    my-very-long-container   claude-code   always-on        registere  2026-04-10       error
-        -image…                                                 d          21:00
-   ●    server.js :4000          manual        always-on        live       2026-04-10       success
-                                                                           22:00
-   ✗    flask-server             claude-code   always-on        registere  2026-04-10       error
-                                                                d          16:30"
+"    ST   JOB NAME              AGENT         SCHEDULE      SOURCE      LAST RUN          RESULT
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+▶   ●    my-web-server         claude-code   always-on     registered  2026-04-10 18:00  success
+    ●    node server.js        claude-code   always-on     registered  2026-04-10 19:00  success
+    ●    pm2 api.js"},"tool…   claude-code   always-on     registered  2026-04-10 20:00  success
+    ○    my-very-long-conta…   claude-code   always-on     registered  2026-04-10 21:00  error
+    ●    server.js :4000       manual        always-on     live        2026-04-10 22:00  success
+    ✗    flask-server          claude-code   always-on     registered  2026-04-10 16:30  error"
 `;
 
 exports[`Full table snapshot > renders a table with expanded detail 1`] = `
-"ST   JOB NAME                  AGENT         SCHEDULE          SOURCE     LAST RUN          RESULT
-────────────────────────────────────────────────────────────────────────────────────────────────────
-────────────────────
-▼  ●    my-web-server            claude-code   always-on        registere  2026-04-10       success
-                                                                d          18:00
-   ╭───────────────────────────────────────────────────────────────────────────────────────────────╮
-   │  Description:   node src/server.js --port 3000                                                │
-   │  Project:       /Users/dev/my-project                                                         │
-   │  Source:        registered                                                                    │
-   │  Status:        active                                                                        │
-   │  Created:       2026-04-10 18:00                                                              │
-   │  Next Run:      :3000                                                                         │
-   │  Run Count:     5                                                                             │
-   │  Last Result:   success                                                                       │
-   │                                                                                               │
-   │  ESC or d to close                                                                            │
-   ╰───────────────────────────────────────────────────────────────────────────────────────────────╯"
+"    ST   JOB NAME              AGENT         SCHEDULE      SOURCE      LAST RUN          RESULT
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+▼   ●    my-web-server         claude-code   always-on     registered  2026-04-10 18:00  success
+   ╭───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+   │  Description:   node src/server.js --port 3000                                                                                        │
+   │  Project:       /Users/dev/my-project                                                                                                 │
+   │  Source:        registered                                                                                                            │
+   │  Status:        active                                                                                                                │
+   │  Created:       2026-04-10 18:00                                                                                                      │
+   │  Next Run:      -                                                                                                                     │
+   │  Run Count:     5                                                                                                                     │
+   │  Last Result:   success                                                                                                               │
+   │  Port:          3000                                                                                                                  │
+   │                                                                                                                                       │
+   │  ESC or d to close                                                                                                                    │
+   ╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯"
 `;

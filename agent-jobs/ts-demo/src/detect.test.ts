@@ -20,7 +20,12 @@ vi.mock("fs", async (importOriginal) => {
 
 describe("detect - Bash pattern matching", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
+    vi.mocked(existsSync).mockReturnValue(false);
+    vi.mocked(readFileSync).mockImplementation((...args: unknown[]) => {
+      if (args[0] === 0) return "";
+      throw new Error("ENOENT");
+    });
   });
 
   it("detects pm2 start and registers job", () => {
@@ -104,6 +109,65 @@ describe("detect - Bash pattern matching", () => {
     expect(result).toBe(true);
   });
 
+  it("detects docker run -d with --name flag", () => {
+    detect({
+      tool_name: "Bash",
+      tool_input: { command: "docker run -d --name my-app nginx:latest" },
+      tool_result: "abc123",
+    });
+    const mockWrite = vi.mocked(writeFileSync);
+    const written = JSON.parse(mockWrite.mock.calls[0]![1] as string);
+    expect(written.jobs[0].name).toBe("my-app");
+  });
+
+  it("detects uvicorn with module path", () => {
+    const result = detect({
+      tool_name: "Bash",
+      tool_input: { command: "uvicorn main:app --reload" },
+      tool_result: "Uvicorn running on http://127.0.0.1:8000",
+    });
+    expect(result).toBe(true);
+    const mockWrite = vi.mocked(writeFileSync);
+    const written = JSON.parse(mockWrite.mock.calls[0]![1] as string);
+    expect(written.jobs[0].name).toBe("uvicorn main:app");
+  });
+
+  it("detects gunicorn with module path", () => {
+    const result = detect({
+      tool_name: "Bash",
+      tool_input: { command: "gunicorn app:application -w 4" },
+      tool_result: "Listening at: http://0.0.0.0:8000",
+    });
+    expect(result).toBe(true);
+    const mockWrite = vi.mocked(writeFileSync);
+    const written = JSON.parse(mockWrite.mock.calls[0]![1] as string);
+    expect(written.jobs[0].name).toBe("gunicorn app:application");
+  });
+
+  it("detects next dev", () => {
+    const result = detect({
+      tool_name: "Bash",
+      tool_input: { command: "next dev" },
+      tool_result: "ready - started server on http://localhost:3000",
+    });
+    expect(result).toBe(true);
+    const mockWrite = vi.mocked(writeFileSync);
+    const written = JSON.parse(mockWrite.mock.calls[0]![1] as string);
+    expect(written.jobs[0].name).toBe("next-dev");
+  });
+
+  it("detects vite dev", () => {
+    const result = detect({
+      tool_name: "Bash",
+      tool_input: { command: "vite dev" },
+      tool_result: "Local: http://localhost:5173",
+    });
+    expect(result).toBe(true);
+    const mockWrite = vi.mocked(writeFileSync);
+    const written = JSON.parse(mockWrite.mock.calls[0]![1] as string);
+    expect(written.jobs[0].name).toBe("vite-dev");
+  });
+
   it("ignores unrelated Bash commands", () => {
     const result = detect({
       tool_name: "Bash",
@@ -116,7 +180,12 @@ describe("detect - Bash pattern matching", () => {
 
 describe("detect - File pattern matching", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
+    vi.mocked(existsSync).mockReturnValue(false);
+    vi.mocked(readFileSync).mockImplementation((...args: unknown[]) => {
+      if (args[0] === 0) return "";
+      throw new Error("ENOENT");
+    });
   });
 
   it("detects .plist file creation", () => {
@@ -154,7 +223,12 @@ describe("detect - File pattern matching", () => {
 
 describe("detect - tool filtering", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
+    vi.mocked(existsSync).mockReturnValue(false);
+    vi.mocked(readFileSync).mockImplementation((...args: unknown[]) => {
+      if (args[0] === 0) return "";
+      throw new Error("ENOENT");
+    });
   });
 
   it("ignores Read tool calls", () => {

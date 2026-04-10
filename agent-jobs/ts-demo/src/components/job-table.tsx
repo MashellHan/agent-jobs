@@ -6,19 +6,21 @@ import { formatTime, truncate, statusIcon, resultColor } from "../utils.js";
 const GAP = 2;
 
 const COL = {
-  status: 4,
-  name: 30,
-  agent: 16,
-  schedule: 20,
-  source: 12,
-  lastRun: 20,
-  result: 10,
+  indicator: 2,
+  status: 3,
+  name: 20,
+  agent: 12,
+  schedule: 12,
+  source: 10,
+  lastRun: 16,
+  result: 7,
 };
 
 export function TableHeader() {
   return (
     <Box flexDirection="column">
       <Box gap={GAP}>
+        <Box width={COL.indicator}><Text>{" "}</Text></Box>
         <Box width={COL.status}><Text bold color="magenta">{"ST"}</Text></Box>
         <Box width={COL.name}><Text bold color="magenta">{"JOB NAME"}</Text></Box>
         <Box width={COL.agent}><Text bold color="magenta">{"AGENT"}</Text></Box>
@@ -44,7 +46,7 @@ export function JobRow({ job, selected, expanded }: RowProps) {
 
   return (
     <Box gap={GAP}>
-      <Text>{indicator}</Text>
+      <Box width={COL.indicator}><Text>{indicator}</Text></Box>
       <Box width={COL.status}><Text color={color}>{icon}</Text></Box>
       <Box width={COL.name}>
         <Text bold={selected} inverse={selected}>

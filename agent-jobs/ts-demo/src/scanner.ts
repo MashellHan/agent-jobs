@@ -63,7 +63,7 @@ function inferAgent(fullCmd: string): string {
   return "manual";
 }
 
-function friendlyLiveName(command: string, fullCmd: string, port: number): string {
+export function friendlyLiveName(command: string, fullCmd: string, port: number): string {
   const parts = fullCmd.trim().split(/\s+/);
 
   // Try to find a script file argument (e.g. server.js, app.py)

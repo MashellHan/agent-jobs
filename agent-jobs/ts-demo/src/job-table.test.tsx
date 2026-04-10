@@ -1,8 +1,28 @@
 import React from "react";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { render } from "ink-testing-library";
 import { Box } from "ink";
 import { TableHeader, JobRow } from "./components/job-table.js";
+
+// Patch ink-testing-library's mock stdout to use 140 columns (row needs ~126).
+// The mock Stdout class hardcodes columns=100 on its prototype.
+let origColumnsDescriptor: PropertyDescriptor | undefined;
+beforeAll(() => {
+  const inst = render(React.createElement(Box, null));
+  const proto = Object.getPrototypeOf(inst.stdout);
+  origColumnsDescriptor = Object.getOwnPropertyDescriptor(proto, "columns");
+  Object.defineProperty(proto, "columns", { get: () => 140, configurable: true });
+  inst.cleanup();
+});
+afterAll(() => {
+  if (origColumnsDescriptor) {
+    const inst = render(React.createElement(Box, null));
+    const proto = Object.getPrototypeOf(inst.stdout);
+    Object.defineProperty(proto, "columns", origColumnsDescriptor);
+    inst.cleanup();
+  }
+});
+
 import {
   normalJob,
   unfriendlyBgJob,
@@ -10,6 +30,7 @@ import {
   longNameJob,
   liveProcessJob,
   errorJob,
+  pewSyncJob,
   allFixtureJobs,
 } from "./fixtures.js";
 
@@ -39,14 +60,13 @@ describe("JobRow", () => {
       <JobRow job={normalJob} selected={false} expanded={false} />
     );
     const frame = lastFrame()!;
-    expect(frame).toContain("my-web-server");
-    expect(frame).toContain("claude-code");
-    expect(frame).toContain("always-on");
-    // BUG: "registered" gets split across lines due to column overflow
-    // The word wraps as "registere\nd" — documenting this alignment bug.
-    // After fix, this should be: expect(frame).toContain("registered");
-    expect(frame).toContain("registere");
-    expect(frame).toContain("success");
+    // Join lines to handle ink word-wrap in narrow test terminal
+    const joined = frame.replace(/\n\s*/g, " ");
+    expect(joined).toContain("my-web-server");
+    expect(joined).toContain("claude-code");
+    expect(joined).toContain("always-on");
+    expect(joined).toContain("registered");
+    expect(joined).toContain("success");
   });
 
   it("renders active status icon (●)", () => {
@@ -133,28 +153,49 @@ describe("JobRow", () => {
       expect(lastFrame()!).toContain("live");
     });
   });
+
+  describe("real-world service names", () => {
+    it("displays 'pew sync' service name clearly in the table row", () => {
+      const { lastFrame } = render(
+        <JobRow job={pewSyncJob} selected={false} expanded={false} />
+      );
+      const frame = lastFrame()!;
+      expect(frame).toContain("pew sync");
+      expect(frame).toContain("claude-code");
+      expect(frame).toContain("success");
+    });
+
+    it("pew sync is visible in the full table alongside other jobs", () => {
+      const { lastFrame } = render(
+        <Box flexDirection="column">
+          <TableHeader />
+          {allFixtureJobs.map((job, i) => (
+            <JobRow key={job.id} job={job} selected={false} expanded={false} />
+          ))}
+        </Box>
+      );
+      const frame = lastFrame()!;
+      expect(frame).toContain("pew sync");
+    });
+  });
 });
 
 describe("Column alignment", () => {
-  it("all rows have consistent structure when rendered together", () => {
+  it("all rows render on a single line", () => {
     const rows = allFixtureJobs.map((job, i) => {
       const { lastFrame } = render(
         <JobRow job={job} selected={i === 0} expanded={false} />
       );
-      return lastFrame()!;
+      return { name: job.name, frame: lastFrame()! };
     });
 
-    // BUG: rows wrap to multiple lines because the total column width
-    // (indicator + gaps + all COL widths) exceeds the ink test render width.
-    // This documents the alignment/wrapping bug.
-    for (const row of rows) {
-      const lines = row.split("\n").filter((l) => l.trim().length > 0);
-      // Currently wrapping to 2 lines — after fix should be 1 line.
-      expect(lines.length).toBeLessThanOrEqual(2);
+    for (const { name, frame } of rows) {
+      const lines = frame.split("\n").filter((l) => l.trim().length > 0);
+      expect(lines.length, `Job "${name}" wraps to ${lines.length} lines`).toBe(1);
     }
   });
 
-  it("header and rows should have matching column starts", () => {
+  it("header and rows have matching column starts", () => {
     const { lastFrame: headerFrame } = render(<TableHeader />);
     const headerLines = headerFrame()!.split("\n");
     const headerLine = headerLines[0]!;
@@ -164,20 +205,11 @@ describe("Column alignment", () => {
     );
     const rowLine = rowFrame()!.split("\n")[0]!;
 
-    // The indicator column adds an extra character in the row but not the header.
-    // This documents the alignment bug: header starts at a different offset
-    // than the row content.
-    // We check that "JOB NAME" column in header aligns-ish with the name in the row.
     const nameInHeader = headerLine.indexOf("JOB NAME");
     const nameInRow = rowLine.indexOf("my-web-server");
 
-    // Document the current misalignment: they should be close
-    // (within the indicator width + gap = ~4 chars)
-    const offset = Math.abs(nameInHeader - nameInRow);
-    // If alignment is perfect, offset should be 0.
-    // Currently it may be off due to the indicator being outside the column system.
-    // We record the offset — future fixes should bring this to 0.
-    expect(offset).toBeLessThan(10); // generous bound to document, not fail
+    // With indicator inside the column system, alignment should be exact
+    expect(Math.abs(nameInHeader - nameInRow)).toBe(0);
   });
 });
 

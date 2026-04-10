@@ -111,6 +111,41 @@ export const errorJob: Job = {
   run_count: 2,
 };
 
+/** Real-world named service — user should see exactly "pew sync" in the table */
+export const pewSyncJob: Job = {
+  id: "hook-2001",
+  name: "pew sync",
+  description: "node pew-sync.js --interval 60",
+  agent: "claude-code",
+  schedule: "always-on",
+  status: "active",
+  source: "registered",
+  project: "/Users/dev/pew-project",
+  port: undefined,
+  created_at: "2026-04-11T00:00:00Z",
+  last_run: "2026-04-11T01:00:00Z",
+  next_run: null,
+  last_result: "success",
+  run_count: 10,
+};
+
+/** Cron-scheduled job — tests cronToHuman display */
+export const cronJob: Job = {
+  id: "cron-0",
+  name: "backup script",
+  description: "Run nightly database backup",
+  agent: "claude-code",
+  schedule: "0 2 * * *",
+  status: "active",
+  source: "cron",
+  project: "/Users/dev/ops",
+  created_at: "2026-04-09T14:00:00Z",
+  last_run: "2026-04-11T02:00:00Z",
+  next_run: "2026-04-12T02:00:00Z",
+  last_result: "success",
+  run_count: 3,
+};
+
 /** A representative set of all jobs for full table rendering */
 export const allFixtureJobs: Job[] = [
   normalJob,
@@ -119,4 +154,6 @@ export const allFixtureJobs: Job[] = [
   longNameJob,
   liveProcessJob,
   errorJob,
+  pewSyncJob,
+  cronJob,
 ];
