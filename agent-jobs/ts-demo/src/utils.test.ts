@@ -26,10 +26,10 @@ describe("truncate", () => {
   // When JSON garbage like 'pm2:api.js"},"tool_result":"...' is truncated,
   // it produces unreadable partial JSON.
   it("truncates JSON residue to partial garbage (bug baseline)", () => {
-    const badName = 'pm2:api.js"},"tool_result":"started process [api]\\nid: 0"';
+    const badName = 'pm2 api.js"},"tool_result":"started process [api]\\nid: 0"';
     const result = truncate(badName, 29);
     // Truncated to 29 chars: first 28 chars + "…"
-    expect(result).toBe('pm2:api.js"},"tool_result":"…');
+    expect(result).toBe('pm2 api.js"},"tool_result":"…');
     expect(result.length).toBe(29);
   });
 });

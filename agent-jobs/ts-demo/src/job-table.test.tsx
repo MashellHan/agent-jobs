@@ -104,13 +104,12 @@ describe("JobRow", () => {
       expect(frame).toContain("…");
     });
 
-    it("renders unfriendly bg:node name as-is (bug baseline)", () => {
+    it("renders friendly nohup name (node server.js instead of bg:node)", () => {
       const { lastFrame } = render(
         <JobRow job={unfriendlyBgJob} selected={false} expanded={false} />
       );
-      // This test documents current behavior — "bg:node" IS rendered,
-      // which is the visual problem the user sees.
-      expect(lastFrame()!).toContain("bg:node");
+      // After fix: "node server.js" is rendered instead of unfriendly "bg:node"
+      expect(lastFrame()!).toContain("node server.js");
     });
 
     it("renders JSON residue name after truncation (bug baseline)", () => {
@@ -120,9 +119,9 @@ describe("JobRow", () => {
       const frame = lastFrame()!;
       // The name field has JSON residue. When truncated to 29 chars it
       // should still show partial garbage — documenting the bug.
-      // The name is: pm2:api.js"},"tool_result":"started process [api]\nid: 0"
-      // Truncated at 29: pm2:api.js"},"tool_result":…
-      expect(frame).toContain("pm2:api.js");
+      // The name is: pm2 api.js"},"tool_result":"started process [api]\nid: 0"
+      // Truncated at 29: pm2 api.js"},"tool_result…
+      expect(frame).toContain("pm2 api.js");
     });
   });
 

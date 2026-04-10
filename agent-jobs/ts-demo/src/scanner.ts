@@ -62,6 +62,31 @@ function inferAgent(fullCmd: string): string {
   return "manual";
 }
 
+function friendlyLiveName(command: string, fullCmd: string, port: number): string {
+  const parts = fullCmd.trim().split(/\s+/);
+
+  // Try to find a script file argument (e.g. server.js, app.py)
+  const scriptArg = parts.find((p) =>
+    /\.(js|mjs|ts|jsx|tsx|py|rb|go)$/i.test(p) && !p.startsWith("-")
+  );
+
+  if (scriptArg) {
+    const filename = scriptArg.split("/").pop()!;
+    return port > 0 ? `${filename} :${port}` : filename;
+  }
+
+  // For known frameworks, use a friendly label
+  const cmdLower = fullCmd.toLowerCase();
+  for (const fw of ["next", "nuxt", "vite", "uvicorn", "gunicorn", "flask", "fastapi"]) {
+    if (cmdLower.includes(fw)) {
+      return port > 0 ? `${fw} :${port}` : fw;
+    }
+  }
+
+  // Fallback: command + port
+  return port > 0 ? `${command} :${port}` : command;
+}
+
 export function scanLiveProcesses(): Promise<Job[]> {
   return new Promise((resolve) => {
     execFile("lsof", ["-i", "-P", "-n", "-sTCP:LISTEN"], { encoding: "utf-8", timeout: 5000 }, async (err, stdout) => {
@@ -78,9 +103,7 @@ export function scanLiveProcesses(): Promise<Job[]> {
         const jobs = await Promise.all(
           entries.map(async (entry): Promise<Job> => {
             const fullCmd = await getFullCommand(entry.pid);
-            const name = entry.port > 0
-              ? `${entry.command} (:${entry.port})`
-              : entry.command;
+            const name = friendlyLiveName(entry.command, fullCmd, entry.port);
 
             return {
               id: `live-${entry.pid}`,

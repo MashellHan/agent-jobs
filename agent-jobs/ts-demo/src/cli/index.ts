@@ -64,9 +64,13 @@ Commands:
 
   case "--version":
   case "-v":
-  case "version":
-    process.stdout.write("agent-jobs v1.0.0\n");
+  case "version": {
+    const { createRequire } = await import("module");
+    const require = createRequire(import.meta.url);
+    const { version } = require("../../package.json");
+    process.stdout.write(`agent-jobs v${version}\n`);
     break;
+  }
 
   default:
     process.stderr.write(`Unknown command: ${cmd}\nRun 'agent-jobs help' for usage.\n`);

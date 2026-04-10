@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * PostToolUse hook detector.
  * Reads CC hook JSON from stdin, checks if the tool call created a background service,
@@ -14,6 +13,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync, renameSync } from "fs";
 import { join, dirname } from "path";
 import { homedir } from "os";
+import type { JobsFile } from "../types.js";
 
 const JOBS_DIR = join(homedir(), ".agent-jobs");
 const JOBS_PATH = join(JOBS_DIR, "jobs.json");
@@ -30,17 +30,26 @@ const BASH_PATTERNS: Array<{ re: RegExp; label: (m: RegExpMatchArray, cmd: strin
   },
   {
     re: /pm2\s+start\s+(\S+)/i,
-    label: (m) => `pm2:${m[1]!.split("/").pop()!}`,
+    label: (m) => {
+      const script = m[1]!.split("/").pop()!;
+      return `pm2 ${script}`;
+    },
   },
   {
     re: /systemctl\s+(enable|start)\s+(\S+)/i,
-    label: (m) => `systemd:${m[2]}`,
+    label: (m) => m[2]!,
   },
   {
     re: /docker\s+run\s+(?:.*\s)?-d\s/i,
     label: (_m, cmd) => {
+      // Prefer --name flag for human-readable container name
+      const nameFlag = cmd.match(/--name\s+(\S+)/);
+      if (nameFlag) return nameFlag[1]!;
+      // Fallback to image name (last non-flag arg)
       const img = cmd.match(/docker\s+run\s+(?:.*\s)(\S+)\s*$/)?.[1] ?? "container";
-      return `docker:${img}`;
+      // Strip tag suffix for readability (e.g. nginx:latest → nginx)
+      const friendlyImg = img.includes("/") ? img.split("/").pop()! : img;
+      return friendlyImg.split(":")[0]!;
     },
   },
   {
@@ -49,7 +58,7 @@ const BASH_PATTERNS: Array<{ re: RegExp; label: (m: RegExpMatchArray, cmd: strin
   },
   {
     re: /\b(uvicorn|gunicorn)\s+(\S+)/i,
-    label: (m) => `${m[1]}:${m[2]}`,
+    label: (m) => `${m[1]} ${m[2]}`,
   },
   {
     re: /flask\s+run/i,
@@ -67,24 +76,33 @@ const BASH_PATTERNS: Array<{ re: RegExp; label: (m: RegExpMatchArray, cmd: strin
     re: /\bnohup\s+(.+?)\s*&/i,
     label: (m) => {
       const inner = m[1]!.trim().split(/\s+/);
-      return `bg:${inner[0]!.split("/").pop()!}`;
+      const runtime = inner[0]!.split("/").pop()!;
+      // Try to find a script file in args for a readable name
+      const scriptArg = inner.find((p) =>
+        /\.(js|mjs|ts|py|rb|go)$/i.test(p) && !p.startsWith("-")
+      );
+      if (scriptArg) {
+        const filename = scriptArg.split("/").pop()!;
+        return `${runtime} ${filename}`;
+      }
+      return runtime;
     },
   },
   {
     re: /\bnode\s+(\S+\.(?:js|mjs|ts))\b/i,
-    label: (m) => `node:${m[1]!.split("/").pop()!}`,
+    label: (m) => `node ${m[1]!.split("/").pop()!}`,
   },
   {
     re: /\b(python3?)\s+(\S+\.py)\b/i,
-    label: (m) => `python:${m[2]!.split("/").pop()!}`,
+    label: (m) => `python ${m[2]!.split("/").pop()!}`,
   },
   {
     re: /\b(deno)\s+run\s+(\S+)/i,
-    label: (m) => `deno:${m[2]!.split("/").pop()!}`,
+    label: (m) => `deno ${m[2]!.split("/").pop()!}`,
   },
   {
     re: /\b(bun)\s+run\s+(\S+)/i,
-    label: (m) => `bun:${m[2]!.split("/").pop()!}`,
+    label: (m) => `bun ${m[2]!.split("/").pop()!}`,
   },
 ];
 
@@ -95,7 +113,7 @@ const BACKGROUND_RE = /&\s*$/;
 const FILE_PATTERNS: Array<{ re: RegExp; label: (path: string) => string }> = [
   {
     re: /\.plist$/i,
-    label: (p) => `launchd:${p.split("/").pop()!.replace(".plist", "")}`,
+    label: (p) => p.split("/").pop()!.replace(".plist", ""),
   },
   {
     re: /docker-compose\.ya?ml$/i,
@@ -103,16 +121,11 @@ const FILE_PATTERNS: Array<{ re: RegExp; label: (path: string) => string }> = [
   },
   {
     re: /\.service$/i,
-    label: (p) => `systemd:${p.split("/").pop()!.replace(".service", "")}`,
+    label: (p) => p.split("/").pop()!.replace(".service", ""),
   },
 ];
 
 // ── Helpers ──────────────────────────────────────────────────────────
-
-interface JobsFile {
-  version: string;
-  jobs: Array<Record<string, unknown>>;
-}
 
 function loadJobs(): JobsFile {
   if (!existsSync(JOBS_PATH)) {
@@ -211,7 +224,7 @@ function detectBash(input: HookInput): boolean {
     if (!m) continue;
 
     // For simple node/python script runs, only register if backgrounded or server output detected
-    if (/^(node|python|deno|bun):/.test(label(m, cmd)) && !isBackground && !hasServerOutput) {
+    if (/^(node|python|deno|bun)\s/.test(label(m, cmd)) && !isBackground && !hasServerOutput) {
       continue;
     }
 
@@ -286,4 +299,11 @@ function main(): void {
   }
 }
 
-main();
+// Only run main() when executed directly (not when imported as a module)
+const isDirectRun =
+  import.meta.url === `file://${process.argv[1]}` ||
+  process.argv[1]?.endsWith("detect.js");
+
+if (isDirectRun) {
+  main();
+}

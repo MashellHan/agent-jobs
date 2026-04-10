@@ -22,10 +22,10 @@ export const normalJob: Job = {
   run_count: 5,
 };
 
-/** Unfriendly name from nohup pattern: "bg:node" */
+/** Unfriendly name from nohup pattern: now uses "node server.js" instead of "bg:node" */
 export const unfriendlyBgJob: Job = {
   id: "hook-1002",
-  name: "bg:node",
+  name: "node server.js",
   description: "nohup node server.js &",
   agent: "claude-code",
   schedule: "always-on",
@@ -43,7 +43,7 @@ export const unfriendlyBgJob: Job = {
 /** JSON residue leaking into name — the detect hook stored raw JSON data */
 export const jsonResidueJob: Job = {
   id: "hook-1003",
-  name: 'pm2:api.js"},"tool_result":"started process [api]\\nid: 0"',
+  name: 'pm2 api.js"},"tool_result":"started process [api]\\nid: 0"',
   description: 'pm2 start api.js --name api"},"tool_result":"started process [api]\\nid: 0"',
   agent: "claude-code",
   schedule: "always-on",
@@ -57,10 +57,10 @@ export const jsonResidueJob: Job = {
   run_count: 3,
 };
 
-/** Very long name that tests truncation */
+/** Very long name that tests truncation — now without docker: prefix */
 export const longNameJob: Job = {
   id: "hook-1004",
-  name: "docker:my-very-long-container-image-name-that-exceeds-column-width",
+  name: "my-very-long-container-image-name-that-exceeds-column-width",
   description: "docker run -d my-very-long-container-image-name-that-exceeds-column-width",
   agent: "claude-code",
   schedule: "always-on",
@@ -74,12 +74,12 @@ export const longNameJob: Job = {
   run_count: 0,
 };
 
-/** Live process detected by scanner */
+/** Live process detected by scanner — now shows "server.js :4000" instead of "node:server.js" */
 export const liveProcessJob: Job = {
   id: "live-5678",
-  name: "node:server.js",
+  name: "server.js :4000",
   description: "node /Users/dev/api/server.js",
-  agent: "unknown",
+  agent: "manual",
   schedule: "always-on",
   status: "active",
   source: "live",

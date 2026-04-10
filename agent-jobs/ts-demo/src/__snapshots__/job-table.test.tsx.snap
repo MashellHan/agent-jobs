@@ -6,13 +6,13 @@ exports[`Full table snapshot > renders a complete table with header and all fixt
 ────────────────────
 ▶   ●    my-web-server           claude-code   always-on        registere  2026-04-10       success
                                                                 d          18:00
-   ●    bg:node                  claude-code   always-on        registere  2026-04-10       success
+   ●    node server.js           claude-code   always-on        registere  2026-04-10       success
                                                                 d          19:00
-   ●    pm2:api.js"},"tool_res   claude-code   always-on        registere  2026-04-10       success
+   ●    pm2 api.js"},"tool_res   claude-code   always-on        registere  2026-04-10       success
         ult":"…                                                 d          20:00
-   ○    docker:my-very-long-co   claude-code   always-on        registere  2026-04-10       error
-        ntaine…                                                 d          21:00
-   ●    node:server.js           unknown       always-on        live       2026-04-10       success
+   ○    my-very-long-container   claude-code   always-on        registere  2026-04-10       error
+        -image…                                                 d          21:00
+   ●    server.js :4000          manual        always-on        live       2026-04-10       success
                                                                            22:00
    ✗    flask-server             claude-code   always-on        registere  2026-04-10       error
                                                                 d          16:30"
