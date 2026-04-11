@@ -6,6 +6,8 @@ export function Footer() {
     { key: "q", desc: "Quit" },
     { key: "r", desc: "Refresh" },
     { key: "d/↵", desc: "Details" },
+    { key: "x", desc: "Hide" },
+    { key: "s", desc: "Stop" },
     { key: "↑↓", desc: "Navigate" },
     { key: "←→", desc: "Tabs" },
   ];

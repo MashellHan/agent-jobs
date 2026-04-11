@@ -213,6 +213,34 @@ function extractPort(cmd: string, output: string): number | undefined {
   return undefined;
 }
 
+/**
+ * Try to detect the schedule from a command's flags.
+ * Falls back to "always-on" for background daemons.
+ */
+export function detectScheduleFromCommand(cmd: string): string {
+  // Check for --interval or -i flags with numeric values (seconds)
+  const intervalMatch = cmd.match(/--interval\s+(\d+)/);
+  if (intervalMatch) {
+    const seconds = parseInt(intervalMatch[1]!, 10);
+    if (seconds < 60) return `every ${seconds}s`;
+    if (seconds < 3600) {
+      const min = Math.round(seconds / 60);
+      return min === 1 ? "every min" : `every ${min} min`;
+    }
+    const h = Math.round(seconds / 3600);
+    return h === 1 ? "hourly" : `every ${h}h`;
+  }
+
+  // Check for --cron flag
+  const cronMatch = cmd.match(/--cron\s+["']?([^"'\s]+(?:\s+[^"'\s]+){4})["']?/);
+  if (cronMatch) {
+    return cronMatch[1]!;
+  }
+
+  // Default: background daemons (docker, pm2, nohup, node) are always-on
+  return "always-on";
+}
+
 function registerJob(label: string, opts: {
   description: string;
   port?: number;
@@ -237,7 +265,7 @@ function registerJob(label: string, opts: {
       name: label,
       description: opts.description.slice(0, MAX_DESCRIPTION_LENGTH),
       agent: "claude-code",
-      schedule: "always-on",
+      schedule: detectScheduleFromCommand(opts.description),
       status: "active",
       project: process.cwd(),
       port: opts.port,

@@ -28,6 +28,15 @@ export interface JobsFile {
   jobs: Array<Omit<Job, "source">>;
 }
 
+export interface HiddenFile {
+  hidden: string[];
+}
+
+export interface ConfirmAction {
+  type: "stop";
+  index: number;
+}
+
 export type TabFilter = "all" | "registered" | "live" | "active" | "error";
 
 export const TAB_FILTERS: TabFilter[] = [

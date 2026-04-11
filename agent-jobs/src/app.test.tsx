@@ -10,10 +10,26 @@ vi.mock("./loader.js", () => ({
   watchJobsFile: vi.fn(() => () => {}),
 }));
 
+// Mock store module
+vi.mock("./store.js", () => ({
+  loadHiddenIds: vi.fn(() => new Set()),
+  addHiddenId: vi.fn(),
+  removeRegisteredJob: vi.fn(),
+  setRegisteredJobStatus: vi.fn(),
+  killProcess: vi.fn(() => true),
+  stopLaunchdService: vi.fn(() => Promise.resolve(true)),
+}));
+
 import { loadAllJobs, watchJobsFile } from "./loader.js";
+import { loadHiddenIds, addHiddenId, removeRegisteredJob, setRegisteredJobStatus, killProcess } from "./store.js";
 
 const mockLoadAllJobs = vi.mocked(loadAllJobs);
 const mockWatchJobsFile = vi.mocked(watchJobsFile);
+const mockLoadHiddenIds = vi.mocked(loadHiddenIds);
+const mockAddHiddenId = vi.mocked(addHiddenId);
+const mockRemoveRegisteredJob = vi.mocked(removeRegisteredJob);
+const mockSetRegisteredJobStatus = vi.mocked(setRegisteredJobStatus);
+const mockKillProcess = vi.mocked(killProcess);
 
 function makeJob(overrides: Partial<Job> = {}): Job {
   return {
@@ -281,5 +297,172 @@ describe("App keyboard interactions", () => {
     await vi.advanceTimersByTimeAsync(10_000);
 
     expect(mockLoadAllJobs).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("App hide/stop features", () => {
+  const threeJobs = [
+    makeJob({ id: "j1", name: "api-server", source: "registered" }),
+    makeJob({ id: "j2", name: "worker", source: "registered", status: "stopped" }),
+    makeJob({ id: "j3", name: "live-proc", source: "live", pid: 12345 }),
+  ];
+
+  beforeEach(() => {
+    mockLoadAllJobs.mockResolvedValue(threeJobs);
+    mockLoadHiddenIds.mockReturnValue(new Set());
+  });
+
+  it("renders footer with Hide and Stop shortcuts", async () => {
+    const { lastFrame } = render(<App />);
+    await vi.advanceTimersByTimeAsync(0);
+
+    const frame = lastFrame();
+    expect(frame).toContain("Hide");
+    expect(frame).toContain("Stop");
+  });
+
+  it("hides a registered job when pressing 'x'", async () => {
+    const { lastFrame, stdin } = render(<App />);
+    await vi.advanceTimersByTimeAsync(0);
+
+    // First job is selected — press 'x' to hide it
+    stdin.write("x");
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(mockAddHiddenId).toHaveBeenCalledWith("j1");
+    expect(mockRemoveRegisteredJob).toHaveBeenCalledWith("j1");
+  });
+
+  it("hides a live job without removing from registered store", async () => {
+    const { stdin } = render(<App />);
+    await vi.advanceTimersByTimeAsync(0);
+
+    // Move to 3rd row (live-proc)
+    stdin.write("\u001B[B"); // down
+    await vi.advanceTimersByTimeAsync(0);
+    stdin.write("\u001B[B"); // down
+    await vi.advanceTimersByTimeAsync(0);
+
+    stdin.write("x");
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(mockAddHiddenId).toHaveBeenCalledWith("j3");
+    expect(mockRemoveRegisteredJob).not.toHaveBeenCalled();
+  });
+
+  it("shows status message after hiding", async () => {
+    const { lastFrame, stdin } = render(<App />);
+    await vi.advanceTimersByTimeAsync(0);
+
+    stdin.write("x");
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(lastFrame()).toContain("Hidden api-server");
+  });
+
+  it("shows confirmation prompt when pressing 's'", async () => {
+    const { lastFrame, stdin } = render(<App />);
+    await vi.advanceTimersByTimeAsync(0);
+
+    stdin.write("s");
+    await vi.advanceTimersByTimeAsync(0);
+
+    const frame = lastFrame();
+    expect(frame).toContain("Stop this job?");
+    expect(frame).toContain("[y]es");
+    expect(frame).toContain("[n]o");
+  });
+
+  it("cancels stop action when pressing 'n'", async () => {
+    const { lastFrame, stdin } = render(<App />);
+    await vi.advanceTimersByTimeAsync(0);
+
+    stdin.write("s");
+    await vi.advanceTimersByTimeAsync(0);
+    expect(lastFrame()).toContain("Stop this job?");
+
+    stdin.write("n");
+    await vi.advanceTimersByTimeAsync(0);
+
+    // Confirmation should be gone
+    expect(lastFrame()).not.toContain("Stop this job?");
+  });
+
+  it("cancels stop action when pressing Escape", async () => {
+    const { lastFrame, stdin } = render(<App />);
+    await vi.advanceTimersByTimeAsync(0);
+
+    stdin.write("s");
+    await vi.advanceTimersByTimeAsync(0);
+    expect(lastFrame()).toContain("Stop this job?");
+
+    stdin.write("\u001B");
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(lastFrame()).not.toContain("Stop this job?");
+  });
+
+  it("stops a registered job when confirming with 'y'", async () => {
+    const { lastFrame, stdin } = render(<App />);
+    await vi.advanceTimersByTimeAsync(0);
+
+    stdin.write("s");
+    await vi.advanceTimersByTimeAsync(0);
+
+    stdin.write("y");
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(mockSetRegisteredJobStatus).toHaveBeenCalledWith("j1", "stopped");
+    expect(lastFrame()).toContain("Stopped api-server");
+  });
+
+  it("kills a live process when confirming stop with 'y'", async () => {
+    const { lastFrame, stdin } = render(<App />);
+    await vi.advanceTimersByTimeAsync(0);
+
+    // Move to live-proc (3rd row)
+    stdin.write("\u001B[B"); // down
+    await vi.advanceTimersByTimeAsync(0);
+    stdin.write("\u001B[B"); // down
+    await vi.advanceTimersByTimeAsync(0);
+
+    stdin.write("s");
+    await vi.advanceTimersByTimeAsync(0);
+
+    stdin.write("y");
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(mockKillProcess).toHaveBeenCalledWith(12345);
+    expect(lastFrame()).toContain("Killed PID 12345");
+  });
+
+  it("blocks other keys during confirmation mode", async () => {
+    const { lastFrame, stdin } = render(<App />);
+    await vi.advanceTimersByTimeAsync(0);
+
+    stdin.write("s");
+    await vi.advanceTimersByTimeAsync(0);
+    expect(lastFrame()).toContain("Stop this job?");
+
+    // Try pressing 'r' (refresh) — should be blocked
+    const callsBefore = mockLoadAllJobs.mock.calls.length;
+    stdin.write("r");
+    await vi.advanceTimersByTimeAsync(0);
+    expect(mockLoadAllJobs).toHaveBeenCalledTimes(callsBefore);
+
+    // Confirmation should still be showing
+    expect(lastFrame()).toContain("Stop this job?");
+  });
+
+  it("filters out hidden jobs from display", async () => {
+    mockLoadHiddenIds.mockReturnValue(new Set(["j1"]));
+
+    const { lastFrame } = render(<App />);
+    await vi.advanceTimersByTimeAsync(0);
+
+    const frame = lastFrame();
+    expect(frame).not.toContain("api-server");
+    expect(frame).toContain("worker");
+    expect(frame).toContain("live-proc");
   });
 });

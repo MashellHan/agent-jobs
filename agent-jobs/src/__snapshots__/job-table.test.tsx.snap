@@ -1,42 +1,46 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`Full table snapshot > renders a complete table with header and all fixture jobs 1`] = `
-"   ST SERVICE            COMMAND                      SCHEDULE       LAST RUN   RESULT  CREATED
+"   ST SERVICE                AGENT        SOURCE     SCHEDULE       LAST RUN     RESULT  CREATED
 ────────────────────────────────────────────────────────────────────────────────────────────────────
 ────────────────────
-▶  ●  my-web-server      node src/server.js --port …  always-on      7h ago     success 7h ago
-   ●  node server.js     nohup node server.js &       always-on      6h ago     success 6h ago
-   ●  pm2 api.js         pm2 start api.js --name api  always-on      5h ago     success 5h ago
-   ○  my-very-long-con…  docker run -d my-very-long…  always-on      4h ago     error   4h ago
-   ●  server.js :4000    node /Users/dev/api/server…  always-on      3h ago     success 8h ago
-   ✗  flask-server       flask run --port 5000        always-on      8h ago     error   9h ago
-   ●  pew sync           node pew-sync.js --interva…  always-on      just now   success just now
-   ●  backup script      Run nightly database backup  daily 2am      just now   success 1d ago
-   ●  openclaw-monitor   python monitor.py --watch …  every 30 min   30m ago    success 11h ago
-   ○  pending-task       node setup-wizard.js --init  weekdays 9am   -          unknown 2h ago"
+▶  ●  my-web-server          claude-code  register…  always-on      04-10 18:00  success 7h ago
+   ●  node server.js         claude-code  register…  always-on      04-10 19:00  success 6h ago
+   ●  pm2 api.js             claude-code  register…  always-on      04-10 20:00  success 5h ago
+   ○  my-very-long-contain…  claude-code  register…  always-on      04-10 21:00  error   4h ago
+   ●  server.js :4000        manual       live       always-on      04-10 22:00  success 8h ago
+   ✗  flask-server           claude-code  register…  always-on      04-10 16:30  error   9h ago
+   ●  pew sync               claude-code  register…  always-on      04-11 09:00  success just now
+   ●  backup script          claude-code  cron       daily 2am      04-11 10:00  success 1d ago
+   ●  openclaw-monitor       openclaw     register…  every 30 min   04-11 00:30  success 11h ago
+   ○  pending-task           claude-code  register…  weekdays 9am   -            unknown 2h ago
+   ●  pew sync               manual       launchd    every 10 min   04-11 00:50  success 9d ago
+   ●  pew update             manual       launchd    daily 9am      04-11 17:00  success 9d ago
+   ●  node gateway           openclaw     launchd    always-on      04-11 01:00  success 8d ago"
 `;
 
 exports[`Full table snapshot > renders a table with expanded detail 1`] = `
-"   ST SERVICE            COMMAND                      SCHEDULE       LAST RUN   RESULT  CREATED
+"   ST SERVICE                AGENT        SOURCE     SCHEDULE       LAST RUN     RESULT  CREATED
 ────────────────────────────────────────────────────────────────────────────────────────────────────
 ────────────────────
-▼  ●  my-web-server      node src/server.js --port …  always-on      7h ago     success 7h ago
+▼  ●  my-web-server          claude-code  register…  always-on      04-10 18:00  success 7h ago
    ╭───────────────────────────────────────────────────────────────────────────────────────────────╮
    │  Command:       node src/server.js --port 3000                                                │
-   │  Agent:         claude-code                                                                   │
-   │  Schedule:      always-on                                                                     │
-   │  Project:       /Users/dev/my-project                                                         │
-   │  Source:        Hook-registered                                                               │
    │  Status:        active                                                                        │
-   │  Created:       2026-04-10 18:00 (7h ago)                                                     │
-   │  Last Run:      2026-04-10 18:00 (7h ago)                                                     │
-   │  Next Run:      -                                                                             │
-   │  Run Count:     5                                                                             │
-   │  Last Result:   success                                                                       │
+   │  Agent:         claude-code                                                                   │
+   │  Source:        Hook-registered                                                               │
+   │  Project:       /Users/dev/my-project                                                         │
    │  Port:          3000                                                                          │
    │                                                                                               │
-   │  Run History:                                                                                 │
-   │    1. 2026-04-10 18:00 (7h ago) success                                                       │
+   │  ── Schedule ──                                                                               │
+   │  Frequency:     always-on                                                                     │
+   │  Next Run:      -                                                                             │
+   │                                                                                               │
+   │  ── History ──                                                                                │
+   │  Created:       2026-04-10 18:00 (7h ago)                                                     │
+   │  Last Run:      2026-04-10 18:00 (7h ago)                                                     │
+   │  Run Count:     5                                                                             │
+   │  Last Result:   success                                                                       │
    │    ... and 4 earlier runs                                                                     │
    │                                                                                               │
    │  ESC or d to close                                                                            │

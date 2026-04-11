@@ -10,6 +10,7 @@ vi.mock("fs", () => ({
 vi.mock("./scanner.js", () => ({
   scanLiveProcesses: vi.fn(),
   scanClaudeScheduledTasks: vi.fn(),
+  scanLaunchdServices: vi.fn(),
 }));
 
 // Mock os to control homedir
@@ -19,12 +20,13 @@ vi.mock("os", () => ({
 
 import { readFile, watch } from "fs";
 import { loadAllJobs, watchJobsFile } from "./loader.js";
-import { scanLiveProcesses, scanClaudeScheduledTasks } from "./scanner.js";
+import { scanLiveProcesses, scanClaudeScheduledTasks, scanLaunchdServices } from "./scanner.js";
 
 const mockReadFile = vi.mocked(readFile);
 const mockWatch = vi.mocked(watch);
 const mockScanLive = vi.mocked(scanLiveProcesses);
 const mockScanCron = vi.mocked(scanClaudeScheduledTasks);
+const mockScanLaunchd = vi.mocked(scanLaunchdServices);
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -94,14 +96,46 @@ describe("loadAllJobs", () => {
     });
     mockScanLive.mockResolvedValue([liveJob]);
     mockScanCron.mockResolvedValue([cronJob]);
+    mockScanLaunchd.mockResolvedValue([]);
 
     const jobs = await loadAllJobs();
 
-    // Order: registered, cron, live
+    // Order: registered, cron, launchd, live
     expect(jobs).toHaveLength(3);
     expect(jobs[0]!.source).toBe("registered");
     expect(jobs[1]!.source).toBe("cron");
     expect(jobs[2]!.source).toBe("live");
+  });
+
+  it("merges launchd jobs into the result (4 sources)", async () => {
+    const launchdJob = {
+      id: "launchd-com.pew.sync",
+      name: "pew sync",
+      description: "/opt/homebrew/bin/pew sync",
+      agent: "system",
+      schedule: "every 10 min",
+      status: "active" as const,
+      source: "launchd" as const,
+      project: "",
+      created_at: "2026-01-01T00:00:00Z",
+      last_run: "2026-04-11T14:00:00Z",
+      next_run: null,
+      last_result: "success" as const,
+      run_count: -1,
+    };
+
+    mockReadFile.mockImplementation((_path, _enc, cb) => {
+      (cb as (err: Error) => void)(new Error("ENOENT"));
+    });
+    mockScanLive.mockResolvedValue([]);
+    mockScanCron.mockResolvedValue([]);
+    mockScanLaunchd.mockResolvedValue([launchdJob]);
+
+    const jobs = await loadAllJobs();
+    expect(jobs).toHaveLength(1);
+    expect(jobs[0]!.source).toBe("launchd");
+    expect(jobs[0]!.name).toBe("pew sync");
+    expect(jobs[0]!.schedule).toBe("every 10 min");
   });
 
   it("returns only live and cron when jobs.json does not exist", async () => {
@@ -110,6 +144,7 @@ describe("loadAllJobs", () => {
     });
     mockScanLive.mockResolvedValue([]);
     mockScanCron.mockResolvedValue([]);
+    mockScanLaunchd.mockResolvedValue([]);
 
     const jobs = await loadAllJobs();
     expect(jobs).toEqual([]);
@@ -120,6 +155,7 @@ describe("loadRegisteredJobs (via loadAllJobs)", () => {
   beforeEach(() => {
     mockScanLive.mockResolvedValue([]);
     mockScanCron.mockResolvedValue([]);
+    mockScanLaunchd.mockResolvedValue([]);
   });
 
   it("returns empty when file read fails (ENOENT)", async () => {
@@ -215,24 +251,28 @@ describe("loadRegisteredJobs (via loadAllJobs)", () => {
 });
 
 describe("watchJobsFile", () => {
-  it("returns a cleanup function that closes both watchers", () => {
+  it("returns a cleanup function that closes all three watchers", () => {
     const closeJobs = vi.fn();
+    const closeHidden = vi.fn();
     const closeClaude = vi.fn();
 
     let callCount = 0;
+    const closeFns = [closeJobs, closeHidden, closeClaude];
     mockWatch.mockImplementation(() => {
+      const fn = closeFns[callCount]!;
       callCount++;
-      return { close: callCount === 1 ? closeJobs : closeClaude } as unknown as ReturnType<typeof watch>;
+      return { close: fn } as unknown as ReturnType<typeof watch>;
     });
 
     const cleanup = watchJobsFile(() => {});
     expect(typeof cleanup).toBe("function");
 
-    // Should have created 2 watchers (jobs.json + scheduled_tasks.json)
-    expect(mockWatch).toHaveBeenCalledTimes(2);
+    // Should have created 3 watchers (jobs.json + hidden.json + scheduled_tasks.json)
+    expect(mockWatch).toHaveBeenCalledTimes(3);
 
     cleanup();
     expect(closeJobs).toHaveBeenCalledTimes(1);
+    expect(closeHidden).toHaveBeenCalledTimes(1);
     expect(closeClaude).toHaveBeenCalledTimes(1);
   });
 

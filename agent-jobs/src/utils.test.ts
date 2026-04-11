@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { formatTime, formatRelativeTime, cronToHuman, truncate, statusIcon, resultColor, sanitizeName, sourceToHuman } from "./utils.js";
+import { formatTime, formatCompactTime, formatRelativeTime, cronToHuman, truncate, statusIcon, resultColor, sanitizeName, sourceToHuman, friendlyCronName } from "./utils.js";
 
 describe("truncate", () => {
   it("returns string unchanged when shorter than max", () => {
@@ -223,5 +223,58 @@ describe("sourceToHuman", () => {
 
   it("passes through unknown sources unchanged", () => {
     expect(sourceToHuman("custom-source")).toBe("custom-source");
+  });
+});
+
+describe("formatCompactTime", () => {
+  it("returns dash for null", () => {
+    expect(formatCompactTime(null)).toBe("-");
+  });
+
+  it("returns original string for invalid date", () => {
+    expect(formatCompactTime("not-a-date")).toBe("not-a-date");
+  });
+
+  it("formats valid ISO date as MM-DD HH:MM", () => {
+    // Use a date where we know the local time (test runs in system TZ)
+    const result = formatCompactTime("2026-04-10T10:30:00Z");
+    // Should match MM-DD HH:MM pattern
+    expect(result).toMatch(/^\d{2}-\d{2} \d{2}:\d{2}$/);
+  });
+
+  it("pads single-digit months and days", () => {
+    const result = formatCompactTime("2026-01-05T08:05:00Z");
+    expect(result).toMatch(/^\d{2}-\d{2} \d{2}:\d{2}$/);
+  });
+});
+
+describe("friendlyCronName", () => {
+  it("extracts command name from shell command", () => {
+    expect(friendlyCronName("pew sync --all")).toBe("pew sync");
+  });
+
+  it("extracts binary and first arg from path", () => {
+    expect(friendlyCronName("/usr/bin/python3 backup.py")).toBe("python3 backup.py");
+  });
+
+  it("returns 'cron task' for empty prompt", () => {
+    expect(friendlyCronName("")).toBe("cron task");
+  });
+
+  it("handles natural language prompt", () => {
+    const result = friendlyCronName("Run nightly database backup");
+    // "Run" is stripped, then "nightly database backup" (22 chars) → truncated to 20
+    expect(result).toBe("nightly database ba…");
+  });
+
+  it("truncates long names to 20 chars", () => {
+    const result = friendlyCronName("very-long-command-name-here argument1");
+    expect(result.length).toBeLessThanOrEqual(20);
+  });
+
+  it("strips check verb from natural language prompt", () => {
+    // "check" is stripped as a verb, remaining 3 words taken
+    const result = friendlyCronName("check system health status");
+    expect(result).toBe("system health status");
   });
 });

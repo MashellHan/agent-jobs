@@ -2,18 +2,20 @@ import { readFile, watch } from "fs";
 import { join } from "path";
 import { homedir } from "os";
 import type { Job, JobsFile } from "./types.js";
-import { scanLiveProcesses, scanClaudeScheduledTasks } from "./scanner.js";
+import { scanLiveProcesses, scanClaudeScheduledTasks, scanLaunchdServices } from "./scanner.js";
 
 const JOBS_PATH = join(homedir(), ".agent-jobs", "jobs.json");
+const HIDDEN_PATH = join(homedir(), ".agent-jobs", "hidden.json");
 const CLAUDE_TASKS_PATH = join(homedir(), ".claude", "scheduled_tasks.json");
 
 export async function loadAllJobs(): Promise<Job[]> {
-  const [registered, live, cron] = await Promise.all([
+  const [registered, live, cron, launchd] = await Promise.all([
     loadRegisteredJobs(),
     scanLiveProcesses(),
     scanClaudeScheduledTasks(),
+    scanLaunchdServices(),
   ]);
-  return [...registered, ...cron, ...live];
+  return [...registered, ...cron, ...launchd, ...live];
 }
 
 function loadRegisteredJobs(): Promise<Job[]> {
@@ -58,10 +60,12 @@ function createWatcher(path: string, onChange: () => void): () => void {
 
 export function watchJobsFile(onChange: () => void): () => void {
   const cleanupJobs = createWatcher(JOBS_PATH, onChange);
+  const cleanupHidden = createWatcher(HIDDEN_PATH, onChange);
   const cleanupClaude = createWatcher(CLAUDE_TASKS_PATH, onChange);
 
   return () => {
     cleanupJobs();
+    cleanupHidden();
     cleanupClaude();
   };
 }

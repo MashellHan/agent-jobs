@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { detect } from "./cli/detect.js";
+import { detect, detectScheduleFromCommand } from "./cli/detect.js";
 import { writeFileSync, existsSync, readFileSync, openSync, unlinkSync } from "fs";
 
 // Mock fs to prevent writing to real ~/.agent-jobs/jobs.json
@@ -416,5 +416,43 @@ describe("detect - file locking", () => {
       (call) => typeof call[0] === "string" && String(call[0]).includes("jobs.lock"),
     );
     expect(lockRelease).toBeDefined();
+  });
+});
+
+describe("detectScheduleFromCommand", () => {
+  it("detects --interval 60 as 'every min'", () => {
+    expect(detectScheduleFromCommand("node task.js --interval 60")).toBe("every min");
+  });
+
+  it("detects --interval 300 as 'every 5 min'", () => {
+    expect(detectScheduleFromCommand("node sync.js --interval 300")).toBe("every 5 min");
+  });
+
+  it("detects --interval 30 as 'every 30s'", () => {
+    expect(detectScheduleFromCommand("node task.js --interval 30")).toBe("every 30s");
+  });
+
+  it("detects --interval 3600 as 'hourly'", () => {
+    expect(detectScheduleFromCommand("pew sync --interval 3600")).toBe("hourly");
+  });
+
+  it("detects --interval 7200 as 'every 2h'", () => {
+    expect(detectScheduleFromCommand("node backup.js --interval 7200")).toBe("every 2h");
+  });
+
+  it("detects --cron flag with quoted expression", () => {
+    expect(detectScheduleFromCommand('node backup.js --cron "0 2 * * *"')).toBe("0 2 * * *");
+  });
+
+  it("detects --cron flag with single-quoted expression", () => {
+    expect(detectScheduleFromCommand("node backup.js --cron '*/5 * * * *'")).toBe("*/5 * * * *");
+  });
+
+  it("defaults to 'always-on' when no schedule flags", () => {
+    expect(detectScheduleFromCommand("node server.js --port 3000")).toBe("always-on");
+  });
+
+  it("defaults to 'always-on' for plain commands", () => {
+    expect(detectScheduleFromCommand("pm2 start api.js")).toBe("always-on");
   });
 });

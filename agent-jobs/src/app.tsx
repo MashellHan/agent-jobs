@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Box, Text, useInput, useApp } from "ink";
-import type { Job, TabFilter } from "./types.js";
+import type { Job, TabFilter, ConfirmAction } from "./types.js";
 import { TAB_FILTERS } from "./types.js";
 import { loadAllJobs, watchJobsFile } from "./loader.js";
+import { loadHiddenIds, addHiddenId, removeRegisteredJob, setRegisteredJobStatus, killProcess, stopLaunchdService } from "./store.js";
 import { Header } from "./components/header.js";
 import { TabBar } from "./components/tab-bar.js";
 import { TableHeader, JobRow } from "./components/job-table.js";
 import { JobDetail } from "./components/job-detail.js";
 import { Footer } from "./components/footer.js";
+import { getInkInstance } from "./ink-instance.js";
 
 function filterJobs(jobs: Job[], tab: TabFilter): Job[] {
   switch (tab) {
@@ -39,17 +41,22 @@ function computeTabCounts(jobs: Job[]): Record<TabFilter, number> {
 export default function App() {
   const { exit } = useApp();
   const [allJobs, setAllJobs] = useState<Job[]>([]);
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
   const [cursor, setCursor] = useState(0);
   const [expanded, setExpanded] = useState(-1);
   const [tab, setTab] = useState<TabFilter>("all");
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
+  const [statusMsg, setStatusMsg] = useState<string | null>(null);
 
   const refresh = useCallback(() => {
+    getInkInstance()?.clear();
     loadAllJobs()
       .then((jobs) => {
         setAllJobs(jobs);
+        setHiddenIds(loadHiddenIds());
         setLastRefresh(new Date());
         setLoading(false);
         setError(null);
@@ -76,10 +83,59 @@ export default function App() {
     return watchJobsFile(refresh);
   }, [refresh]);
 
-  const filtered = filterJobs(allJobs, tab);
-  const tabCounts = computeTabCounts(allJobs);
+  // Clear status message after 3 seconds
+  useEffect(() => {
+    if (!statusMsg) return;
+    const timer = setTimeout(() => setStatusMsg(null), 3000);
+    return () => clearTimeout(timer);
+  }, [statusMsg]);
+
+  const filtered = filterJobs(allJobs, tab).filter((j) => !hiddenIds.has(j.id));
+  const tabCounts = computeTabCounts(allJobs.filter((j) => !hiddenIds.has(j.id)));
+
+  const handleStopConfirm = useCallback(async (job: Job) => {
+    switch (job.source) {
+      case "registered":
+        setRegisteredJobStatus(job.id, "stopped");
+        setStatusMsg(`Stopped ${job.name}`);
+        break;
+      case "live":
+        if (job.pid) {
+          const killed = killProcess(job.pid);
+          setStatusMsg(killed ? `Killed PID ${job.pid}` : `Failed to kill PID ${job.pid}`);
+        }
+        break;
+      case "launchd": {
+        const label = job.id.replace("launchd-", "");
+        const stopped = await stopLaunchdService(label);
+        setStatusMsg(stopped ? `Stopped ${label}` : `Failed to stop ${label}`);
+        break;
+      }
+      case "cron":
+        setStatusMsg("Cron tasks managed by Claude Code");
+        break;
+    }
+    setConfirmAction(null);
+    refresh();
+  }, [refresh]);
 
   useInput((input, key) => {
+    // Confirmation mode — only respond to y/n/Escape
+    if (confirmAction) {
+      if (input === "y" || input === "Y") {
+        const job = filtered[confirmAction.index];
+        if (job) {
+          void handleStopConfirm(job);
+        }
+        return;
+      }
+      if (input === "n" || input === "N" || key.escape) {
+        setConfirmAction(null);
+        return;
+      }
+      return; // Block all other keys during confirmation
+    }
+
     if (input === "q") {
       exit();
       return;
@@ -99,6 +155,35 @@ export default function App() {
 
     if (key.escape) {
       setExpanded(-1);
+      return;
+    }
+
+    // Hide (delete from view)
+    if (input === "x") {
+      if (filtered.length > 0 && cursor < filtered.length) {
+        const job = filtered[cursor]!;
+        addHiddenId(job.id);
+        if (job.source === "registered") {
+          removeRegisteredJob(job.id);
+        }
+        setHiddenIds(loadHiddenIds());
+        setExpanded(-1);
+        // Adjust cursor if it's now out of bounds
+        const newLen = filtered.length - 1;
+        if (cursor >= newLen && newLen > 0) {
+          setCursor(newLen - 1);
+        }
+        setStatusMsg(`Hidden ${job.name}`);
+      }
+      return;
+    }
+
+    // Stop (disable with confirmation)
+    if (input === "s") {
+      if (filtered.length > 0 && cursor < filtered.length) {
+        setConfirmAction({ type: "stop", index: cursor });
+        setExpanded(-1);
+      }
       return;
     }
 
@@ -150,7 +235,7 @@ export default function App() {
 
   return (
     <Box flexDirection="column" paddingX={1}>
-      <Header jobs={allJobs} lastRefresh={lastRefresh} currentTab={tab} />
+      <Header jobs={allJobs.filter((j) => !hiddenIds.has(j.id))} lastRefresh={lastRefresh} currentTab={tab} />
       <TabBar current={tab} counts={tabCounts} />
       <TableHeader />
 
@@ -169,10 +254,21 @@ export default function App() {
       ) : (
         filtered.map((job, i) => (
           <Box key={job.id} flexDirection="column">
-            <JobRow job={job} selected={i === cursor} expanded={i === expanded} />
+            <JobRow
+              job={job}
+              selected={i === cursor}
+              expanded={i === expanded}
+              confirmMessage={confirmAction?.index === i ? `Stop this job? [y]es / [n]o` : undefined}
+            />
             {i === expanded && <JobDetail job={job} />}
           </Box>
         ))
+      )}
+
+      {statusMsg && (
+        <Box marginTop={0}>
+          <Text color="green" italic>{`  ${statusMsg}`}</Text>
+        </Box>
       )}
 
       <Footer />

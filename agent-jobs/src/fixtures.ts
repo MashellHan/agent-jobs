@@ -180,6 +180,58 @@ export const neverRunJob: Job = {
   run_count: 0,
 };
 
+/** Launchd service — pew sync running every 10 min via macOS LaunchAgent */
+export const launchdPewSyncJob: Job = {
+  id: "launchd-com.pew.sync",
+  name: "pew sync",
+  description: "/opt/homebrew/bin/pew sync",
+  agent: "manual",
+  schedule: "every 10 min",
+  status: "active",
+  source: "launchd",
+  project: "",
+  created_at: "2026-04-01T00:00:00Z",
+  last_run: "2026-04-10T16:50:00Z",
+  next_run: null,
+  last_result: "success",
+  run_count: -1,
+};
+
+/** Launchd service — pew update running daily at 9am via StartCalendarInterval */
+export const launchdPewUpdateJob: Job = {
+  id: "launchd-com.pew.update",
+  name: "pew update",
+  description: "/opt/homebrew/bin/pew update",
+  agent: "manual",
+  schedule: "daily 9am",
+  status: "active",
+  source: "launchd",
+  project: "",
+  created_at: "2026-04-01T00:00:00Z",
+  last_run: "2026-04-11T09:00:00Z",
+  next_run: null,
+  last_result: "success",
+  run_count: -1,
+};
+
+/** Launchd service — always-on KeepAlive service (like openclaw gateway) */
+export const launchdKeepAliveJob: Job = {
+  id: "launchd-ai.openclaw.gateway",
+  name: "node gateway",
+  description: "/opt/homebrew/opt/node/bin/node /opt/homebrew/lib/node_modules/openclaw/dist/entry.js gateway --port 18789",
+  agent: "openclaw",
+  schedule: "always-on",
+  status: "active",
+  source: "launchd",
+  project: "",
+  pid: 1786,
+  created_at: "2026-04-02T00:00:00Z",
+  last_run: "2026-04-10T17:00:00Z",
+  next_run: null,
+  last_result: "success",
+  run_count: -1,
+};
+
 /** A representative set of all jobs for full table rendering */
 export const allFixtureJobs: Job[] = [
   normalJob,
@@ -192,4 +244,7 @@ export const allFixtureJobs: Job[] = [
   cronJob,
   openclawJob,
   neverRunJob,
+  launchdPewSyncJob,
+  launchdPewUpdateJob,
+  launchdKeepAliveJob,
 ];

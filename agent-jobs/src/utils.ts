@@ -14,6 +14,21 @@ export function formatTime(iso: string | null): string {
   }).replace(",", "");
 }
 
+/**
+ * Compact date-time for table columns: "MM-DD HH:MM" (11 chars).
+ * Omits the year to fit narrow columns while still showing an absolute timestamp.
+ */
+export function formatCompactTime(iso: string | null): string {
+  if (!iso) return "-";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return iso;
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mi = String(d.getMinutes()).padStart(2, "0");
+  return `${mm}-${dd} ${hh}:${mi}`;
+}
+
 export function formatRelativeTime(iso: string | null): string {
   if (!iso) return "-";
   const d = new Date(iso);
@@ -127,6 +142,41 @@ export function sourceToHuman(source: string): string {
 export function truncate(s: string, max: number): string {
   if (s.length <= max) return s;
   return s.slice(0, max - 1) + "…";
+}
+
+/**
+ * Extract a human-readable service name from a cron task prompt.
+ * E.g. "pew sync --all" → "pew sync", "Run nightly backup of db" → "nightly database backup"
+ * Caps at 20 chars.
+ */
+export function friendlyCronName(prompt: string): string {
+  const trimmed = prompt.trim();
+  if (!trimmed) return "cron task";
+
+  // Try stripping leading action verbs (natural language prompts)
+  const stripped = trimmed.replace(/^(run|execute|do|perform|check)\s+/i, "");
+  const wasStripped = stripped !== trimmed;
+
+  // If no verb was stripped, try parsing as a shell command (binary + first arg)
+  if (!wasStripped) {
+    const cmdMatch = trimmed.match(/^([\w./-]+)\s+([\w./-]+)/);
+    if (cmdMatch) {
+      const bin = cmdMatch[1]!.split("/").pop()!;
+      const arg = cmdMatch[2]!;
+      const name = `${bin} ${arg}`;
+      return name.length > 20 ? name.slice(0, 19) + "…" : name;
+    }
+  }
+
+  // Natural language or verb-stripped: take first 3 meaningful words from stripped version
+  const words = stripped
+    .split(/\s+/)
+    .filter((w) => w.length > 1)
+    .slice(0, 3)
+    .join(" ");
+
+  const result = words || trimmed.slice(0, 20);
+  return result.length > 20 ? result.slice(0, 19) + "…" : result;
 }
 
 export function statusIcon(status: JobStatus): { icon: string; color: string } {
