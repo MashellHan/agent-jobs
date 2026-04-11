@@ -1,16 +1,12 @@
 import React from "react";
 import { render } from "ink";
 import App from "./app.js";
-import { setInkInstance } from "./ink-instance.js";
 
-// Enter alternate screen buffer to prevent TUI stacking/overlapping.
-// This gives us a clean fullscreen canvas, like htop or vim.
+// Enter alternate screen buffer for a clean fullscreen canvas (like htop/vim).
 process.stdout.write("\x1b[?1049h");
-// Move cursor to top-left
 process.stdout.write("\x1b[H");
 
-const instance = render(React.createElement(App));
-setInkInstance(instance);
+render(React.createElement(App));
 
 // Restore main screen buffer on exit
 function restoreScreen(): void {

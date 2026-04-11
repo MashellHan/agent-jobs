@@ -10,6 +10,22 @@ import { TableHeader, JobRow } from "./components/job-table.js";
 import { JobDetail } from "./components/job-detail.js";
 import { Footer } from "./components/footer.js";
 
+/**
+ * Clear the entire terminal screen and reset cursor to top-left.
+ * This works around an Ink bug where `log-update`'s `previousLineCount`
+ * gets out of sync when the UI height changes (e.g. detail panel
+ * expand/collapse), causing old frames to persist ("stacking").
+ *
+ * By clearing the screen before state changes that alter height,
+ * Ink's `eraseLines(staleCount)` becomes harmless — the screen is
+ * already blank.
+ */
+function clearScreen(): void {
+  if (process.stdout.isTTY) {
+    process.stdout.write("\x1b[2J\x1b[H");
+  }
+}
+
 function filterJobs(jobs: Job[], tab: TabFilter): Job[] {
   switch (tab) {
     case "all":
@@ -51,6 +67,7 @@ export default function App() {
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
 
   const refresh = useCallback(() => {
+    clearScreen();
     loadAllJobs()
       .then((jobs) => {
         setAllJobs(jobs);
@@ -123,11 +140,13 @@ export default function App() {
       if (input === "y" || input === "Y") {
         const job = filtered[confirmAction.index];
         if (job) {
+          clearScreen();
           void handleStopConfirm(job);
         }
         return;
       }
       if (input === "n" || input === "N" || key.escape) {
+        clearScreen();
         setConfirmAction(null);
         return;
       }
@@ -146,12 +165,14 @@ export default function App() {
 
     if (input === "d" || key.return) {
       if (filtered.length > 0) {
+        clearScreen();
         setExpanded((prev) => (prev === cursor ? -1 : cursor));
       }
       return;
     }
 
     if (key.escape) {
+      clearScreen();
       setExpanded(-1);
       return;
     }
@@ -159,6 +180,7 @@ export default function App() {
     // Hide (delete from view)
     if (input === "x") {
       if (filtered.length > 0 && cursor < filtered.length) {
+        clearScreen();
         const job = filtered[cursor]!;
         addHiddenId(job.id);
         if (job.source === "registered") {
@@ -179,6 +201,7 @@ export default function App() {
     // Stop (disable with confirmation)
     if (input === "s") {
       if (filtered.length > 0 && cursor < filtered.length) {
+        clearScreen();
         setConfirmAction({ type: "stop", index: cursor });
         setExpanded(-1);
       }
@@ -186,11 +209,13 @@ export default function App() {
     }
 
     if (key.upArrow && cursor > 0) {
+      if (expanded >= 0) clearScreen();
       setCursor((c) => c - 1);
       setExpanded(-1);
     }
 
     if (key.downArrow && cursor < filtered.length - 1) {
+      if (expanded >= 0) clearScreen();
       setCursor((c) => c + 1);
       setExpanded(-1);
     }
@@ -198,6 +223,7 @@ export default function App() {
     if (key.leftArrow) {
       const idx = TAB_FILTERS.indexOf(tab);
       if (idx > 0) {
+        clearScreen();
         setTab(TAB_FILTERS[idx - 1]!);
         setCursor(0);
         setExpanded(-1);
@@ -207,6 +233,7 @@ export default function App() {
     if (key.rightArrow) {
       const idx = TAB_FILTERS.indexOf(tab);
       if (idx < TAB_FILTERS.length - 1) {
+        clearScreen();
         setTab(TAB_FILTERS[idx + 1]!);
         setCursor(0);
         setExpanded(-1);
