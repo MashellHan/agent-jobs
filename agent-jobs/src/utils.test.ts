@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { formatTime, formatRelativeTime, cronToHuman, truncate, statusIcon, resultColor } from "./utils.js";
+import { formatTime, formatRelativeTime, cronToHuman, truncate, statusIcon, resultColor, sanitizeName, sourceToHuman } from "./utils.js";
 
 describe("truncate", () => {
   it("returns string unchanged when shorter than max", () => {
@@ -81,8 +81,8 @@ describe("resultColor", () => {
 });
 
 describe("cronToHuman", () => {
-  it("converts always-on to daemon", () => {
-    expect(cronToHuman("always-on")).toBe("daemon");
+  it("converts always-on to always-on", () => {
+    expect(cronToHuman("always-on")).toBe("always-on");
   });
 
   it("converts every 5 min cron", () => {
@@ -162,5 +162,66 @@ describe("formatRelativeTime", () => {
 
   it("returns just now for future timestamps", () => {
     expect(formatRelativeTime("2026-04-11T03:00:00Z")).toBe("just now");
+  });
+});
+
+describe("sanitizeName", () => {
+  it("returns clean names unchanged", () => {
+    expect(sanitizeName("my-web-server")).toBe("my-web-server");
+  });
+
+  it("strips JSON residue from pm2 output", () => {
+    const dirty = 'pm2 api.js"},"tool_result":"started process [api]\\nid: 0"';
+    expect(sanitizeName(dirty)).toBe("pm2 api.js");
+  });
+
+  it("strips tool_result leak", () => {
+    const dirty = 'node server.js","tool_result":"listening on port 3000"';
+    expect(sanitizeName(dirty)).toBe("node server.js");
+  });
+
+  it("handles names with only garbage — returns first token as fallback", () => {
+    const dirty = '"},"tool_result":"something"';
+    // After stripping tool_result and JSON chars, falls back to first token
+    const result = sanitizeName(dirty);
+    expect(result.length).toBeGreaterThan(0);
+  });
+
+  it("collapses extra whitespace", () => {
+    expect(sanitizeName("node   server.js")).toBe("node server.js");
+  });
+
+  it("strips trailing colons and quotes", () => {
+    expect(sanitizeName('flask-server":')).toBe("flask-server");
+  });
+
+  it("keeps simple space-separated names", () => {
+    expect(sanitizeName("pew sync")).toBe("pew sync");
+  });
+
+  it("keeps names with ports", () => {
+    expect(sanitizeName("server.js :4000")).toBe("server.js :4000");
+  });
+});
+
+describe("sourceToHuman", () => {
+  it("converts registered to Hook-registered", () => {
+    expect(sourceToHuman("registered")).toBe("Hook-registered");
+  });
+
+  it("converts live to Live process", () => {
+    expect(sourceToHuman("live")).toBe("Live process");
+  });
+
+  it("converts cron to Cron schedule", () => {
+    expect(sourceToHuman("cron")).toBe("Cron schedule");
+  });
+
+  it("converts launchd to macOS launchd", () => {
+    expect(sourceToHuman("launchd")).toBe("macOS launchd");
+  });
+
+  it("passes through unknown sources unchanged", () => {
+    expect(sourceToHuman("custom-source")).toBe("custom-source");
   });
 });

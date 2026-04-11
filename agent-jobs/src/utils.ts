@@ -40,7 +40,7 @@ export function formatRelativeTime(iso: string | null): string {
 }
 
 export function cronToHuman(schedule: string): string {
-  if (schedule === "always-on") return "daemon";
+  if (schedule === "always-on") return "always-on";
 
   const parts = schedule.trim().split(/\s+/);
   if (parts.length !== 5) return schedule;
@@ -84,6 +84,44 @@ export function cronToHuman(schedule: string): string {
   }
 
   return schedule;
+}
+
+/**
+ * Strip JSON residue, tool_result leaks, and other garbage from service names.
+ * Returns a clean, human-readable name.
+ */
+export function sanitizeName(raw: string): string {
+  // Remove tool_result leaks first (most specific)
+  let name = raw.replace(/,?\s*"?tool_result"?.*$/i, "").trim();
+
+  // Cut at first JSON-like boundary: { } or ","  (but only after valid content)
+  name = name.replace(/["{}[\]].*$/, "").trim();
+
+  // Remove trailing special chars
+  name = name.replace(/[,;:'"\\]+$/, "").trim();
+
+  // Collapse whitespace
+  name = name.replace(/\s+/g, " ");
+
+  return name || raw.split(/\s+/)[0] || raw;
+}
+
+/**
+ * Convert internal source codes to human-readable labels.
+ */
+export function sourceToHuman(source: string): string {
+  switch (source) {
+    case "registered":
+      return "Hook-registered";
+    case "live":
+      return "Live process";
+    case "cron":
+      return "Cron schedule";
+    case "launchd":
+      return "macOS launchd";
+    default:
+      return source;
+  }
 }
 
 export function truncate(s: string, max: number): string {

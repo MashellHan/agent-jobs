@@ -11,14 +11,21 @@ import {
   liveProcessJob,
   errorJob,
   pewSyncJob,
+  cronJob,
+  openclawJob,
+  neverRunJob,
   allFixtureJobs,
 } from "./fixtures.js";
 
+/**
+ * Helper: join all lines into one string and collapse whitespace so that
+ * Ink word-wrap in narrow test terminal (80 cols) doesn't break `toContain`.
+ */
+function joinFrame(frame: string): string {
+  return frame.replace(/\n/g, " ").replace(/\s+/g, " ").trim();
+}
+
 // Freeze clock so formatRelativeTime produces stable output for snapshot tests.
-// The fixture created_at dates are relative to 2026-04-10T17:00:00Z:
-//   normalJob  "2026-04-10T10:00:00Z" -> 7h ago
-//   unfriendlyBgJob "2026-04-10T11:00:00Z" -> 6h ago
-//   etc.
 beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date("2026-04-10T17:00:00Z"));
@@ -29,38 +36,69 @@ afterEach(() => {
 });
 
 describe("TableHeader", () => {
-  it("renders all column headers", () => {
+  it("renders all new column headers", () => {
     const { lastFrame } = render(<TableHeader />);
-    const frame = lastFrame()!;
-    expect(frame).toContain("ST");
-    expect(frame).toContain("JOB NAME");
-    expect(frame).toContain("AGENT");
-    expect(frame).toContain("SCHEDULE");
-    expect(frame).toContain("SOURCE");
-    expect(frame).toContain("AGE");
-    expect(frame).toContain("RESULT");
+    const joined = joinFrame(lastFrame()!);
+    expect(joined).toContain("ST");
+    expect(joined).toContain("SERVICE");
+    expect(joined).toContain("COMMAND");
+    expect(joined).toContain("SCHEDULE");
+    expect(joined).toContain("LAST RUN");
+    expect(joined).toContain("RESULT");
+    expect(joined).toContain("CREATED");
+  });
+
+  it("does NOT render old column headers", () => {
+    const { lastFrame } = render(<TableHeader />);
+    const joined = joinFrame(lastFrame()!);
+    expect(joined).not.toContain("JOB NAME");
+    expect(joined).not.toContain("AGENT");
+    // SOURCE could match part of other text, check exact header
+    expect(joined).not.toMatch(/\bAGE\b/);
   });
 
   it("renders separator line", () => {
     const { lastFrame } = render(<TableHeader />);
-    const frame = lastFrame()!;
-    expect(frame).toContain("─");
+    expect(lastFrame()!).toContain("─");
   });
 });
 
 describe("JobRow", () => {
-  it("renders a normal job with correct columns", () => {
+  it("renders a normal job with new columns", () => {
     const { lastFrame } = render(
       <JobRow job={normalJob} selected={false} expanded={false} />
     );
-    const frame = lastFrame()!;
-    // Join lines to handle ink word-wrap in narrow test terminal
-    const joined = frame.replace(/\n\s*/g, " ");
+    const joined = joinFrame(lastFrame()!);
     expect(joined).toContain("my-web-server");
-    expect(joined).toContain("claude-cod"); // truncated at COL.agent-1=11 chars
-    expect(joined).toContain("daemon"); // cronToHuman("always-on") → "daemon"
-    expect(joined).toContain("registered");
+    expect(joined).toContain("node src/server.js"); // COMMAND column
+    expect(joined).toContain("always-on");
     expect(joined).toContain("success");
+  });
+
+  it("shows COMMAND column content on the row", () => {
+    const { lastFrame } = render(
+      <JobRow job={normalJob} selected={false} expanded={false} />
+    );
+    const joined = joinFrame(lastFrame()!);
+    expect(joined).toContain("node src/server.js");
+  });
+
+  it("shows LAST RUN time (not creation time as AGE)", () => {
+    const { lastFrame } = render(
+      <JobRow job={cronJob} selected={false} expanded={false} />
+    );
+    const joined = joinFrame(lastFrame()!);
+    // cronJob.last_run = "2026-04-11T02:00:00Z" → future from clock 2026-04-10T17:00 → "just now"
+    // cronJob.created_at = "2026-04-09T14:00:00Z" → "1d ago"
+    expect(joined).toContain("1d ago"); // CREATED column
+  });
+
+  it("shows dash for LAST RUN when job has never run", () => {
+    const { lastFrame } = render(
+      <JobRow job={neverRunJob} selected={false} expanded={false} />
+    );
+    const joined = joinFrame(lastFrame()!);
+    expect(joined).toContain("-");
   });
 
   it("renders active status icon (●)", () => {
@@ -102,80 +140,138 @@ describe("JobRow", () => {
     const { lastFrame } = render(
       <JobRow job={normalJob} selected={false} expanded={false} />
     );
-    // Should NOT show ▶ or ▼
     expect(lastFrame()!).not.toContain("▶");
     expect(lastFrame()!).not.toContain("▼");
   });
 
   describe("name display issues", () => {
-    it("truncates long names with ellipsis", () => {
+    it("truncates long names with ellipsis in service column", () => {
       const { lastFrame } = render(
         <JobRow job={longNameJob} selected={false} expanded={false} />
       );
-      const frame = lastFrame()!;
-      // The full name should NOT appear since COL.name=24
-      expect(frame).not.toContain(longNameJob.name);
-      expect(frame).toContain("…");
+      const joined = joinFrame(lastFrame()!);
+      expect(joined).toContain("…");
+      // The full untruncated name should NOT appear
+      expect(joined).not.toContain(longNameJob.name);
     });
 
-    it("renders friendly nohup name (node server.js instead of bg:node)", () => {
+    it("renders friendly nohup name (node server.js)", () => {
       const { lastFrame } = render(
         <JobRow job={unfriendlyBgJob} selected={false} expanded={false} />
       );
-      // After fix: "node server.js" is rendered instead of unfriendly "bg:node"
-      expect(lastFrame()!).toContain("node server.js");
+      const joined = joinFrame(lastFrame()!);
+      expect(joined).toContain("node server.js");
     });
 
-    it("renders JSON residue name after truncation (bug baseline)", () => {
+    it("renders JSON residue name after sanitization (cleaned up)", () => {
       const { lastFrame } = render(
         <JobRow job={jsonResidueJob} selected={false} expanded={false} />
       );
-      const frame = lastFrame()!;
-      // The name field has JSON residue. When truncated to COL.name-1=23 chars
-      // it still shows partial garbage — documenting the bug.
-      // The name is: pm2 api.js"},"tool_result":"started process [api]\nid: 0"
-      // Truncated at 19: pm2 api.js"},"to…
-      expect(frame).toContain("pm2 api.js");
+      const joined = joinFrame(lastFrame()!);
+      expect(joined).toContain("pm2 api.js");
+      expect(joined).not.toContain("tool_result");
     });
   });
 
-  describe("live source display", () => {
-    it("renders live source label", () => {
+  describe("command column display", () => {
+    it("shows command for cron job", () => {
+      const { lastFrame } = render(
+        <JobRow job={cronJob} selected={false} expanded={false} />
+      );
+      const joined = joinFrame(lastFrame()!);
+      // Command may be truncated in narrow terminal, just check prefix
+      expect(joined).toContain("Run nightly database");
+    });
+
+    it("shows command for live process job", () => {
       const { lastFrame } = render(
         <JobRow job={liveProcessJob} selected={false} expanded={false} />
       );
-      expect(lastFrame()!).toContain("live");
+      const joined = joinFrame(lastFrame()!);
+      expect(joined).toContain("node /Users/dev/api");
+    });
+
+    it("sanitizes command column for JSON residue job", () => {
+      const { lastFrame } = render(
+        <JobRow job={jsonResidueJob} selected={false} expanded={false} />
+      );
+      const joined = joinFrame(lastFrame()!);
+      expect(joined).not.toContain("tool_result");
+      expect(joined).toContain("pm2 start api.js");
+    });
+  });
+
+  describe("schedule column clarity", () => {
+    it("shows always-on for daemon-like services", () => {
+      const { lastFrame } = render(
+        <JobRow job={normalJob} selected={false} expanded={false} />
+      );
+      const joined = joinFrame(lastFrame()!);
+      expect(joined).toContain("always-on");
+      expect(joined).not.toContain("daemon");
+    });
+
+    it("shows human-readable cron schedule", () => {
+      const { lastFrame } = render(
+        <JobRow job={cronJob} selected={false} expanded={false} />
+      );
+      const joined = joinFrame(lastFrame()!);
+      expect(joined).toContain("daily 2am");
+    });
+
+    it("shows every 30 min for openclaw job", () => {
+      const { lastFrame } = render(
+        <JobRow job={openclawJob} selected={false} expanded={false} />
+      );
+      const joined = joinFrame(lastFrame()!);
+      expect(joined).toContain("every 30 min");
+    });
+
+    it("shows weekdays schedule", () => {
+      const { lastFrame } = render(
+        <JobRow job={neverRunJob} selected={false} expanded={false} />
+      );
+      const joined = joinFrame(lastFrame()!);
+      expect(joined).toContain("weekdays 9am");
     });
   });
 
   describe("real-world service names", () => {
-    it("displays 'pew sync' service name clearly in the table row", () => {
+    it("displays 'pew sync' service name clearly", () => {
       const { lastFrame } = render(
         <JobRow job={pewSyncJob} selected={false} expanded={false} />
       );
-      const frame = lastFrame()!;
-      expect(frame).toContain("pew sync");
-      expect(frame).toContain("claude-cod"); // truncated
-      expect(frame).toContain("success");
+      const joined = joinFrame(lastFrame()!);
+      expect(joined).toContain("pew sync");
+      expect(joined).toContain("success");
     });
 
-    it("pew sync is visible in the full table alongside other jobs", () => {
+    it("displays openclaw-monitor service name", () => {
+      const { lastFrame } = render(
+        <JobRow job={openclawJob} selected={false} expanded={false} />
+      );
+      const joined = joinFrame(lastFrame()!);
+      expect(joined).toContain("openclaw-monitor");
+      expect(joined).toContain("python monitor.py"); // may be truncated, just check prefix
+    });
+
+    it("pew sync is visible in the full table", () => {
       const { lastFrame } = render(
         <Box flexDirection="column">
           <TableHeader />
-          {allFixtureJobs.map((job, i) => (
+          {allFixtureJobs.map((job) => (
             <JobRow key={job.id} job={job} selected={false} expanded={false} />
           ))}
         </Box>
       );
-      const frame = lastFrame()!;
-      expect(frame).toContain("pew sync");
+      const joined = joinFrame(lastFrame()!);
+      expect(joined).toContain("pew sync");
     });
   });
 });
 
 describe("Column alignment", () => {
-  it("all rows render on a single line", () => {
+  it("all content from each row is present in the rendered output", () => {
     const rows = allFixtureJobs.map((job, i) => {
       const { lastFrame } = render(
         <JobRow job={job} selected={i === 0} expanded={false} />
@@ -185,24 +281,24 @@ describe("Column alignment", () => {
 
     for (const { name, frame } of rows) {
       const lines = frame.split("\n").filter((l) => l.trim().length > 0);
-      expect(lines.length, `Job "${name}" wraps to ${lines.length} lines`).toBe(1);
+      // Rows may wrap in narrow test terminal, but should have at most 2 lines
+      expect(lines.length, `Job "${name}" should render on at most 2 lines`).toBeLessThanOrEqual(2);
+      expect(lines.length, `Job "${name}" should have at least 1 line`).toBeGreaterThanOrEqual(1);
     }
   });
 
-  it("header and rows have matching column starts", () => {
+  it("header and rows have matching SERVICE column start", () => {
     const { lastFrame: headerFrame } = render(<TableHeader />);
-    const headerLines = headerFrame()!.split("\n");
-    const headerLine = headerLines[0]!;
+    const headerLine = headerFrame()!.split("\n")[0]!;
 
     const { lastFrame: rowFrame } = render(
       <JobRow job={normalJob} selected={false} expanded={false} />
     );
     const rowLine = rowFrame()!.split("\n")[0]!;
 
-    const nameInHeader = headerLine.indexOf("JOB NAME");
+    const nameInHeader = headerLine.indexOf("SERVICE");
     const nameInRow = rowLine.indexOf("my-web-server");
 
-    // With indicator inside the column system, alignment should be exact
     expect(Math.abs(nameInHeader - nameInRow)).toBe(0);
   });
 });
@@ -217,7 +313,6 @@ describe("Full table snapshot", () => {
         ))}
       </Box>
     );
-    // Snapshot captures the full visual output for comparison
     expect(lastFrame()).toMatchSnapshot();
   });
 

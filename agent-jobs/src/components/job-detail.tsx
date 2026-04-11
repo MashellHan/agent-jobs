@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Text } from "ink";
 import type { Job } from "../types.js";
-import { formatTime, formatRelativeTime, cronToHuman, statusIcon, resultColor } from "../utils.js";
+import { formatTime, formatRelativeTime, cronToHuman, statusIcon, resultColor, sourceToHuman } from "../utils.js";
 
 interface Props {
   job: Job;
@@ -12,13 +12,14 @@ export function JobDetail({ job }: Props) {
   const runCount = job.run_count < 0 ? "(live process)" : String(job.run_count);
 
   const fields: Array<{ label: string; value: string; valueColor?: string }> = [
-    { label: "Description", value: job.description || "-" },
+    { label: "Command", value: job.description || "-" },
     { label: "Agent", value: job.agent },
     { label: "Schedule", value: cronToHuman(job.schedule) },
     { label: "Project", value: job.project || "-" },
-    { label: "Source", value: job.source },
+    { label: "Source", value: sourceToHuman(job.source) },
     { label: "Status", value: job.status, valueColor: color },
     { label: "Created", value: `${formatTime(job.created_at)} (${formatRelativeTime(job.created_at)})` },
+    { label: "Last Run", value: job.last_run ? `${formatTime(job.last_run)} (${formatRelativeTime(job.last_run)})` : "-" },
     { label: "Next Run", value: formatTime(job.next_run) },
     { label: "Run Count", value: runCount },
     { label: "Last Result", value: job.last_result, valueColor: resultColor(job.last_result) },
@@ -30,6 +31,16 @@ export function JobDetail({ job }: Props) {
 
   if (job.pid) {
     fields.push({ label: "PID", value: String(job.pid) });
+  }
+
+  // Build run history from available data
+  const history: Array<{ time: string; result: string; resultColor: string }> = [];
+  if (job.last_run) {
+    history.push({
+      time: `${formatTime(job.last_run)} (${formatRelativeTime(job.last_run)})`,
+      result: job.last_result,
+      resultColor: resultColor(job.last_result),
+    });
   }
 
   return (
@@ -49,6 +60,25 @@ export function JobDetail({ job }: Props) {
           <Text color={f.valueColor}>{f.value}</Text>
         </Box>
       ))}
+
+      {history.length > 0 && (
+        <Box flexDirection="column" marginTop={1}>
+          <Text bold color="magenta">{"Run History:"}</Text>
+          {history.map((h, i) => (
+            <Box key={i} gap={1} marginLeft={2}>
+              <Text dimColor>{`${i + 1}.`}</Text>
+              <Text>{h.time}</Text>
+              <Text color={h.resultColor}>{h.result}</Text>
+            </Box>
+          ))}
+          {job.run_count > 1 && (
+            <Box marginLeft={2}>
+              <Text dimColor>{`... and ${job.run_count - 1} earlier run${job.run_count - 1 === 1 ? "" : "s"}`}</Text>
+            </Box>
+          )}
+        </Box>
+      )}
+
       <Text dimColor>{"\nESC or d to close"}</Text>
     </Box>
   );

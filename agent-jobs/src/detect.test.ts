@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { detect } from "./cli/detect.js";
-import { writeFileSync, existsSync, readFileSync } from "fs";
+import { writeFileSync, existsSync, readFileSync, openSync, unlinkSync } from "fs";
 
 // Mock fs to prevent writing to real ~/.agent-jobs/jobs.json
 vi.mock("fs", async (importOriginal) => {
@@ -15,8 +15,31 @@ vi.mock("fs", async (importOriginal) => {
     writeFileSync: vi.fn(),
     mkdirSync: vi.fn(),
     renameSync: vi.fn(),
+    openSync: vi.fn(() => 99),
+    closeSync: vi.fn(),
+    unlinkSync: vi.fn(),
   };
 });
+
+/** Find the jobs.json temp-file write (string path containing .tmp), skipping lockfile fd writes */
+function getJobsWriteJson(): unknown {
+  const mockWrite = vi.mocked(writeFileSync);
+  const jobsWrite = mockWrite.mock.calls.find(
+    (call) => typeof call[0] === "string" && String(call[0]).includes(".tmp"),
+  );
+  if (!jobsWrite) throw new Error("No jobs.json write found");
+  return JSON.parse(jobsWrite[1] as string);
+}
+
+/** Get the raw JSON string from the jobs.json temp-file write */
+function getJobsWriteRaw(): string {
+  const mockWrite = vi.mocked(writeFileSync);
+  const jobsWrite = mockWrite.mock.calls.find(
+    (call) => typeof call[0] === "string" && String(call[0]).includes(".tmp"),
+  );
+  if (!jobsWrite) throw new Error("No jobs.json write found");
+  return jobsWrite[1] as string;
+}
 
 describe("detect - Bash pattern matching", () => {
   beforeEach(() => {
@@ -115,8 +138,7 @@ describe("detect - Bash pattern matching", () => {
       tool_input: { command: "docker run -d --name my-app nginx:latest" },
       tool_result: "abc123",
     });
-    const mockWrite = vi.mocked(writeFileSync);
-    const written = JSON.parse(mockWrite.mock.calls[0]![1] as string);
+    const written = getJobsWriteJson() as { jobs: Array<{ name: string }> };
     expect(written.jobs[0].name).toBe("my-app");
   });
 
@@ -127,8 +149,7 @@ describe("detect - Bash pattern matching", () => {
       tool_result: "Uvicorn running on http://127.0.0.1:8000",
     });
     expect(result).toBe(true);
-    const mockWrite = vi.mocked(writeFileSync);
-    const written = JSON.parse(mockWrite.mock.calls[0]![1] as string);
+    const written = getJobsWriteJson() as { jobs: Array<{ name: string }> };
     expect(written.jobs[0].name).toBe("uvicorn main:app");
   });
 
@@ -139,8 +160,7 @@ describe("detect - Bash pattern matching", () => {
       tool_result: "Listening at: http://0.0.0.0:8000",
     });
     expect(result).toBe(true);
-    const mockWrite = vi.mocked(writeFileSync);
-    const written = JSON.parse(mockWrite.mock.calls[0]![1] as string);
+    const written = getJobsWriteJson() as { jobs: Array<{ name: string }> };
     expect(written.jobs[0].name).toBe("gunicorn app:application");
   });
 
@@ -151,8 +171,7 @@ describe("detect - Bash pattern matching", () => {
       tool_result: "ready - started server on http://localhost:3000",
     });
     expect(result).toBe(true);
-    const mockWrite = vi.mocked(writeFileSync);
-    const written = JSON.parse(mockWrite.mock.calls[0]![1] as string);
+    const written = getJobsWriteJson() as { jobs: Array<{ name: string }> };
     expect(written.jobs[0].name).toBe("next-dev");
   });
 
@@ -163,8 +182,7 @@ describe("detect - Bash pattern matching", () => {
       tool_result: "Local: http://localhost:5173",
     });
     expect(result).toBe(true);
-    const mockWrite = vi.mocked(writeFileSync);
-    const written = JSON.parse(mockWrite.mock.calls[0]![1] as string);
+    const written = getJobsWriteJson() as { jobs: Array<{ name: string }> };
     expect(written.jobs[0].name).toBe("vite-dev");
   });
 
@@ -265,10 +283,7 @@ describe("detect - job registration", () => {
       tool_result: "[PM2] Starting api.js",
     });
 
-    const mockWrite = vi.mocked(writeFileSync);
-    expect(mockWrite).toHaveBeenCalledTimes(1);
-
-    const written = JSON.parse(mockWrite.mock.calls[0]![1] as string);
+    const written = getJobsWriteJson() as { jobs: Array<{ name: string; agent: string; status: string; id: string }> };
     expect(written.jobs).toHaveLength(1);
     expect(written.jobs[0].name).toBe("pm2 api.js");
     expect(written.jobs[0].agent).toBe("claude-code");
@@ -286,8 +301,7 @@ describe("detect - job registration", () => {
     expect(first).toBe(true);
 
     // Capture what was written so the second call sees the existing job
-    const mockWrite = vi.mocked(writeFileSync);
-    const writtenJson = mockWrite.mock.calls[0]![1] as string;
+    const writtenJson = getJobsWriteRaw();
 
     // Now simulate the file existing with that content
     vi.mocked(existsSync).mockReturnValue(true);
@@ -309,10 +323,98 @@ describe("detect - job registration", () => {
       tool_result: "Running on http://127.0.0.1:5000",
     });
 
-    const mockWrite = vi.mocked(writeFileSync);
-    const written = JSON.parse(mockWrite.mock.calls[0]![1] as string);
-    const flaskJob = written.jobs.find((j: { name: string }) => j.name === "flask-server");
+    const written = getJobsWriteJson() as { jobs: Array<{ name: string; port: number }> };
+    const flaskJob = written.jobs.find((j) => j.name === "flask-server");
     expect(flaskJob).toBeDefined();
-    expect(flaskJob.port).toBe(5000);
+    expect(flaskJob!.port).toBe(5000);
+  });
+});
+
+describe("detect - file locking", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vi.mocked(existsSync).mockReturnValue(false);
+    vi.mocked(readFileSync).mockImplementation((...args: unknown[]) => {
+      if (args[0] === 0) return "";
+      throw new Error("ENOENT");
+    });
+  });
+
+  it("returns false when lock cannot be acquired (non-EEXIST error)", () => {
+    // openSync throws a non-EEXIST error (e.g. permission denied)
+    vi.mocked(openSync).mockImplementation(() => {
+      const err = new Error("EACCES: permission denied") as NodeJS.ErrnoException;
+      err.code = "EACCES";
+      throw err;
+    });
+
+    const result = detect({
+      tool_name: "Bash",
+      tool_input: { command: "pm2 start api.js" },
+      tool_result: "[PM2] Starting api.js",
+    });
+    expect(result).toBe(false);
+  });
+
+  it("detects stale lock from dead process and recovers", () => {
+    let openCallCount = 0;
+    vi.mocked(openSync).mockImplementation((...args: unknown[]) => {
+      openCallCount++;
+      if (openCallCount === 1) {
+        // First attempt: lock exists
+        const err = new Error("EEXIST") as NodeJS.ErrnoException;
+        err.code = "EEXIST";
+        throw err;
+      }
+      // Second attempt succeeds after stale lock removal
+      return 99;
+    });
+
+    // readFileSync for the lock file returns a PID of a dead process
+    vi.mocked(readFileSync).mockImplementation((...args: unknown[]) => {
+      const pathArg = args[0];
+      if (pathArg === 0) return "";
+      if (typeof pathArg === "string" && String(pathArg).includes("jobs.lock")) {
+        return "99999"; // PID of a non-existent process
+      }
+      throw new Error("ENOENT");
+    });
+
+    // process.kill(99999, 0) should throw for non-existent process
+    const origKill = process.kill;
+    process.kill = vi.fn((pid: number, signal?: string | number) => {
+      if (signal === 0 && pid === 99999) {
+        throw new Error("ESRCH: no such process");
+      }
+      return true;
+    }) as typeof process.kill;
+
+    const result = detect({
+      tool_name: "Bash",
+      tool_input: { command: "pm2 start api.js" },
+      tool_result: "[PM2] Starting api.js",
+    });
+
+    expect(result).toBe(true);
+    expect(vi.mocked(unlinkSync)).toHaveBeenCalled();
+
+    process.kill = origKill;
+  });
+
+  it("releases lock in finally block even on error", () => {
+    // Ensure detect succeeds (lock acquired)
+    const result = detect({
+      tool_name: "Bash",
+      tool_input: { command: "pm2 start api.js" },
+      tool_result: "[PM2] Starting api.js",
+    });
+    expect(result).toBe(true);
+
+    // unlinkSync should be called for lock release
+    const unlinkCalls = vi.mocked(unlinkSync).mock.calls;
+    const lockRelease = unlinkCalls.find(
+      (call) => typeof call[0] === "string" && String(call[0]).includes("jobs.lock"),
+    );
+    expect(lockRelease).toBeDefined();
   });
 });

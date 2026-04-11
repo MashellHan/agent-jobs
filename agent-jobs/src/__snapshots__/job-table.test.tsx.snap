@@ -1,36 +1,43 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`Full table snapshot > renders a complete table with header and all fixture jobs 1`] = `
-"    ST   JOB NAME                  AGENT         SCHEDULE      SOURCE      AGE         RESULT
+"   ST SERVICE            COMMAND                      SCHEDULE       LAST RUN   RESULT  CREATED
 ────────────────────────────────────────────────────────────────────────────────────────────────────
 ────────────────────
-▶   ●    my-web-server             claude-code   daemon        registered  7h ago      success
-    ●    node server.js            claude-code   daemon        registered  6h ago      success
-    ●    pm2 api.js"},"tool_res…   claude-code   daemon        registered  5h ago      success
-    ○    my-very-long-container…   claude-code   daemon        registered  4h ago      error
-    ●    server.js :4000           manual        daemon        live        8h ago      success
-    ✗    flask-server              claude-code   daemon        registered  9h ago      error
-    ●    pew sync                  claude-code   daemon        registered  just now    success
-    ●    backup script             claude-code   daily 2am     cron        1d ago      success"
+▶  ●  my-web-server      node src/server.js --port …  always-on      7h ago     success 7h ago
+   ●  node server.js     nohup node server.js &       always-on      6h ago     success 6h ago
+   ●  pm2 api.js         pm2 start api.js --name api  always-on      5h ago     success 5h ago
+   ○  my-very-long-con…  docker run -d my-very-long…  always-on      4h ago     error   4h ago
+   ●  server.js :4000    node /Users/dev/api/server…  always-on      3h ago     success 8h ago
+   ✗  flask-server       flask run --port 5000        always-on      8h ago     error   9h ago
+   ●  pew sync           node pew-sync.js --interva…  always-on      just now   success just now
+   ●  backup script      Run nightly database backup  daily 2am      just now   success 1d ago
+   ●  openclaw-monitor   python monitor.py --watch …  every 30 min   30m ago    success 11h ago
+   ○  pending-task       node setup-wizard.js --init  weekdays 9am   -          unknown 2h ago"
 `;
 
 exports[`Full table snapshot > renders a table with expanded detail 1`] = `
-"    ST   JOB NAME                  AGENT         SCHEDULE      SOURCE      AGE         RESULT
+"   ST SERVICE            COMMAND                      SCHEDULE       LAST RUN   RESULT  CREATED
 ────────────────────────────────────────────────────────────────────────────────────────────────────
 ────────────────────
-▼   ●    my-web-server             claude-code   daemon        registered  7h ago      success
+▼  ●  my-web-server      node src/server.js --port …  always-on      7h ago     success 7h ago
    ╭───────────────────────────────────────────────────────────────────────────────────────────────╮
-   │  Description:   node src/server.js --port 3000                                                │
+   │  Command:       node src/server.js --port 3000                                                │
    │  Agent:         claude-code                                                                   │
-   │  Schedule:      daemon                                                                        │
+   │  Schedule:      always-on                                                                     │
    │  Project:       /Users/dev/my-project                                                         │
-   │  Source:        registered                                                                    │
+   │  Source:        Hook-registered                                                               │
    │  Status:        active                                                                        │
    │  Created:       2026-04-10 18:00 (7h ago)                                                     │
+   │  Last Run:      2026-04-10 18:00 (7h ago)                                                     │
    │  Next Run:      -                                                                             │
    │  Run Count:     5                                                                             │
    │  Last Result:   success                                                                       │
    │  Port:          3000                                                                          │
+   │                                                                                               │
+   │  Run History:                                                                                 │
+   │    1. 2026-04-10 18:00 (7h ago) success                                                       │
+   │    ... and 4 earlier runs                                                                     │
    │                                                                                               │
    │  ESC or d to close                                                                            │
    ╰───────────────────────────────────────────────────────────────────────────────────────────────╯"

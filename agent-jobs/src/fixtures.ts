@@ -146,6 +146,40 @@ export const cronJob: Job = {
   run_count: 3,
 };
 
+/** OpenClaw agent — every 30 min schedule, tests non-Claude agent display */
+export const openclawJob: Job = {
+  id: "hook-3001",
+  name: "openclaw-monitor",
+  description: "python monitor.py --watch /var/log",
+  agent: "openclaw",
+  schedule: "*/30 * * * *",
+  status: "active",
+  source: "registered",
+  project: "/Users/dev/openclaw-agent",
+  created_at: "2026-04-10T06:00:00Z",
+  last_run: "2026-04-10T16:30:00Z",
+  next_run: "2026-04-10T17:00:00Z",
+  last_result: "success",
+  run_count: 22,
+};
+
+/** Job that has never run — tests "-" fallback for last_run */
+export const neverRunJob: Job = {
+  id: "hook-3002",
+  name: "pending-task",
+  description: "node setup-wizard.js --init",
+  agent: "claude-code",
+  schedule: "0 9 * * 1-5",
+  status: "stopped",
+  source: "registered",
+  project: "/Users/dev/setup",
+  created_at: "2026-04-10T15:00:00Z",
+  last_run: null,
+  next_run: "2026-04-12T09:00:00Z",
+  last_result: "unknown",
+  run_count: 0,
+};
+
 /** A representative set of all jobs for full table rendering */
 export const allFixtureJobs: Job[] = [
   normalJob,
@@ -156,4 +190,6 @@ export const allFixtureJobs: Job[] = [
   errorJob,
   pewSyncJob,
   cronJob,
+  openclawJob,
+  neverRunJob,
 ];

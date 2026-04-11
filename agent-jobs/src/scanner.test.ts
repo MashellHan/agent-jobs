@@ -1,5 +1,36 @@
-import { describe, it, expect } from "vitest";
-import { friendlyLiveName, parseLsofOutput, inferAgent } from "./scanner.js";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { friendlyLiveName, parseLsofOutput, inferAgent, scanLiveProcesses, scanClaudeScheduledTasks } from "./scanner.js";
+
+// We need to mock child_process and fs for integration tests
+vi.mock("child_process", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("child_process")>();
+  return {
+    ...actual,
+    execFile: vi.fn(),
+  };
+});
+
+vi.mock("fs", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("fs")>();
+  return {
+    ...actual,
+    readFile: vi.fn(),
+  };
+});
+
+vi.mock("os", () => ({
+  homedir: vi.fn(() => "/mock-home"),
+}));
+
+import { execFile } from "child_process";
+import { readFile } from "fs";
+
+const mockExecFile = vi.mocked(execFile);
+const mockReadFile = vi.mocked(readFile);
+
+beforeEach(() => {
+  vi.resetAllMocks();
+});
 
 describe("friendlyLiveName", () => {
   it("extracts script filename with port", () => {
@@ -137,5 +168,160 @@ describe("inferAgent", () => {
   it("is case insensitive", () => {
     expect(inferAgent("CLAUDE Desktop App")).toBe("claude-code");
     expect(inferAgent("OpenClaw Agent")).toBe("openclaw");
+  });
+});
+
+describe("scanLiveProcesses", () => {
+  it("returns empty array when lsof produces no output", async () => {
+    mockExecFile.mockImplementation((_cmd, _args, _opts, cb) => {
+      (cb as (err: null, stdout: string) => void)(null, "");
+      return {} as ReturnType<typeof execFile>;
+    });
+
+    const jobs = await scanLiveProcesses();
+    expect(jobs).toEqual([]);
+  });
+
+  it("returns empty array when lsof output has no COMMAND header", async () => {
+    mockExecFile.mockImplementation((_cmd, _args, _opts, cb) => {
+      (cb as (err: null, stdout: string) => void)(null, "some random output\nwithout headers");
+      return {} as ReturnType<typeof execFile>;
+    });
+
+    const jobs = await scanLiveProcesses();
+    expect(jobs).toEqual([]);
+  });
+
+  it("maps lsof entries to Job objects with correct fields", async () => {
+    const lsofOutput = [
+      "COMMAND     PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME",
+      "node      12345 dev   24u  IPv4 0x1234      0t0  TCP *:3000 (LISTEN)",
+    ].join("\n");
+
+    let callCount = 0;
+    mockExecFile.mockImplementation((cmd, _args, _opts, cb) => {
+      if (cmd === "lsof") {
+        (cb as (err: null, stdout: string) => void)(null, lsofOutput);
+      } else if (cmd === "ps") {
+        // getFullCommand call
+        (cb as (err: null, stdout: string) => void)(null, "node /app/server.js --port 3000\n");
+      }
+      return {} as ReturnType<typeof execFile>;
+    });
+
+    const jobs = await scanLiveProcesses();
+    expect(jobs).toHaveLength(1);
+    expect(jobs[0]!.id).toBe("live-12345");
+    expect(jobs[0]!.name).toBe("server.js :3000");
+    expect(jobs[0]!.source).toBe("live");
+    expect(jobs[0]!.schedule).toBe("always-on");
+    expect(jobs[0]!.status).toBe("active");
+    expect(jobs[0]!.port).toBe(3000);
+    expect(jobs[0]!.pid).toBe(12345);
+  });
+
+  it("catches errors from lsof and returns empty array", async () => {
+    mockExecFile.mockImplementation((_cmd, _args, _opts, cb) => {
+      (cb as (err: Error, stdout: string) => void)(new Error("lsof failed"), "");
+      return {} as ReturnType<typeof execFile>;
+    });
+
+    const jobs = await scanLiveProcesses();
+    expect(jobs).toEqual([]);
+  });
+
+  it("handles lsof error with stdout on error object", async () => {
+    const lsofOutput = [
+      "COMMAND     PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME",
+      "node      99999 dev   24u  IPv4 0x1234      0t0  TCP *:8080 (LISTEN)",
+    ].join("\n");
+
+    mockExecFile.mockImplementation((cmd, _args, _opts, cb) => {
+      if (cmd === "lsof") {
+        // lsof sometimes returns non-zero exit with valid stdout
+        const err = Object.assign(new Error("exit code 1"), { stdout: lsofOutput });
+        (cb as (err: Error, stdout: string) => void)(err, "");
+      } else if (cmd === "ps") {
+        (cb as (err: null, stdout: string) => void)(null, "node app.js\n");
+      }
+      return {} as ReturnType<typeof execFile>;
+    });
+
+    const jobs = await scanLiveProcesses();
+    expect(jobs).toHaveLength(1);
+    expect(jobs[0]!.port).toBe(8080);
+  });
+});
+
+describe("scanClaudeScheduledTasks", () => {
+  it("returns empty array when file does not exist", async () => {
+    mockReadFile.mockImplementation((_path, _enc, cb) => {
+      (cb as (err: Error) => void)(new Error("ENOENT"));
+    });
+
+    const jobs = await scanClaudeScheduledTasks();
+    expect(jobs).toEqual([]);
+  });
+
+  it("returns empty array when file is not an array", async () => {
+    mockReadFile.mockImplementation((_path, _enc, cb) => {
+      (cb as (err: null, data: string) => void)(null, JSON.stringify({ not: "an array" }));
+    });
+
+    const jobs = await scanClaudeScheduledTasks();
+    expect(jobs).toEqual([]);
+  });
+
+  it("maps tasks to Job objects with source:'cron'", async () => {
+    const tasks = [
+      { prompt: "Run backup script", cron: "0 2 * * *" },
+      { prompt: "Check health endpoint", cron: "*/5 * * * *" },
+    ];
+
+    mockReadFile.mockImplementation((_path, _enc, cb) => {
+      (cb as (err: null, data: string) => void)(null, JSON.stringify(tasks));
+    });
+
+    const jobs = await scanClaudeScheduledTasks();
+    expect(jobs).toHaveLength(2);
+    expect(jobs[0]!.source).toBe("cron");
+    expect(jobs[0]!.agent).toBe("claude-code");
+    expect(jobs[0]!.name).toBe("Run backup script");
+    expect(jobs[0]!.schedule).toBe("0 2 * * *");
+    expect(jobs[0]!.id).toBe("cron-0");
+    expect(jobs[1]!.id).toBe("cron-1");
+    expect(jobs[1]!.name).toBe("Check health endpoint");
+  });
+
+  it("returns empty array on corrupt JSON", async () => {
+    mockReadFile.mockImplementation((_path, _enc, cb) => {
+      (cb as (err: null, data: string) => void)(null, "{{corrupt json!!!");
+    });
+
+    const jobs = await scanClaudeScheduledTasks();
+    expect(jobs).toEqual([]);
+  });
+
+  it("truncates long prompt names to 50 chars", async () => {
+    const longPrompt = "A".repeat(100);
+    const tasks = [{ prompt: longPrompt, cron: "0 * * * *" }];
+
+    mockReadFile.mockImplementation((_path, _enc, cb) => {
+      (cb as (err: null, data: string) => void)(null, JSON.stringify(tasks));
+    });
+
+    const jobs = await scanClaudeScheduledTasks();
+    expect(jobs[0]!.name).toHaveLength(50);
+  });
+
+  it("uses fallback name when prompt is empty", async () => {
+    const tasks = [{ prompt: "", cron: "0 * * * *" }];
+
+    mockReadFile.mockImplementation((_path, _enc, cb) => {
+      (cb as (err: null, data: string) => void)(null, JSON.stringify(tasks));
+    });
+
+    const jobs = await scanClaudeScheduledTasks();
+    expect(jobs[0]!.name).toBe("Cron task #0");
   });
 });

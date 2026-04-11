@@ -10,13 +10,14 @@
  * - Write/Edit: .plist files, docker-compose.yml, systemd .service files
  */
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync, renameSync } from "fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, renameSync, openSync, closeSync, unlinkSync } from "fs";
 import { randomUUID } from "crypto";
 import { join, dirname } from "path";
 import { homedir } from "os";
 import { pathToFileURL } from "url";
 import type { JobsFile } from "../types.js";
 import { MAX_DESCRIPTION_LENGTH } from "../types.js";
+import { sanitizeName } from "../utils.js";
 
 const JOBS_DIR = join(homedir(), ".agent-jobs");
 const JOBS_PATH = join(JOBS_DIR, "jobs.json");
@@ -130,6 +131,51 @@ const FILE_PATTERNS: Array<{ re: RegExp; label: (path: string) => string }> = [
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
+const LOCK_PATH = join(JOBS_DIR, "jobs.lock");
+const LOCK_TIMEOUT_MS = 5000;
+const LOCK_RETRY_MS = 50;
+
+function acquireLock(): boolean {
+  const deadline = Date.now() + LOCK_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    try {
+      // O_CREAT | O_EXCL: fail if file already exists (atomic)
+      const fd = openSync(LOCK_PATH, "wx");
+      writeFileSync(fd, String(process.pid));
+      closeSync(fd);
+      return true;
+    } catch (err: unknown) {
+      if (err instanceof Error && "code" in err && (err as NodeJS.ErrnoException).code === "EEXIST") {
+        // Lock held by another process — check if stale
+        try {
+          const lockPid = parseInt(readFileSync(LOCK_PATH, "utf-8").trim(), 10);
+          if (!isNaN(lockPid)) {
+            try {
+              // signal 0: check if process exists without killing it
+              process.kill(lockPid, 0);
+            } catch {
+              // Process gone — stale lock, remove it
+              try { unlinkSync(LOCK_PATH); } catch { /* ignore */ }
+              continue;
+            }
+          }
+        } catch { /* can't read lock — retry */ }
+
+        // Busy wait with small delay
+        const start = Date.now();
+        while (Date.now() - start < LOCK_RETRY_MS) { /* spin */ }
+        continue;
+      }
+      return false;
+    }
+  }
+  return false;
+}
+
+function releaseLock(): void {
+  try { unlinkSync(LOCK_PATH); } catch { /* ignore */ }
+}
+
 function loadJobs(): JobsFile {
   if (!existsSync(JOBS_PATH)) {
     return { version: "1.0", jobs: [] };
@@ -172,32 +218,41 @@ function registerJob(label: string, opts: {
   port?: number;
   source: string;
 }): boolean {
-  const file = loadJobs();
-
-  // Deduplicate by name
-  if (file.jobs.some((j) => j.name === label)) {
+  if (!acquireLock()) {
+    // Could not acquire lock — skip to avoid blocking the hook
     return false;
   }
 
-  const now = new Date().toISOString();
-  file.jobs.push({
-    id: `hook-${randomUUID()}`,
-    name: label,
-    description: opts.description.slice(0, MAX_DESCRIPTION_LENGTH),
-    agent: "claude-code",
-    schedule: "always-on",
-    status: "active",
-    project: process.cwd(),
-    port: opts.port,
-    created_at: now,
-    last_run: now,
-    next_run: null,
-    last_result: "success",
-    run_count: 0,
-  });
+  try {
+    const file = loadJobs();
 
-  saveJobs(file);
-  return true;
+    // Deduplicate by name
+    if (file.jobs.some((j) => j.name === label)) {
+      return false;
+    }
+
+    const now = new Date().toISOString();
+    file.jobs.push({
+      id: `hook-${randomUUID()}`,
+      name: label,
+      description: opts.description.slice(0, MAX_DESCRIPTION_LENGTH),
+      agent: "claude-code",
+      schedule: "always-on",
+      status: "active",
+      project: process.cwd(),
+      port: opts.port,
+      created_at: now,
+      last_run: now,
+      next_run: null,
+      last_result: "success",
+      run_count: 0,
+    });
+
+    saveJobs(file);
+    return true;
+  } finally {
+    releaseLock();
+  }
 }
 
 // ── Main detection logic ─────────────────────────────────────────────
@@ -231,7 +286,7 @@ function detectBash(input: HookInput): boolean {
       continue;
     }
 
-    const name = label(m, cmd);
+    const name = sanitizeName(label(m, cmd));
     const port = extractPort(cmd, output);
     return registerJob(name, {
       description: cmd.slice(0, MAX_DESCRIPTION_LENGTH),
