@@ -4,7 +4,7 @@
 
 ```bash
 git clone https://github.com/MashellHan/agent-jobs.git
-cd agent-jobs/ts-demo
+cd agent-jobs
 npm install
 npm run dev
 ```
