@@ -9,7 +9,6 @@ import { TabBar } from "./components/tab-bar.js";
 import { TableHeader, JobRow } from "./components/job-table.js";
 import { JobDetail } from "./components/job-detail.js";
 import { Footer } from "./components/footer.js";
-import { getInkInstance } from "./ink-instance.js";
 
 function filterJobs(jobs: Job[], tab: TabFilter): Job[] {
   switch (tab) {
@@ -52,7 +51,6 @@ export default function App() {
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
 
   const refresh = useCallback(() => {
-    getInkInstance()?.clear();
     loadAllJobs()
       .then((jobs) => {
         setAllJobs(jobs);
