@@ -33,3 +33,11 @@ yarn-error.log*
 # Compiled binaries
 *.exe
 *.out
+
+# Agent artifacts
+.claude/
+.implementation/
+.test/
+.demo-recordings/
+scripts/
+demo-recorder.yaml
