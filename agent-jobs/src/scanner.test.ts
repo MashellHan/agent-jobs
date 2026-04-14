@@ -326,11 +326,11 @@ describe("scanClaudeScheduledTasks", () => {
     expect(jobs).toHaveLength(2);
     expect(jobs[0]!.source).toBe("cron");
     expect(jobs[0]!.agent).toBe("claude-code");
-    expect(jobs[0]!.name).toBe("backup script");
+    expect(jobs[0]!.name).toBe("Run backup script");
     expect(jobs[0]!.schedule).toBe("0 2 * * *");
     expect(jobs[0]!.id).toBe("cron-0");
     expect(jobs[1]!.id).toBe("cron-1");
-    expect(jobs[1]!.name).toBe("health endpoint");
+    expect(jobs[1]!.name).toBe("Check health endpoint");
   });
 
   it("returns empty array on corrupt JSON", async () => {
@@ -351,7 +351,7 @@ describe("scanClaudeScheduledTasks", () => {
     });
 
     const jobs = await scanClaudeScheduledTasks();
-    expect(jobs[0]!.name).toHaveLength(20);
+    expect(jobs[0]!.name).toHaveLength(22);
     expect(jobs[0]!.name).toContain("…");
   });
 

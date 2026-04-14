@@ -4,16 +4,16 @@ exports[`Full table snapshot > renders a complete table with header and all fixt
 "   ST SERVICE                AGENT        SOURCE     SCHEDULE       LAST RUN     RESULT  CREATED
 ────────────────────────────────────────────────────────────────────────────────────────────────────
 ────────────────────
-▶  ●  my-web-server          claude-code  register…  always-on      04-10 18:00  success 7h ago
-   ●  node server.js         claude-code  register…  always-on      04-10 19:00  success 6h ago
-   ●  pm2 api.js             claude-code  register…  always-on      04-10 20:00  success 5h ago
-   ○  my-very-long-contain…  claude-code  register…  always-on      04-10 21:00  error   4h ago
+▶  ●  my-web-server          claude-code  hook       always-on      04-10 18:00  success 7h ago
+   ●  node server.js         claude-code  hook       always-on      04-10 19:00  success 6h ago
+   ●  pm2 api.js             claude-code  hook       always-on      04-10 20:00  success 5h ago
+   ○  my-very-long-contain…  claude-code  hook       always-on      04-10 21:00  error   4h ago
    ●  server.js :4000        manual       live       always-on      04-10 22:00  success 8h ago
-   ✗  flask-server           claude-code  register…  always-on      04-10 16:30  error   9h ago
-   ●  pew sync               claude-code  register…  always-on      04-11 09:00  success just now
+   ✗  flask-server           claude-code  hook       always-on      04-10 16:30  error   9h ago
+   ●  pew sync               claude-code  hook       always-on      04-11 09:00  success just now
    ●  backup script          claude-code  cron       daily 2am      04-11 10:00  success 1d ago
-   ●  openclaw-monitor       openclaw     register…  every 30 min   04-11 00:30  success 11h ago
-   ○  pending-task           claude-code  register…  weekdays 9am   -            unknown 2h ago
+   ●  openclaw-monitor       openclaw     hook       every 30 min   04-11 00:30  success 11h ago
+   ○  pending-task           claude-code  hook       weekdays 9am   -            unknown 2h ago
    ●  pew sync               manual       launchd    every 10 min   04-11 00:50  success 9d ago
    ●  pew update             manual       launchd    daily 9am      04-11 17:00  success 9d ago
    ●  node gateway           openclaw     launchd    always-on      04-11 01:00  success 8d ago"
@@ -23,7 +23,7 @@ exports[`Full table snapshot > renders a table with expanded detail 1`] = `
 "   ST SERVICE                AGENT        SOURCE     SCHEDULE       LAST RUN     RESULT  CREATED
 ────────────────────────────────────────────────────────────────────────────────────────────────────
 ────────────────────
-▼  ●  my-web-server          claude-code  register…  always-on      04-10 18:00  success 7h ago
+▼  ●  my-web-server          claude-code  hook       always-on      04-10 18:00  success 7h ago
    ╭───────────────────────────────────────────────────────────────────────────────────────────────╮
    │  Command:       node src/server.js --port 3000                                                │
    │  Status:        active                                                                        │

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { formatTime, formatCompactTime, formatRelativeTime, cronToHuman, truncate, statusIcon, resultColor, sanitizeName, sourceToHuman, friendlyCronName } from "./utils.js";
+import { formatTime, formatCompactTime, formatRelativeTime, cronToHuman, truncate, statusIcon, resultColor, sanitizeName, sourceToHuman, sourceToShort, friendlyCronName } from "./utils.js";
 
 describe("truncate", () => {
   it("returns string unchanged when shorter than max", () => {
@@ -226,6 +226,34 @@ describe("sourceToHuman", () => {
   });
 });
 
+describe("sourceToShort", () => {
+  it("converts registered to hook", () => {
+    expect(sourceToShort("registered")).toBe("hook");
+  });
+
+  it("converts live to live", () => {
+    expect(sourceToShort("live")).toBe("live");
+  });
+
+  it("converts cron to cron", () => {
+    expect(sourceToShort("cron")).toBe("cron");
+  });
+
+  it("converts launchd to launchd", () => {
+    expect(sourceToShort("launchd")).toBe("launchd");
+  });
+
+  it("passes through unknown sources unchanged", () => {
+    expect(sourceToShort("custom")).toBe("custom");
+  });
+
+  it("all values fit within 9-char table column", () => {
+    for (const source of ["registered", "live", "cron", "launchd"]) {
+      expect(sourceToShort(source).length).toBeLessThanOrEqual(9);
+    }
+  });
+});
+
 describe("formatCompactTime", () => {
   it("returns dash for null", () => {
     expect(formatCompactTime(null)).toBe("-");
@@ -249,32 +277,83 @@ describe("formatCompactTime", () => {
 });
 
 describe("friendlyCronName", () => {
-  it("extracts command name from shell command", () => {
-    expect(friendlyCronName("pew sync --all")).toBe("pew sync");
-  });
-
-  it("extracts binary and first arg from path", () => {
-    expect(friendlyCronName("/usr/bin/python3 backup.py")).toBe("python3 backup.py");
-  });
-
   it("returns 'cron task' for empty prompt", () => {
     expect(friendlyCronName("")).toBe("cron task");
   });
 
-  it("handles natural language prompt", () => {
-    const result = friendlyCronName("Run nightly database backup");
-    // "Run" is stripped, then "nightly database backup" (22 chars) → truncated to 20
-    expect(result).toBe("nightly database ba…");
-  });
-
-  it("truncates long names to 20 chars", () => {
+  it("truncates long names to 22 chars", () => {
     const result = friendlyCronName("very-long-command-name-here argument1");
-    expect(result.length).toBeLessThanOrEqual(20);
+    expect(result.length).toBeLessThanOrEqual(22);
   });
 
-  it("strips check verb from natural language prompt", () => {
-    // "check" is stripped as a verb, remaining 3 words taken
-    const result = friendlyCronName("check system health status");
-    expect(result).toBe("system health status");
+  // ── Chinese patterns ──
+  it("extracts project+role from Chinese role prompt", () => {
+    expect(friendlyCronName("你是 auto-demo-recorder 项目的 dev agent")).toBe("auto-demo-recorder dev");
+  });
+
+  it("extracts project iteration from Chinese prompt", () => {
+    expect(friendlyCronName("EyesHealth 项目 30 分钟迭代检查")).toBe("EyesHealth iteration");
+  });
+
+  it("extracts Chinese run command", () => {
+    expect(friendlyCronName("运行 `pew sync`")).toBe("pew sync");
+  });
+
+  it("extracts Chinese check target", () => {
+    expect(friendlyCronName("检查 Hermes Agent 深度分析报告")).toBe("Hermes Agent check");
+  });
+
+  // ── Named task headers ──
+  it("extracts named iteration tasks", () => {
+    expect(friendlyCronName("EyeGuard 30-minute iteration check.")).toBe("EyeGuard iteration");
+  });
+
+  it("extracts named test/check/review tasks", () => {
+    expect(friendlyCronName("Agent Jobs E2E Test Check")).toBe("agent jobs e2e test");
+  });
+
+  // ── Role prompts ──
+  it("extracts project name from role prompt", () => {
+    expect(friendlyCronName("You are a senior code reviewer for the agent-jobs project.")).toBe("agent-jobs code review");
+  });
+
+  // ── Periodic/Recurring ──
+  it("extracts target from periodic prompt", () => {
+    const result = friendlyCronName("Periodic review task for agent-file-preview.");
+    expect(result).toContain("agent-file-preview");
+    expect(result).toContain("review");
+  });
+
+  // ── Run on/for ──
+  it("extracts target from Run...on prompt", () => {
+    const result = friendlyCronName("Run a review iteration on agent-file-preview:");
+    expect(result).toContain("agent-file-preview");
+    expect(result).toContain("review");
+  });
+
+  // ── Check directory ──
+  it("extracts directory check name", () => {
+    expect(friendlyCronName("Check the .review/ directory for new documents")).toBe("review check");
+  });
+
+  it("handles BOTH directories check", () => {
+    expect(friendlyCronName("Check BOTH directories for new review and test documents")).toBe("review+test check");
+  });
+
+  // ── Command prompts ──
+  it("extracts command from Run...in prompt", () => {
+    expect(friendlyCronName("Run `pew sync` in the project terminal")).toBe("pew sync");
+  });
+
+  // ── Cancel/cleanup ──
+  it("handles cancel prompts", () => {
+    const result = friendlyCronName("Cancel the recurring review job");
+    expect(result).toContain("cancel");
+  });
+
+  // ── Fallback ──
+  it("uses fallback word extraction for unknown patterns", () => {
+    const result = friendlyCronName("simple task");
+    expect(result).toBe("simple task");
   });
 });

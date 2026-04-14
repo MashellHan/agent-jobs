@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Text } from "ink";
 import type { Job } from "../types.js";
-import { formatCompactTime, formatRelativeTime, truncate, cronToHuman, statusIcon, resultColor, sanitizeName } from "../utils.js";
+import { formatCompactTime, formatRelativeTime, truncate, cronToHuman, statusIcon, resultColor, sanitizeName, sourceToShort } from "../utils.js";
 
 const GAP = 1;
 
@@ -86,7 +86,7 @@ export function JobRow({ job, selected, expanded, confirmMessage }: RowProps) {
           <Text dimColor>{truncate(job.agent, COL.agent - 1)}</Text>
         </Box>
         <Box width={COL.source}>
-          <Text dimColor>{truncate(job.source, COL.source - 1)}</Text>
+          <Text dimColor>{truncate(sourceToShort(job.source), COL.source - 1)}</Text>
         </Box>
         <Box width={COL.schedule}><Text>{truncate(cronToHuman(job.schedule), COL.schedule - 1)}</Text></Box>
         <Box width={COL.lastRun}><Text>{formatCompactTime(job.last_run)}</Text></Box>

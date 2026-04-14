@@ -327,12 +327,12 @@ describe("JobRow", () => {
   });
 
   describe("SOURCE column display", () => {
-    it("shows registered source for registered jobs", () => {
+    it("shows hook label for registered jobs", () => {
       const { lastFrame } = render(
         <JobRow job={normalJob} selected={false} expanded={false} />
       );
       const joined = joinFrame(lastFrame()!);
-      expect(joined).toMatch(/registe/); // "registered" may be truncated in narrow terminal
+      expect(joined).toContain("hook"); // sourceToShort("registered") → "hook"
     });
 
     it("shows live source for live process jobs", () => {
