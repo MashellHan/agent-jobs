@@ -5,6 +5,7 @@ import Foundation
 final class MonitoringService: NSObject {
     private let appState: AppState
     private var notificationService: NotificationService?
+    private var breakWindowService: BreakWindowService?
     private var pollingTimer: Timer?
     private var isScreenLocked: Bool = false
 
@@ -16,6 +17,10 @@ final class MonitoringService: NSObject {
 
     func setNotificationService(_ service: NotificationService) {
         notificationService = service
+    }
+
+    func setBreakWindowService(_ service: BreakWindowService) {
+        breakWindowService = service
     }
 
     // MARK: - Start / Stop
@@ -37,6 +42,7 @@ final class MonitoringService: NSObject {
     func takeBreakNow() {
         appState.recordBreak()
         notificationService?.cancelPendingNotifications()
+        breakWindowService?.dismiss()
     }
 
     // MARK: - Snooze
@@ -83,6 +89,11 @@ final class MonitoringService: NSObject {
         if appState.shouldNotify {
             appState.hasNotifiedThisSession = true
             notificationService?.scheduleBreakReminder()
+
+            // In normal mode, also show the floating countdown window
+            if appState.reminderMode == .normal {
+                breakWindowService?.showBreakWindow()
+            }
         }
     }
 

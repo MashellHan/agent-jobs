@@ -4,17 +4,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let appState = AppState()
     var monitoringService: MonitoringService?
     var notificationService: NotificationService?
+    var breakWindowService: BreakWindowService?
     private var midnightTimer: Timer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let notifService = NotificationService(appState: appState)
         let monService = MonitoringService(appState: appState)
+        let breakService = BreakWindowService(appState: appState)
 
         monService.setNotificationService(notifService)
+        monService.setBreakWindowService(breakService)
         notifService.setMonitoringService(monService)
+        breakService.setMonitoringService(monService)
 
         monitoringService = monService
         notificationService = notifService
+        breakWindowService = breakService
 
         notifService.requestPermission()
         monService.startMonitoring()
