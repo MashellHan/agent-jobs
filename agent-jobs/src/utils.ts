@@ -176,10 +176,14 @@ export function friendlyCronName(prompt: string): string {
   const trimmed = prompt.trim();
   if (!trimmed) return "cron task";
 
+  // Use only the first line for pattern matching — intent is always stated upfront.
+  // Multi-line prompts contain implementation details that confuse pattern matching.
+  const firstLine = trimmed.split(/\n/)[0]!.trim();
+
   // ── Pattern 1: Chinese role/project prompts ──
   // "你是 auto-demo-recorder 项目的 dev agent" → "auto-demo-recorder dev"
   // "你是 agent-file-preview 项目的资深 reviewer" → "agent-file-preview review"
-  const zhProjectMatch = trimmed.match(/(?:你是|这是)\s+(\S+)\s+项目的?\s*(?:资深\s*)?(\S+)/);
+  const zhProjectMatch = firstLine.match(/(?:你是|这是)\s+(\S+)\s+项目的?\s*(?:资深\s*)?(\S+)/);
   if (zhProjectMatch) {
     const proj = zhProjectMatch[1]!;
     const role = zhProjectMatch[2]!;
@@ -187,41 +191,41 @@ export function friendlyCronName(prompt: string): string {
   }
 
   // "EyesHealth 项目 30 分钟迭代检查" → "EyesHealth iteration"
-  const zhIterMatch = trimmed.match(/^(\S+)\s*项目.*?(?:迭代|检查|测试|review)/i);
+  const zhIterMatch = firstLine.match(/^(\S+)\s*项目.*?(?:迭代|检查|测试|review)/i);
   if (zhIterMatch) {
     const proj = zhIterMatch[1]!;
     return cap(`${proj} iteration`, 22);
   }
 
   // "30 分钟迭代检查：Claude Session Monitor" → "csm iteration"
-  const zhIterMatch2 = trimmed.match(/分钟迭代检查[：:]\s*(.+?)(?:\s*[（(]|$)/);
+  const zhIterMatch2 = firstLine.match(/分钟迭代检查[：:]\s*(.+?)(?:\s*[（(]|$)/);
   if (zhIterMatch2) {
     return cap(`${zhIterMatch2[1]!.trim()} iteration`, 22);
   }
 
   // "检查 Hermes Agent 深度分析报告" → "hermes report check"
-  const zhCheckMatch = trimmed.match(/^检查\s+(.+?)(?:的文档|报告|完成度)/);
+  const zhCheckMatch = firstLine.match(/^检查\s+(.+?)(?:的文档|报告|完成度)/);
   if (zhCheckMatch) {
     const target = zhCheckMatch[1]!.trim().split(/\s+/).slice(0, 2).join(" ");
     return cap(`${target} check`, 22);
   }
 
   // "运行 `pew sync`" → "pew sync"
-  const zhRunMatch = trimmed.match(/^运行\s+[`"']?([^`"'\s]+(?:\s+[^`"'\s]+)?)[`"']?/);
+  const zhRunMatch = firstLine.match(/^运行\s+[`"']?([^`"'\s]+(?:\s+[^`"'\s]+)?)[`"']?/);
   if (zhRunMatch) {
     return cap(zhRunMatch[1]!, 22);
   }
 
   // ── Pattern 2: Named task headers ──
   // "EyeGuard 30-minute iteration check." → "EyeGuard iteration"
-  const namedMatch = trimmed.match(/^([A-Z][\w-]+)\s+\d+-\w+\s+iteration/i);
+  const namedMatch = firstLine.match(/^([A-Z][\w-]+)\s+\d+-\w+\s+iteration/i);
   if (namedMatch) {
     return cap(`${namedMatch[1]!} iteration`, 22);
   }
 
   // "Agent Jobs E2E Test Check" → "agent jobs e2e test"
-  const namedMatch2 = trimmed.match(/^([\w-]+(?:\s+[\w-]+)?)\s+((?:E2E|test|check|review|monitor)(?:\s+\w+)?)/i);
-  if (namedMatch2 && /^[A-Z]/.test(trimmed) && !/^(?:Periodic|Recurring|Run|Check|Perform|Cancel|Delete|Stop|End|You)\b/i.test(trimmed)) {
+  const namedMatch2 = firstLine.match(/^([\w-]+(?:\s+[\w-]+)?)\s+((?:E2E|test|check|review|monitor)(?:\s+\w+)?)/i);
+  if (namedMatch2 && /^[A-Z]/.test(firstLine) && !/^(?:Periodic|Recurring|Run|Check|Perform|Cancel|Delete|Stop|End|You)\b/i.test(firstLine)) {
     const prefix = namedMatch2[1]!.toLowerCase();
     const action = namedMatch2[2]!.toLowerCase();
     return cap(`${prefix} ${action}`, 22);
@@ -229,13 +233,14 @@ export function friendlyCronName(prompt: string): string {
 
   // ── Pattern 3: Role prompts ──
   // "You are a senior code reviewer for the X project" → "X code review"
-  const roleMatch = trimmed.match(/You are (?:a |the )?(?:senior )?(?:[\w ]+ )?(?:for|of) (?:the )?(\S+)/i);
+  // "You are a senior Tech Lead + PM for the auto-demo-recorder project." → "auto-demo-recorder tech lead"
+  const roleMatch = firstLine.match(/You are (?:a |the )?(?:senior )?(?:.+?\s+)?(?:for|of) (?:the )?(\S+)/i);
   if (roleMatch) {
     const target = roleMatch[1]!.replace(/[`'"]/g, "");
-    const role = /review/i.test(trimmed) ? "code review"
-      : /test/i.test(trimmed) ? "test runner"
-      : /monitor/i.test(trimmed) ? "monitor"
-      : /lead|pm/i.test(trimmed) ? "tech lead"
+    const role = /review/i.test(firstLine) ? "code review"
+      : /test/i.test(firstLine) ? "test runner"
+      : /monitor/i.test(firstLine) ? "monitor"
+      : /lead|pm/i.test(firstLine) ? "tech lead"
       : "agent";
     const projName = target.split("/").pop()!.split(".")[0]!;
     return cap(`${projName} ${role}`, 22);
@@ -243,7 +248,7 @@ export function friendlyCronName(prompt: string): string {
 
   // "Periodic review task for agent-file-preview." → "agent-file-preview review"
   // "Recurring test for claude-session-monitor" → "claude-session-monitor test"
-  const periodicMatch = trimmed.match(/(?:Periodic|Recurring)\s+(\w+)\s+(?:task\s+)?for\s+(\S+)/i);
+  const periodicMatch = firstLine.match(/(?:Periodic|Recurring)\s+(\w+)\s+(?:task\s+)?for\s+(\S+)/i);
   if (periodicMatch) {
     const action = periodicMatch[1]!.toLowerCase();
     const target = periodicMatch[2]!.replace(/[`'"]/g, "").split("/").pop()!.replace(/[.:]+$/, "");
@@ -252,7 +257,7 @@ export function friendlyCronName(prompt: string): string {
 
   // "Run a review iteration on agent-file-preview:" → "agent-file-preview review"
   // "Run the tests for my-project" → "my-project tests"
-  const runOnMatch = trimmed.match(/Run\s+(?:a\s+|the\s+)?(\w+)\b.*?\b(?:on|for|against)\s+(\S+)/i);
+  const runOnMatch = firstLine.match(/Run\s+(?:a\s+|the\s+)?(\w+)\b.*?\b(?:on|for|against)\s+(\S+)/i);
   if (runOnMatch) {
     const action = runOnMatch[1]!.toLowerCase();
     const target = runOnMatch[2]!.replace(/[`'":/.,]+$/g, "").replace(/[`'"]/g, "").split("/").pop()!;
@@ -262,17 +267,33 @@ export function friendlyCronName(prompt: string): string {
   // ── Pattern 4: Action prompts with directory/project context ──
   // "Check the .review/ directory for new..." → "review check"
   // "Check BOTH directories for new..." → "review+test check"
-  const checkDirMatch = trimmed.match(/Check\s+(?:the\s+)?(?:BOTH\s+)?(?:directories|\.(\w+)\/?\s+(?:directory|dir)?)/i);
+  // "Check for new/updated files in BOTH directories" → "review+test check"
+  const checkDirMatch = firstLine.match(/Check\s+(?:.*?\s+)?(?:BOTH\s+)?(?:directories|\.(\w+)\/?\s+(?:directory|dir)?)/i);
   if (checkDirMatch) {
-    if (/BOTH/i.test(trimmed)) {
+    if (/BOTH/i.test(firstLine)) {
       return "review+test check";
     }
     const dir = checkDirMatch[1];
     if (dir) return cap(`${dir} check`, 22);
   }
 
+  // "Check the /path/to/project/.review/" → "project review check"
+  // "Check the /path/to/project/.test/\ntest 1." → "project test check"
+  const checkPathMatch = firstLine.match(/Check\s+the\s+(\S+)/i);
+  if (checkPathMatch) {
+    const rawPath = checkPathMatch[1]!.replace(/\/$/, "");
+    // Extract .review/.test suffix and project name
+    const suffixMatch = rawPath.match(/\/\.(\w+)\/?$/);
+    if (suffixMatch) {
+      const what = suffixMatch[1]!;
+      const projPath = rawPath.replace(/\/\.\w+\/?$/, "");
+      const projName = projPath.split("/").pop() || what;
+      return cap(`${projName} ${what} check`, 22);
+    }
+  }
+
   // "Check for new code review documents in /path/to/project/.review/" → "project review check"
-  const checkForMatch = trimmed.match(/Check\s+(?:for\s+)?(?:new\s+)?(?:code\s+)?(\w+)\s+(?:documents?|files?)\s+in\s+(\S+)/i);
+  const checkForMatch = firstLine.match(/Check\s+(?:for\s+)?(?:new\s+)?(?:code\s+)?(\w+)\s+(?:documents?|files?)\s+in\s+(\S+)/i);
   if (checkForMatch) {
     const what = checkForMatch[1]!;
     // Extract project name from path, stripping .review/.test/ suffixes
@@ -282,27 +303,27 @@ export function friendlyCronName(prompt: string): string {
   }
 
   // "Check if there are uncommitted changes" → "uncommitted check"
-  const checkIfMatch = trimmed.match(/Check\s+if\s+(?:there\s+are\s+)?(\w+(?:\s+\w+)?)/i);
+  const checkIfMatch = firstLine.match(/Check\s+if\s+(?:there\s+are\s+)?(\w+(?:\s+\w+)?)/i);
   if (checkIfMatch) {
     return cap(`${checkIfMatch[1]!} check`, 22);
   }
 
   // ── Pattern 5: Command prompts ──
   // "Run `pew sync` in the project..." → "pew sync"
-  const runCmdMatch = trimmed.match(/Run\s+[`"']?(\S+(?:\s+\S+)?)[`"']?\s+(?:in|and|on)/i);
+  const runCmdMatch = firstLine.match(/Run\s+[`"']?(\S+(?:\s+\S+)?)[`"']?\s+(?:in|and|on)/i);
   if (runCmdMatch) {
     const cmd = runCmdMatch[1]!.replace(/[`"']/g, "");
     return cap(cmd, 22);
   }
 
   // "Run the agent-jobs dashboard test suite" → "agent-jobs test suite"
-  const runTheMatch = trimmed.match(/Run\s+the\s+(\S+)\s+\S+\s+(\S+(?:\s+\S+)?)/i);
+  const runTheMatch = firstLine.match(/Run\s+the\s+(\S+)\s+\S+\s+(\S+(?:\s+\S+)?)/i);
   if (runTheMatch) {
     return cap(`${runTheMatch[1]!} ${runTheMatch[2]!}`, 22);
   }
 
   // "Perform a code quality and test review" → "quality+test review"
-  const performMatch = trimmed.match(/Perform\s+a\s+(.+?)\s+(?:for|on|of)\s+(?:the\s+)?(\S+)/i);
+  const performMatch = firstLine.match(/Perform\s+a\s+(.+?)\s+(?:for|on|of)\s+(?:the\s+)?(\S+)/i);
   if (performMatch) {
     const what = performMatch[1]!.replace(/\s+and\s+/g, "+").split(/\s+/).slice(-2).join(" ");
     const target = performMatch[2]!.split("/").pop()!;
@@ -311,20 +332,20 @@ export function friendlyCronName(prompt: string): string {
 
   // ── Pattern 6: Cancel/cleanup tasks ──
   // "Cancel the recurring review job" → "cancel review job"
-  const cancelMatch = trimmed.match(/^(Cancel|Delete|Stop|End)\s+the\s+(\w+(?:\s+\w+)?)/i);
+  const cancelMatch = firstLine.match(/^(Cancel|Delete|Stop|End)\s+the\s+(\w+(?:\s+\w+)?)/i);
   if (cancelMatch) {
     return cap(`${cancelMatch[1]!.toLowerCase()} ${cancelMatch[2]!}`, 22);
   }
 
   // "24-hour periodic review cycle has ended" → "review cycle end"
-  const endedMatch = trimmed.match(/(\w+)\s+(?:review\s+)?cycle\s+has\s+ended/i);
+  const endedMatch = firstLine.match(/(\w+)\s+(?:review\s+)?cycle\s+has\s+ended/i);
   if (endedMatch) {
     return "review cycle cleanup";
   }
 
   // ── Fallback: improved word extraction ──
   // Strip markdown headers, role prefixes
-  let clean = trimmed
+  let clean = firstLine
     .replace(/^#+\s+/, "")                    // markdown headers
     .replace(/^(?:You are|I am|This is)\s+/i, "")
     .replace(/^(?:a|an|the)\s+/i, "")
@@ -348,7 +369,7 @@ export function friendlyCronName(prompt: string): string {
     return cap(`${projShort} ${action}`, 22);
   }
 
-  const result = actionWords.join(" ") || trimmed.slice(0, 20);
+  const result = actionWords.join(" ") || firstLine.slice(0, 20);
   return cap(result, 22);
 }
 
