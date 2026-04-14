@@ -4,8 +4,11 @@ import SwiftUI
 /// Manages the floating NSPanel that shows a 20-second break countdown.
 /// The panel is `.floating` level, appears in the top-right corner, and
 /// auto-dismisses once the countdown completes.
+///
+/// Also manages the full-screen overlay window used in aggressive mode.
 final class BreakWindowService {
     private var panel: NSPanel?
+    private var fullScreenWindow: NSWindow?
     private let appState: AppState
     private weak var monitoringService: MonitoringService?
 
@@ -62,9 +65,61 @@ final class BreakWindowService {
         panel = newPanel
     }
 
+    // MARK: - Full-Screen Break (Aggressive Mode)
+
+    func showFullScreenBreak() {
+        guard fullScreenWindow == nil else { return }
+        guard let screen = NSScreen.main else { return }
+
+        let breakView = FullScreenBreakView(
+            onSkip: { [weak self] in
+                self?.dismissFullScreen()
+            },
+            onComplete: { [weak self] in
+                self?.handleFullScreenComplete()
+            }
+        )
+
+        let hostingView = NSHostingView(rootView: breakView)
+        hostingView.frame = screen.frame
+
+        let window = NSWindow(
+            contentRect: screen.frame,
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+
+        window.contentView = hostingView
+        window.level = .screenSaver
+        window.isOpaque = false
+        window.backgroundColor = .clear
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenPrimary]
+        window.setFrame(screen.frame, display: true)
+        window.orderFrontRegardless()
+
+        fullScreenWindow = window
+    }
+
     func dismiss() {
         panel?.close()
         panel = nil
+        dismissFullScreen()
+    }
+
+    // MARK: - Private (Full-Screen)
+
+    private func dismissFullScreen() {
+        fullScreenWindow?.close()
+        fullScreenWindow = nil
+    }
+
+    private func handleFullScreenComplete() {
+        monitoringService?.takeBreakNow()
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+            self?.dismissFullScreen()
+        }
     }
 
     // MARK: - Private

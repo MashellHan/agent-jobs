@@ -52,6 +52,10 @@ enum Constants {
     static let floatingWindowHeight: CGFloat = 120
     static let breakCountdownSeconds: Int = 20
 
+    // Full-screen break (aggressive mode)
+    static let fullScreenCountdownSeconds: Int = 20
+    static let skipButtonDelaySeconds: Double = 5
+
     // UserDefaults keys
     static let reminderModeKey = "reminderMode"
 }
