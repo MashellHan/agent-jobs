@@ -88,13 +88,6 @@ struct MenuBarView: View {
                 }
             }
             .pickerStyle(.segmented)
-            .disabled(false)
-            .onChange(of: appState.reminderMode) { _, newValue in
-                // Prevent selecting unavailable modes
-                if !newValue.isAvailable {
-                    appState.reminderMode = .normal
-                }
-            }
 
             Text(appState.reminderMode.description)
                 .font(.system(size: 10))

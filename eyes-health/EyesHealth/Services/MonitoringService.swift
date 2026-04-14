@@ -88,11 +88,15 @@ final class MonitoringService: NSObject {
 
         if appState.shouldNotify {
             appState.hasNotifiedThisSession = true
-            notificationService?.scheduleBreakReminder()
 
-            // In normal mode, also show the floating countdown window
-            if appState.reminderMode == .normal {
+            switch appState.reminderMode {
+            case .gentle:
+                notificationService?.scheduleBreakReminder()
+            case .normal:
+                notificationService?.scheduleBreakReminder()
                 breakWindowService?.showBreakWindow()
+            case .aggressive:
+                breakWindowService?.showFullScreenBreak()
             }
         }
     }

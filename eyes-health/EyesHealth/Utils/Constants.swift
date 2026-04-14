@@ -19,13 +19,13 @@ enum ReminderMode: String, CaseIterable, Codable {
         switch self {
         case .gentle: return "Notification only"
         case .normal: return "Notification + floating window"
-        case .aggressive: return "Full-screen overlay (coming soon)"
+        case .aggressive: return "Full-screen overlay with countdown"
         }
     }
 
     /// Whether this mode is available in the current version.
     var isAvailable: Bool {
-        self != .aggressive
+        true
     }
 }
 
