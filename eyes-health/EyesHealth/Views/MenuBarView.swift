@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct MenuBarView: View {
-    let appState: AppState
+    @Bindable var appState: AppState
     let onTakeBreak: () -> Void
 
     var body: some View {
@@ -10,10 +10,12 @@ struct MenuBarView: View {
             Divider()
             statsSection
             Divider()
+            modeSection
+            Divider()
             actionSection
         }
         .padding(12)
-        .frame(width: 240)
+        .frame(width: 260)
     }
 
     // MARK: - Status Section
@@ -47,6 +49,56 @@ struct MenuBarView: View {
                 Text("Breaks today: \(appState.breaksTakenToday)")
                     .font(.system(size: 12))
             }
+
+            lastBreakRow
+        }
+    }
+
+    private var lastBreakRow: some View {
+        HStack {
+            Image(systemName: "arrow.counterclockwise")
+                .foregroundStyle(.secondary)
+            Text("Last break: \(lastBreakText)")
+                .font(.system(size: 12))
+        }
+    }
+
+    private var lastBreakText: String {
+        guard let lastBreak = appState.lastBreakTime else {
+            return "none yet"
+        }
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .abbreviated
+        return formatter.localizedString(for: lastBreak, relativeTo: .now)
+    }
+
+    // MARK: - Mode Section
+
+    private var modeSection: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Reminder Mode")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .textCase(.uppercase)
+
+            Picker("Mode", selection: $appState.reminderMode) {
+                ForEach(ReminderMode.allCases, id: \.self) { mode in
+                    Text(mode.displayName)
+                        .tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+            .disabled(false)
+            .onChange(of: appState.reminderMode) { _, newValue in
+                // Prevent selecting unavailable modes
+                if !newValue.isAvailable {
+                    appState.reminderMode = .normal
+                }
+            }
+
+            Text(appState.reminderMode.description)
+                .font(.system(size: 10))
+                .foregroundStyle(.tertiary)
         }
     }
 
