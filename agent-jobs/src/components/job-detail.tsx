@@ -25,6 +25,15 @@ export function JobDetail({ job }: Props) {
   if (job.pid) {
     infoFields.push({ label: "PID", value: String(job.pid) });
   }
+  if (job.sessionId) {
+    infoFields.push({ label: "Session", value: job.sessionId });
+  }
+  if (job.lifecycle) {
+    const lifecycleLabel = job.lifecycle === "session-only"
+      ? "session-only (7d auto-expire)"
+      : "durable (persisted)";
+    infoFields.push({ label: "Lifecycle", value: lifecycleLabel });
+  }
 
   const scheduleFields: Array<{ label: string; value: string }> = [
     { label: "Frequency", value: cronToHuman(job.schedule) },

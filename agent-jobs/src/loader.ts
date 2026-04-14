@@ -2,7 +2,7 @@ import { readFile, watch } from "fs";
 import { join } from "path";
 import { homedir } from "os";
 import type { Job, JobsFile } from "./types.js";
-import { scanLiveProcesses, scanClaudeScheduledTasks, scanLaunchdServices } from "./scanner.js";
+import { scanLiveProcesses, scanSessionCronTasks, scanLaunchdServices } from "./scanner.js";
 
 const JOBS_PATH = join(homedir(), ".agent-jobs", "jobs.json");
 const HIDDEN_PATH = join(homedir(), ".agent-jobs", "hidden.json");
@@ -12,7 +12,7 @@ export async function loadAllJobs(): Promise<Job[]> {
   const [registered, live, cron, launchd] = await Promise.all([
     loadRegisteredJobs(),
     scanLiveProcesses(),
-    scanClaudeScheduledTasks(),
+    scanSessionCronTasks(),
     scanLaunchdServices(),
   ]);
   return [...registered, ...cron, ...launchd, ...live];

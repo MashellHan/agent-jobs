@@ -9,7 +9,7 @@ vi.mock("fs", () => ({
 // Mock scanner module
 vi.mock("./scanner.js", () => ({
   scanLiveProcesses: vi.fn(),
-  scanClaudeScheduledTasks: vi.fn(),
+  scanSessionCronTasks: vi.fn(),
   scanLaunchdServices: vi.fn(),
 }));
 
@@ -20,12 +20,12 @@ vi.mock("os", () => ({
 
 import { readFile, watch } from "fs";
 import { loadAllJobs, watchJobsFile } from "./loader.js";
-import { scanLiveProcesses, scanClaudeScheduledTasks, scanLaunchdServices } from "./scanner.js";
+import { scanLiveProcesses, scanSessionCronTasks, scanLaunchdServices } from "./scanner.js";
 
 const mockReadFile = vi.mocked(readFile);
 const mockWatch = vi.mocked(watch);
 const mockScanLive = vi.mocked(scanLiveProcesses);
-const mockScanCron = vi.mocked(scanClaudeScheduledTasks);
+const mockScanCron = vi.mocked(scanSessionCronTasks);
 const mockScanLaunchd = vi.mocked(scanLaunchdServices);
 
 beforeEach(() => {

@@ -1,9 +1,11 @@
 import { execFile } from "child_process";
 import { readFile, readdir } from "fs";
+import { createReadStream } from "fs";
 import { join } from "path";
 import { homedir } from "os";
 import { stat } from "fs/promises";
-import type { Job } from "./types.js";
+import { createInterface } from "readline";
+import type { Job, CronLifecycle } from "./types.js";
 import { MAX_DESCRIPTION_LENGTH } from "./types.js";
 import { friendlyCronName } from "./utils.js";
 
@@ -410,4 +412,261 @@ export function scanLaunchdServices(): Promise<Job[]> {
       }).catch(() => resolve([]));
     });
   });
+}
+
+// ── Session Cron Scanner ────────────────────────────────────────
+
+/** Parsed cron task from a session's JSONL log */
+export interface SessionCronTask {
+  cronJobId: string;
+  cron: string;
+  prompt: string;
+  recurring: boolean;
+  durable: boolean;
+  timestamp: string;
+  sessionId: string;
+  cwd: string;
+  projectDir: string;
+}
+
+/** Max age for JSONL files to scan (7 days = cron auto-expiry) */
+const JSONL_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** Session is considered active if JSONL was written within this window */
+const SESSION_ACTIVE_WINDOW_MS = 15 * 60 * 1000;
+
+/**
+ * Extract a readable project name from the Claude project directory path.
+ * E.g. "-Users-mengxionghan--superset-projects-Tmp" → "superset/projects/Tmp"
+ */
+export function projectNameFromDir(dirName: string): string {
+  // Strip the home prefix pattern "-Users-<user>-" or "-Users-<user>--"
+  const stripped = dirName.replace(/^-Users-[^-]+-+/, "");
+  // Convert remaining dashes to slashes, collapse doubles
+  return stripped.replace(/-/g, "/").replace(/\/\//g, "/");
+}
+
+/**
+ * Parse a single JSONL file for CronCreate/CronDelete entries.
+ * Uses readline for streaming (files can be 10-30MB).
+ * Returns { creates, deletes } maps.
+ */
+export function parseSessionJsonl(filePath: string): Promise<{
+  creates: Map<string, SessionCronTask>;
+  deletes: Set<string>;
+}> {
+  return new Promise((resolve) => {
+    const creates = new Map<string, SessionCronTask>();
+    const deletes = new Set<string>();
+
+    // Pending CronCreate tool_uses waiting for their tool_result
+    const pendingToolUses = new Map<string, { cron: string; prompt: string; recurring: boolean; durable: boolean }>();
+
+    const stream = createReadStream(filePath, { encoding: "utf-8" });
+    const rl = createInterface({ input: stream, crlfDelay: Infinity });
+
+    rl.on("line", (line) => {
+      // Fast pre-filter: skip lines that can't contain cron operations
+      const hasCronOp = line.includes("CronCreate") || line.includes("CronDelete");
+      const hasPending = pendingToolUses.size > 0 && line.includes("tool_result");
+      if (!hasCronOp && !hasPending) return;
+
+      try {
+        const obj = JSON.parse(line) as Record<string, unknown>;
+        const msg = obj.message as Record<string, unknown> | undefined;
+        if (!msg) return;
+
+        const content = msg.content as Array<Record<string, unknown>> | undefined;
+        if (!Array.isArray(content)) return;
+
+        for (const block of content) {
+          // CronCreate tool_use — store pending
+          if (block.name === "CronCreate" && block.type === "tool_use") {
+            const inp = (block.input ?? {}) as Record<string, unknown>;
+            pendingToolUses.set(block.id as string, {
+              cron: (inp.cron as string) ?? "",
+              prompt: (inp.prompt as string) ?? "",
+              recurring: (inp.recurring as boolean) ?? true,
+              durable: (inp.durable as boolean) ?? false,
+            });
+          }
+
+          // CronCreate tool_result — match with pending, extract cronJobId
+          if (block.type === "tool_result") {
+            const toolUseResult = obj.toolUseResult as Record<string, unknown> | undefined;
+            if (!toolUseResult || !toolUseResult.id) continue;
+
+            const toolUseId = block.tool_use_id as string;
+            const pending = pendingToolUses.get(toolUseId);
+            if (!pending) continue;
+
+            pendingToolUses.delete(toolUseId);
+
+            const cronJobId = toolUseResult.id as string;
+            creates.set(cronJobId, {
+              cronJobId,
+              cron: pending.cron,
+              prompt: pending.prompt,
+              recurring: pending.recurring,
+              durable: (toolUseResult.durable as boolean) ?? pending.durable,
+              timestamp: (obj.timestamp as string) ?? new Date().toISOString(),
+              sessionId: (obj.sessionId as string) ?? "",
+              cwd: (obj.cwd as string) ?? "",
+              projectDir: "",
+            });
+          }
+
+          // CronDelete tool_use
+          if (block.name === "CronDelete" && block.type === "tool_use") {
+            const inp = (block.input ?? {}) as Record<string, unknown>;
+            const deleteId = inp.id as string;
+            if (deleteId) deletes.add(deleteId);
+          }
+        }
+      } catch {
+        // Skip malformed lines
+      }
+    });
+
+    rl.on("close", () => resolve({ creates, deletes }));
+    rl.on("error", () => resolve({ creates, deletes }));
+    stream.on("error", () => resolve({ creates, deletes }));
+  });
+}
+
+/**
+ * Scan all Claude Code session JSONL files for cron tasks.
+ * Discovers both session-only and durable cron tasks across all sessions.
+ * Also reads ~/.claude/scheduled_tasks.json for durable tasks as fallback.
+ */
+export async function scanSessionCronTasks(): Promise<Job[]> {
+  const projectsDir = join(homedir(), ".claude", "projects");
+  const now = Date.now();
+  const jobs: Job[] = [];
+
+  // Phase 1: Scan session JSONL files
+  try {
+    const projectDirs = await listDir(projectsDir);
+
+    for (const projDir of projectDirs) {
+      const projPath = join(projectsDir, projDir);
+      const projStat = await safeStat(projPath);
+      if (!projStat || !projStat.isDirectory()) continue;
+
+      const files = await listDir(projPath);
+      const jsonlFiles = files.filter((f) => f.endsWith(".jsonl"));
+
+      for (const jsonlFile of jsonlFiles) {
+        const filePath = join(projPath, jsonlFile);
+        const fileStat = await safeStat(filePath);
+        if (!fileStat) continue;
+
+        // Skip files older than 7 days (cron auto-expiry)
+        const age = now - fileStat.mtimeMs;
+        if (age > JSONL_MAX_AGE_MS) continue;
+
+        const sessionActive = age < SESSION_ACTIVE_WINDOW_MS;
+        const sessionId = jsonlFile.replace(".jsonl", "");
+
+        const { creates, deletes } = await parseSessionJsonl(filePath);
+
+        // Net active = creates - deletes
+        for (const [cronId, task] of creates) {
+          if (deletes.has(cronId)) continue;
+
+          task.projectDir = projDir;
+          const lifecycle: CronLifecycle = task.durable ? "durable" : "session-only";
+          const projectName = task.cwd
+            ? task.cwd.split("/").slice(-2).join("/")
+            : projectNameFromDir(projDir);
+
+          jobs.push({
+            id: `cron-${sessionId.slice(0, 8)}-${cronId}`,
+            name: friendlyCronName(task.prompt),
+            description: task.prompt.slice(0, MAX_DESCRIPTION_LENGTH),
+            agent: "claude-code",
+            schedule: task.cron,
+            status: sessionActive ? "active" : "stopped",
+            source: "cron",
+            project: projectName,
+            created_at: task.timestamp,
+            last_run: sessionActive ? new Date().toISOString() : null,
+            next_run: null,
+            last_result: sessionActive ? "success" : "unknown",
+            run_count: -1,
+            sessionId: sessionId.slice(0, 8),
+            lifecycle,
+          });
+        }
+      }
+    }
+  } catch {
+    // If scanning fails, continue with durable tasks fallback
+  }
+
+  // Phase 2: Also read durable tasks from scheduled_tasks.json (fallback)
+  const durableTasks = await scanDurableScheduledTasks();
+  // Deduplicate: durable tasks from JSONL already have durable=true
+  const existingIds = new Set(jobs.map((j) => j.schedule + j.description.slice(0, 50)));
+  for (const dt of durableTasks) {
+    const key = dt.schedule + dt.description.slice(0, 50);
+    if (!existingIds.has(key)) {
+      jobs.push(dt);
+    }
+  }
+
+  return jobs;
+}
+
+/** Read durable tasks from ~/.claude/scheduled_tasks.json */
+function scanDurableScheduledTasks(): Promise<Job[]> {
+  const tasksPath = join(homedir(), ".claude", "scheduled_tasks.json");
+
+  return new Promise((resolve) => {
+    readFile(tasksPath, "utf-8", (err, data) => {
+      if (err) {
+        resolve([]);
+        return;
+      }
+      try {
+        const raw = JSON.parse(data);
+        if (!Array.isArray(raw)) {
+          resolve([]);
+          return;
+        }
+
+        const jobs = raw.map((t: Record<string, unknown>, i: number): Job => ({
+          id: `cron-durable-${i}`,
+          name: friendlyCronName(t.prompt as string ?? ""),
+          description: (t.prompt as string ?? "").slice(0, MAX_DESCRIPTION_LENGTH),
+          agent: "claude-code",
+          schedule: t.cron as string ?? "?",
+          status: "active",
+          source: "cron",
+          project: "",
+          created_at: new Date().toISOString(),
+          last_run: null,
+          next_run: null,
+          last_result: "unknown",
+          run_count: -1,
+          lifecycle: "durable",
+        }));
+        resolve(jobs);
+      } catch {
+        resolve([]);
+      }
+    });
+  });
+}
+
+/** List directory entries, returning [] on error */
+function listDir(dirPath: string): Promise<string[]> {
+  return new Promise((resolve) => {
+    readdir(dirPath, (err, files) => resolve(err ? [] : files));
+  });
+}
+
+/** Stat a file, returning null on error */
+function safeStat(filePath: string): Promise<import("fs").Stats | null> {
+  return stat(filePath).catch(() => null);
 }

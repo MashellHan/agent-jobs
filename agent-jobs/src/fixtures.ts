@@ -232,6 +232,43 @@ export const launchdKeepAliveJob: Job = {
   run_count: -1,
 };
 
+/** Session-only cron task — from a Claude Code session JSONL */
+export const sessionCronJob: Job = {
+  id: "cron-095d7258-653d209e",
+  name: "review check",
+  description: "Check the .review/ directory for new or updated review documents",
+  agent: "claude-code",
+  schedule: "*/5 * * * *",
+  status: "active",
+  source: "cron",
+  project: "claude-statusline-hud",
+  created_at: "2026-04-10T17:01:28Z",
+  last_run: "2026-04-10T17:06:00Z",
+  next_run: null,
+  last_result: "success",
+  run_count: -1,
+  sessionId: "095d7258",
+  lifecycle: "session-only",
+};
+
+/** Durable cron task — persisted to scheduled_tasks.json */
+export const durableCronJob: Job = {
+  id: "cron-durable-0",
+  name: "nightly backup",
+  description: "Run nightly database backup and upload to S3",
+  agent: "claude-code",
+  schedule: "0 2 * * *",
+  status: "active",
+  source: "cron",
+  project: "",
+  created_at: "2026-04-09T14:00:00Z",
+  last_run: null,
+  next_run: null,
+  last_result: "unknown",
+  run_count: -1,
+  lifecycle: "durable",
+};
+
 /** A representative set of all jobs for full table rendering */
 export const allFixtureJobs: Job[] = [
   normalJob,
