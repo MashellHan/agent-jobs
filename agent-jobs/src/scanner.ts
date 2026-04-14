@@ -549,6 +549,8 @@ export async function scanSessionCronTasks(): Promise<Job[]> {
     const projectDirs = await listDir(projectsDir);
 
     for (const projDir of projectDirs) {
+      // Guard against directory traversal (e.g. "../" entries on compromised filesystem)
+      if (projDir.includes("..") || projDir.includes("/")) continue;
       const projPath = join(projectsDir, projDir);
       const projStat = await safeStat(projPath);
       if (!projStat || !projStat.isDirectory()) continue;
@@ -606,11 +608,12 @@ export async function scanSessionCronTasks(): Promise<Job[]> {
 
   // Phase 2: Also read durable tasks from scheduled_tasks.json (fallback)
   const durableTasks = await scanDurableScheduledTasks();
-  // Deduplicate: durable tasks from JSONL already have durable=true
-  const existingIds = new Set(jobs.map((j) => j.schedule + j.description.slice(0, 50)));
+  // Deduplicate: scheduled_tasks.json durable tasks vs JSONL-discovered durable tasks.
+  // Use schedule + description prefix (no project — durable tasks lack project context).
+  const existingKeys = new Set(jobs.map((j) => j.schedule + "|" + j.description.slice(0, 50)));
   for (const dt of durableTasks) {
-    const key = dt.schedule + dt.description.slice(0, 50);
-    if (!existingIds.has(key)) {
+    const key = dt.schedule + "|" + dt.description.slice(0, 50);
+    if (!existingKeys.has(key)) {
       jobs.push(dt);
     }
   }
