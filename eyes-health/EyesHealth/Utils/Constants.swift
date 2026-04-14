@@ -1,5 +1,36 @@
 import SwiftUI
 
+// MARK: - Reminder Mode
+
+enum ReminderMode: String, CaseIterable, Codable {
+    case gentle     // Notification only
+    case normal     // Notification + floating mini window with countdown
+    case aggressive // Full-screen overlay with countdown (V3)
+
+    var displayName: String {
+        switch self {
+        case .gentle: return "Gentle"
+        case .normal: return "Normal"
+        case .aggressive: return "Aggressive"
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .gentle: return "Notification only"
+        case .normal: return "Notification + floating window"
+        case .aggressive: return "Full-screen overlay (coming soon)"
+        }
+    }
+
+    /// Whether this mode is available in the current version.
+    var isAvailable: Bool {
+        self != .aggressive
+    }
+}
+
+// MARK: - Constants
+
 enum Constants {
     static let pollingInterval: TimeInterval = 5
     static let breakIntervalSeconds: TimeInterval = 20 * 60 // 20 min
@@ -15,6 +46,14 @@ enum Constants {
     static let notificationCategoryID = "BREAK_REMINDER"
     static let snoozeActionID = "SNOOZE_5"
     static let takeBreakActionID = "TAKE_BREAK"
+
+    // Floating break window
+    static let floatingWindowWidth: CGFloat = 200
+    static let floatingWindowHeight: CGFloat = 120
+    static let breakCountdownSeconds: Int = 20
+
+    // UserDefaults keys
+    static let reminderModeKey = "reminderMode"
 }
 
 enum StatusColor {

@@ -17,6 +17,20 @@ final class AppState {
     /// The continuous-use counter keeps incrementing so total screen time is accurate.
     var snoozedUntil: Date? = nil
 
+    /// Current reminder intensity level, persisted to UserDefaults.
+    var reminderMode: ReminderMode {
+        get {
+            guard let raw = UserDefaults.standard.string(forKey: Constants.reminderModeKey),
+                  let mode = ReminderMode(rawValue: raw) else {
+                return .gentle
+            }
+            return mode
+        }
+        set {
+            UserDefaults.standard.set(newValue.rawValue, forKey: Constants.reminderModeKey)
+        }
+    }
+
     private(set) var todayBreakRecords: [BreakRecord] = []
 
     var statusColor: StatusColor {
