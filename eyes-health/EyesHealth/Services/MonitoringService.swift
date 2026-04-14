@@ -42,14 +42,10 @@ final class MonitoringService: NSObject {
     // MARK: - Snooze
 
     func handleSnooze() {
-        appState.resetContinuousUse()
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + Constants.snoozeInterval) { [weak self] in
-            guard let self else { return }
-            if self.appState.isMonitoring {
-                self.notificationService?.scheduleBreakReminder()
-            }
-        }
+        // Don't reset continuous use — keep tracking total screen time.
+        // Instead, suppress notifications until snooze period expires.
+        appState.snoozedUntil = Date.now.addingTimeInterval(Constants.snoozeInterval)
+        appState.hasNotifiedThisSession = false
     }
 
     // MARK: - Polling Timer
@@ -85,6 +81,7 @@ final class MonitoringService: NSObject {
         // If idle between 30s and 2m, we neither increment nor reset — just wait
 
         if appState.shouldNotify {
+            appState.hasNotifiedThisSession = true
             notificationService?.scheduleBreakReminder()
         }
     }

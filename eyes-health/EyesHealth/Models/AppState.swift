@@ -9,6 +9,14 @@ final class AppState {
     var isMonitoring: Bool = false
     var notificationPermissionGranted: Bool = false
 
+    /// Prevents repeated notifications for the same continuous-use session.
+    /// Set to true when a notification fires; reset to false when a break is recorded.
+    var hasNotifiedThisSession: Bool = false
+
+    /// When set, notifications are suppressed until this date passes.
+    /// The continuous-use counter keeps incrementing so total screen time is accurate.
+    var snoozedUntil: Date? = nil
+
     private(set) var todayBreakRecords: [BreakRecord] = []
 
     var statusColor: StatusColor {
@@ -30,7 +38,15 @@ final class AppState {
     }
 
     var shouldNotify: Bool {
-        continuousUseSeconds >= Constants.breakIntervalSeconds
+        guard continuousUseSeconds >= Constants.breakIntervalSeconds else { return false }
+        guard !hasNotifiedThisSession else { return false }
+
+        // Suppress during active snooze
+        if let snoozedUntil, snoozedUntil > .now {
+            return false
+        }
+
+        return true
     }
 
     func recordBreak(duration: TimeInterval = 0) {
@@ -39,6 +55,8 @@ final class AppState {
         breaksTakenToday = todayBreakRecords.count
         lastBreakTime = .now
         continuousUseSeconds = 0
+        hasNotifiedThisSession = false
+        snoozedUntil = nil
     }
 
     func incrementContinuousUse(by interval: TimeInterval) {
@@ -54,5 +72,7 @@ final class AppState {
         breaksTakenToday = 0
         continuousUseSeconds = 0
         lastBreakTime = nil
+        hasNotifiedThisSession = false
+        snoozedUntil = nil
     }
 }
