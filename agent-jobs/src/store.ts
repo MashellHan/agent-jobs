@@ -55,9 +55,13 @@ function saveJobsFile(file: JobsFile): void {
 }
 
 export function removeRegisteredJob(id: string): void {
+  if (!existsSync(JOBS_PATH)) return;
   const file = loadJobsFile();
+  const before = file.jobs.length;
   file.jobs = file.jobs.filter((j) => j.id !== id);
-  saveJobsFile(file);
+  if (file.jobs.length < before) {
+    saveJobsFile(file);
+  }
 }
 
 export function setRegisteredJobStatus(id: string, status: JobStatus): void {

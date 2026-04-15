@@ -139,10 +139,21 @@ describe("removeRegisteredJob", () => {
 
     removeRegisteredJob("j1");
 
-    // Should write empty jobs array
-    const writtenContent = mockWriteFileSync.mock.calls[0]![1] as string;
-    const parsed = JSON.parse(writtenContent);
-    expect(parsed.jobs).toHaveLength(0);
+    // Should NOT write anything — no file to modify
+    expect(mockWriteFileSync).not.toHaveBeenCalled();
+  });
+
+  it("does not write when job id is not found", () => {
+    mockExistsSync.mockReturnValue(true);
+    mockReadFileSync.mockReturnValue(JSON.stringify({
+      version: "1.0",
+      jobs: [{ id: "j1", name: "server" }],
+    }));
+
+    removeRegisteredJob("nonexistent");
+
+    // No change = no write
+    expect(mockWriteFileSync).not.toHaveBeenCalled();
   });
 });
 
