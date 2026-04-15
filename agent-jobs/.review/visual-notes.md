@@ -375,3 +375,17 @@ Since screencapture has failed 4 out of 7 attempts (display sleep), switched to 
 | 10 | 10:58 | Active | screencapture | ⚠️ Browser |
 
 **Screencapture TUI hit rate: 2/9 (22%).** TUI is consistently a background process.
+
+## 2026-04-15 11:28 — Visual Review (v042)
+
+### Screenshot
+- **Display active** — Microsoft Teams chat in foreground
+- Conversation with Felix (Junqing) Miao about threat modeling tools
+- Azure Threat Modeling Tool getting started guide visible at bottom
+- Browser tabs unchanged from v041 (opencode, Hermes Agent, Codex, pew tokens)
+- Agent-jobs TUI not visible
+
+### Reliability: 2/10 (20%)
+| 11 | 11:28 | Active | screencapture | ⚠️ Teams chat |
+
+**Note:** Visual review cron should also pause per v042 recommendation — the TUI consistently runs as a background process and is never in the foreground during captures. Snapshot-based verification (v038) confirmed full layout correctness.
