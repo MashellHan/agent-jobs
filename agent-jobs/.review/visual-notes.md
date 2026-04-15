@@ -151,3 +151,40 @@
 - User is working on a multi-agent team planning document ("Agent Team Full")
 - Multiple projects active simultaneously — the dashboard would benefit from a **project filter** to show jobs grouped by project
 - The Copilot chat panel suggests interest in AI agent tooling — agent-jobs could integrate with more AI assistant platforms beyond Claude Code
+
+## 2026-04-15 08:59 — Visual Review (v037)
+
+### Screenshot Analysis
+- **Display active** — 7.7MB screenshot captured (retina)
+- Foreground app: **Microsoft Teams** — user is in a video meeting
+- Screen share shows a **monitoring/observability dashboard** (Grafana-style) with:
+  - Left nav: Metrics Dashboard, Security Dashboard, Codeway Dashboard, Monitor Monitoring, Log Search, Documentation
+  - Main content: "Failure by Type" time-series charts (stacked area graphs)
+  - Multiple metric panels with traffic/error rate data
+- Right side: Teams meeting participants with video feeds
+- Bottom: Meeting chat with active conversation about Kanban dashboard UX
+
+### Agent-Jobs TUI Status
+- TUI is running in background (processes still active)
+- Not visible — user is in a full-screen Teams meeting, no terminal visible
+- Cannot assess TUI rendering visually this cycle
+
+### Observations from Meeting Context
+- The monitoring dashboard on screen shares design patterns relevant to agent-jobs:
+  - **Stacked area charts** for failure rates — could inspire a "job health over time" mini-chart
+  - **Left sidebar navigation** with collapsible sections — current agent-jobs tab bar is simpler but similar concept
+  - **Filter bar at top** with time range, environment, service selectors — agent-jobs could benefit from similar filter controls
+  - **"Failure by Type" categorization** — agent-jobs already categorizes by source, could add failure type breakdown
+- Meeting discussion about "Kanban dashboard" UX — relates to project grouping brainstorm from v037
+
+### Verification via Tests (in lieu of visual)
+- 334/334 tests pass (confirmed this cycle)
+- No code changes since v036 — visual state unchanged
+- Flicker fix still awaiting visual confirmation (3 consecutive reviews without TUI in viewport)
+
+### Outstanding Visual Items
+- [ ] **Verify flicker fix** — now 3 reviews without visual confirmation (v035, v036, v037)
+- [ ] Verify session cron tasks show lifecycle in detail panel
+- [ ] Test narrow terminal behavior (<100 cols)
+- [ ] Isolate agent-jobs TUI in dedicated terminal for better capture
+- [ ] Consider `tmux capture-pane -p` as text-based TUI verification fallback
