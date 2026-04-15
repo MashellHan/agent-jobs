@@ -3,15 +3,28 @@ import UserNotifications
 
 final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     private let appState: AppState
-    private let center: UNUserNotificationCenter
+    private var center: UNUserNotificationCenter?
     private var monitoringService: MonitoringService?
     private var hasScheduledReminder: Bool = false
+    private var isAvailable: Bool = false
 
     init(appState: AppState) {
         self.appState = appState
-        self.center = UNUserNotificationCenter.current()
         super.init()
-        center.delegate = self
+        initializeCenter()
+    }
+
+    private func initializeCenter() {
+        // UNUserNotificationCenter requires a valid bundle identifier.
+        // When running via `swift run`, the bundle proxy may be nil.
+        guard Bundle.main.bundleIdentifier != nil else {
+            print("[NotificationService] No bundle identifier — notifications unavailable (running outside .app bundle)")
+            return
+        }
+        let notifCenter = UNUserNotificationCenter.current()
+        notifCenter.delegate = self
+        center = notifCenter
+        isAvailable = true
         configureCategories()
     }
 
@@ -22,6 +35,10 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     // MARK: - Permission
 
     func requestPermission() {
+        guard let center else {
+            print("[NotificationService] Skipping permission request — not available")
+            return
+        }
         center.requestAuthorization(options: [.alert, .sound, .badge]) { [weak self] granted, error in
             DispatchQueue.main.async {
                 self?.appState.notificationPermissionGranted = granted
@@ -35,6 +52,7 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     // MARK: - Categories & Actions
 
     private func configureCategories() {
+        guard let center else { return }
         let takeBreakAction = UNNotificationAction(
             identifier: Constants.takeBreakActionID,
             title: "Take Break",
@@ -60,7 +78,7 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     // MARK: - Schedule / Cancel
 
     func scheduleBreakReminder() {
-        guard !hasScheduledReminder else { return }
+        guard let center, isAvailable, !hasScheduledReminder else { return }
         hasScheduledReminder = true
 
         let content = UNMutableNotificationContent()
@@ -86,8 +104,8 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     }
 
     func cancelPendingNotifications() {
-        center.removeAllPendingNotificationRequests()
-        center.removeAllDeliveredNotifications()
+        center?.removeAllPendingNotificationRequests()
+        center?.removeAllDeliveredNotifications()
         hasScheduledReminder = false
     }
 

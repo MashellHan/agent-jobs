@@ -9,7 +9,8 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "EyesHealth",
-            path: "EyesHealth"
+            path: "EyesHealth",
+            exclude: ["Resources/Info.plist"]
         )
     ]
 )
