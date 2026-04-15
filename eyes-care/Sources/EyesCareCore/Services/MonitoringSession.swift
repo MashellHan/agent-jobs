@@ -25,7 +25,7 @@ public final class MonitoringSession {
 
     // MARK: - State
 
-    private(set) var isMonitoring = false
+    public private(set) var isMonitoring = false
     private var activityState: ActivityState = .active
     private var accumulatedActiveTime: TimeInterval = 0
     private var lastBreakEndDate: Date = Date()
