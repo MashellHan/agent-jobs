@@ -283,3 +283,24 @@ Since screencapture has failed 4 out of 7 attempts (display sleep), switched to 
 - [x] Session/lifecycle fields verified via JobDetail tests ✅
 - [ ] **Verify flicker fix live** — still not observed in real terminal (4 reviews)
 - [ ] Test narrow terminal behavior (<100 cols)
+
+## 2026-04-15 10:25 — Visual Review (v040)
+
+### Screenshot
+- **macOS lock screen** — 25.5MB retina capture of Lake Tahoe wallpaper with clock "Wed Apr 15 10:25"
+- Machine is locked, no application windows accessible
+- TUI processes still running in background
+
+### Updated Reliability Summary
+| # | Time | Display | Method | TUI Visible |
+|---|------|---------|--------|-------------|
+| 1 | 00:05 | Active | screencapture | ✅ Yes |
+| 2 | 00:10 | Active | screencapture | ✅ Yes |
+| 3 | 05:52 | Sleep | screencapture | ❌ Black |
+| 4 | 07:58 | Active | screencapture | ⚠️ Other app |
+| 5 | 08:34 | Active | screencapture | ⚠️ VS Code |
+| 6 | 08:59 | Active | screencapture | ⚠️ Teams |
+| 7 | 09:28 | Sleep | snapshot | ✅ Verified |
+| 8 | 10:25 | Locked | screencapture | ❌ Lock screen |
+
+**Screencapture TUI hit rate: 2/7 (29%).** Snapshot analysis remains the reliable method.
