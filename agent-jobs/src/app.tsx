@@ -67,7 +67,6 @@ export default function App() {
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
 
   const refresh = useCallback(() => {
-    clearScreen();
     loadAllJobs()
       .then((jobs) => {
         setAllJobs(jobs);
