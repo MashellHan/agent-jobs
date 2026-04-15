@@ -42,6 +42,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let showMascot = UserDefaults.standard.object(forKey: Constants.showMascotKey) as? Bool ?? true
         if showMascot {
             mascotService.show()
+            mascotState.startTipCycling()
         }
 
         startMascotStateSync()
@@ -121,6 +122,7 @@ struct EyesHealthApp: App {
                         UserDefaults.standard.set(newValue, forKey: Constants.showMascotKey)
                         if newValue {
                             appDelegate?.mascotWindowService?.show()
+                            appDelegate?.mascotState.startTipCycling()
                         } else {
                             appDelegate?.mascotWindowService?.hide()
                         }

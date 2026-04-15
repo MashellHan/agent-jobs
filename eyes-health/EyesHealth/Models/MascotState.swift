@@ -25,6 +25,31 @@ final class MascotState {
     /// Temporary override duration for happy expression (seconds).
     private var happyTimer: Timer?
 
+    /// Timer for cycling eye care tips during idle.
+    private var tipCycleTimer: Timer?
+
+    /// Whether a non-tip speech (alert, celebration) is currently showing.
+    private var isShowingPrioritySpeech: Bool = false
+
+    private let tipsService: TipsService
+
+    init(tipsService: TipsService = .shared) {
+        self.tipsService = tipsService
+    }
+
+    /// Start cycling tips every 10 minutes during idle.
+    func startTipCycling() {
+        tipCycleTimer?.invalidate()
+        let timer = Timer.scheduledTimer(
+            withTimeInterval: 600, // 10 minutes
+            repeats: true
+        ) { [weak self] _ in
+            self?.showRandomTip()
+        }
+        RunLoop.current.add(timer, forMode: .common)
+        tipCycleTimer = timer
+    }
+
     /// Update mascot expression based on current app state.
     func updateFromAppState(_ appState: AppState) {
         let status = appState.statusColor
@@ -43,6 +68,7 @@ final class MascotState {
     func celebrateBreak(duration: TimeInterval = 10) {
         happyTimer?.invalidate()
         expression = .happy
+        isShowingPrioritySpeech = true
         showSpeech("Great job! \u{1F60A}")
 
         let timer = Timer.scheduledTimer(
@@ -51,6 +77,7 @@ final class MascotState {
         ) { [weak self] _ in
             guard let self else { return }
             self.expression = .normal
+            self.isShowingPrioritySpeech = false
             self.dismissSpeech()
         }
         RunLoop.current.add(timer, forMode: .common)
@@ -60,7 +87,27 @@ final class MascotState {
     /// Trigger attention-getting state with speech bubble.
     func alertBreakDue() {
         expression = .worried
+        isShowingPrioritySpeech = true
         showSpeech("Time for a break! \u{1F440}")
+
+        // Auto-clear priority flag after 15 seconds
+        DispatchQueue.main.asyncAfter(deadline: .now() + 15) { [weak self] in
+            self?.isShowingPrioritySpeech = false
+        }
+    }
+
+    /// Show a random eye care tip in the speech bubble for 8 seconds.
+    private func showRandomTip() {
+        guard !isShowingPrioritySpeech else { return }
+
+        let hour = Calendar.current.component(.hour, from: .now)
+        let tip = tipsService.contextualTip(hour: hour, score: 75)
+        showSpeech("\u{1F4A1} \(tip.title)")
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 8) { [weak self] in
+            guard let self, !self.isShowingPrioritySpeech else { return }
+            self.dismissSpeech()
+        }
     }
 
     func showSpeech(_ text: String) {
@@ -73,5 +120,6 @@ final class MascotState {
 
     deinit {
         happyTimer?.invalidate()
+        tipCycleTimer?.invalidate()
     }
 }

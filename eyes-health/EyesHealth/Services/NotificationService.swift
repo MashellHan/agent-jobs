@@ -3,13 +3,15 @@ import UserNotifications
 
 final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     private let appState: AppState
+    private let tipsService: TipsService
     private var center: UNUserNotificationCenter?
     private var monitoringService: MonitoringService?
     private var hasScheduledReminder: Bool = false
     private var isAvailable: Bool = false
 
-    init(appState: AppState) {
+    init(appState: AppState, tipsService: TipsService = .shared) {
         self.appState = appState
+        self.tipsService = tipsService
         super.init()
         initializeCenter()
     }
@@ -83,7 +85,12 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
 
         let content = UNMutableNotificationContent()
         content.title = Constants.notificationTitle
-        content.body = Constants.notificationBody
+
+        // Include a contextual eye care tip in the notification body
+        let hour = Calendar.current.component(.hour, from: .now)
+        let tip = tipsService.contextualTip(hour: hour, score: appState.currentEyeHealthScore)
+        content.body = "\(Constants.notificationBody)\n\n\u{1F4A1} Tip: \(tip.content)"
+
         content.sound = .default
         content.categoryIdentifier = Constants.notificationCategoryID
 

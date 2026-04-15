@@ -7,6 +7,8 @@ struct MenuBarView: View {
     let onOpenReportsFolder: () -> Void
     @Binding var showMascot: Bool
 
+    @State private var currentTip: EyeCareTip = TipsService.shared.randomTip()
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             statusSection
@@ -18,6 +20,8 @@ struct MenuBarView: View {
             modeSection
             Divider()
             mascotSection
+            Divider()
+            tipSection
             Divider()
             actionSection
         }
@@ -151,6 +155,60 @@ struct MenuBarView: View {
         }
         .toggleStyle(.switch)
         .controlSize(.small)
+    }
+
+    // MARK: - Daily Tip Section
+
+    private var tipSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text("Daily Tip")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .textCase(.uppercase)
+
+                Spacer()
+
+                Button(action: {
+                    currentTip = TipsService.shared.nextTip()
+                }) {
+                    HStack(spacing: 2) {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 9))
+                        Text("Next")
+                            .font(.system(size: 10))
+                    }
+                    .foregroundStyle(.blue)
+                }
+                .buttonStyle(.plain)
+            }
+
+            HStack(alignment: .top, spacing: 8) {
+                Image(systemName: currentTip.category.icon)
+                    .font(.system(size: 16))
+                    .foregroundStyle(.blue)
+                    .frame(width: 20)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(currentTip.title)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.primary)
+
+                    Text(currentTip.content)
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(3)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Text("Source: \(currentTip.source)")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.tertiary)
+                }
+            }
+        }
+        .onAppear {
+            currentTip = TipsService.shared.nextTip()
+        }
     }
 
     // MARK: - Action Section
