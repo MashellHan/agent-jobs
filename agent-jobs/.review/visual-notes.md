@@ -304,3 +304,43 @@ Since screencapture has failed 4 out of 7 attempts (display sleep), switched to 
 | 8 | 10:25 | Locked | screencapture | ❌ Lock screen |
 
 **Screencapture TUI hit rate: 2/7 (29%).** Snapshot analysis remains the reliable method.
+
+## 2026-04-15 10:31 — Visual Review (post-v040)
+
+### Screenshot Analysis
+- **Display active** — 4.5MB screenshot, VS Code workspace fully visible
+- Multiple terminal panels open (4-5 visible)
+- User has unlocked the machine since v040 capture (6 minutes ago)
+
+### Workspace Contents
+- **Top-left terminal**: Claude Code review session — visible table with "Review / Fix / Commit" columns showing agent-jobs review cycle output. Text: "300/300 tests passing - All deployed - Score ~0.2"
+- **Bottom-left terminal**: "Claude Statusline HUD - Test Runner" — running tests for a separate statusline HUD project
+- **Center terminals**: Multiple Claude Code sessions with Chinese text about scheduled tasks and review documents
+- **Right panel**: MAP widget (Raycast/similar) showing 83% pie chart with colored category entries
+- **Top-right area**: Additional Claude Code session with Chinese text about feature iteration
+
+### Agent-Jobs TUI Visibility
+- The agent-jobs TUI dashboard itself is NOT visible as a standalone panel
+- However, review cycle output IS visible in the top-left terminal (review table, test counts, scores)
+- This confirms the review cron job is executing and producing visible output
+
+### Multi-Agent Workspace Observations
+- At least 3-4 Claude Code sessions running simultaneously in different terminals
+- The statusline HUD project appears to be actively developed alongside agent-jobs
+- The workspace shows a highly active multi-project, multi-agent development workflow
+- This reinforces the need for project grouping (v037 brainstorm) — the user manages many concurrent agent tasks
+
+### Updated Reliability Summary
+| # | Time | Display | Method | TUI Visible |
+|---|------|---------|--------|-------------|
+| 1 | 00:05 | Active | screencapture | ✅ Yes |
+| 2 | 00:10 | Active | screencapture | ✅ Yes |
+| 3 | 05:52 | Sleep | screencapture | ❌ Black |
+| 4 | 07:58 | Active | screencapture | ⚠️ Other app |
+| 5 | 08:34 | Active | screencapture | ⚠️ VS Code, no TUI |
+| 6 | 08:59 | Active | screencapture | ⚠️ Teams meeting |
+| 7 | 09:28 | Sleep | snapshot | ✅ Verified |
+| 8 | 10:25 | Locked | screencapture | ❌ Lock screen |
+| 9 | 10:31 | Active | screencapture | ⚠️ VS Code, review output visible |
+
+**Screencapture TUI hit rate: 2/8 (25%).** Snapshot analysis remains the primary verification method.
