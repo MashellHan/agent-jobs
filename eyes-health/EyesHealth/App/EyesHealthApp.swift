@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let appState = AppState()
@@ -11,8 +12,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var mascotUpdateTimer: Timer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        let persistenceService = DataPersistenceService()
+        let scoreService = EyeHealthScoreService()
+
         let notifService = NotificationService(appState: appState)
-        let monService = MonitoringService(appState: appState, mascotState: mascotState)
+        let monService = MonitoringService(
+            appState: appState,
+            mascotState: mascotState,
+            persistenceService: persistenceService,
+            scoreService: scoreService
+        )
         let breakService = BreakWindowService(appState: appState)
         let mascotService = MascotWindowService(appState: appState, mascotState: mascotState)
 
@@ -37,6 +46,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         startMascotStateSync()
         scheduleMidnightReset()
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        // Save data and generate report before quitting
+        monitoringService?.generateAndSaveDailyReport()
     }
 
     /// Periodically sync mascot expression with app state.
@@ -68,6 +82,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             repeats: false
         ) { [weak self] _ in
             guard let self else { return }
+            // Generate and save yesterday's report before resetting
+            self.monitoringService?.generateAndSaveDailyReport()
             self.appState.resetDaily()
             self.scheduleMidnightReset()
         }
@@ -87,6 +103,15 @@ struct EyesHealthApp: App {
                 appState: appDelegate.appState,
                 onTakeBreak: { [weak appDelegate] in
                     appDelegate?.monitoringService?.takeBreakNow()
+                },
+                onViewReport: { [weak appDelegate] in
+                    guard let monService = appDelegate?.monitoringService else { return }
+                    monService.generateTodayReport()
+                    NSWorkspace.shared.open(monService.todayReportURL)
+                },
+                onOpenReportsFolder: { [weak appDelegate] in
+                    guard let monService = appDelegate?.monitoringService else { return }
+                    NSWorkspace.shared.open(monService.reportsDirectoryURL)
                 },
                 showMascot: Binding(
                     get: {

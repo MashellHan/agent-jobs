@@ -3,11 +3,15 @@ import SwiftUI
 struct MenuBarView: View {
     @Bindable var appState: AppState
     let onTakeBreak: () -> Void
+    let onViewReport: () -> Void
+    let onOpenReportsFolder: () -> Void
     @Binding var showMascot: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             statusSection
+            Divider()
+            scoreSection
             Divider()
             statsSection
             Divider()
@@ -32,6 +36,42 @@ struct MenuBarView: View {
             Text(appState.statusColor.message)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.primary)
+        }
+    }
+
+    // MARK: - Eye Health Score Section
+
+    private var scoreSection: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Image(systemName: "heart.fill")
+                    .foregroundStyle(scoreColor)
+                    .font(.system(size: 14))
+
+                Text("Score: \(appState.currentEyeHealthScore) (\(appState.currentEyeHealthGrade))")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.primary)
+
+                Spacer()
+            }
+
+            HStack {
+                Image(systemName: "desktopcomputer")
+                    .foregroundStyle(.secondary)
+                    .font(.system(size: 11))
+                Text("Today: \(appState.formattedTotalScreenTime)")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private var scoreColor: Color {
+        switch appState.currentEyeHealthScore {
+        case 80...: return .green
+        case 60..<80: return .yellow
+        case 40..<60: return .orange
+        default: return .red
         }
     }
 
@@ -125,6 +165,26 @@ struct MenuBarView: View {
                 .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
+            .controlSize(.regular)
+
+            Button(action: onViewReport) {
+                HStack {
+                    Image(systemName: "doc.text")
+                    Text("View Today's Report")
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.regular)
+
+            Button(action: onOpenReportsFolder) {
+                HStack {
+                    Image(systemName: "folder")
+                    Text("Open Reports Folder")
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
             .controlSize(.regular)
 
             Button(action: { NSApplication.shared.terminate(nil) }) {
