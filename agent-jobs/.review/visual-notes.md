@@ -79,3 +79,37 @@
 - Schedule next visual review when display is confirmed active
 - Consider using `tmux capture-pane` as fallback when screencapture returns black
 - Test `npx tsx src/index.tsx 2>&1 | head -50` for non-interactive render verification
+
+## 2026-04-15 07:58 — Active Display Screenshot (v035)
+
+### Screenshot Analysis
+- **Display is active** — full 6016x3384 retina screenshot captured (4.4MB)
+- VS Code workspace visible with multiple terminal panels
+- Left sidebar: agent-jobs project file tree visible
+- Multiple Claude Code sessions running in integrated terminals
+- Claude Session Monitor TUI visible in bottom-right panel
+
+### Workspace Layout
+- 4+ terminal panels visible in VS Code integrated terminal
+- Build/test output visible in some panels
+- The agent-jobs TUI itself is not the focused/visible TUI — the Claude Session Monitor occupies the bottom-right panel
+- Session data shows active/stopped indicators with tabular layout
+
+### User-Reported Issue
+- **Dashboard flickers every ~10 seconds** — user confirmed this is still happening
+- This corresponds to the `clearScreen()` call in the auto-refresh cycle (P2 #5, carried since v031)
+- Root cause: `clearScreen()` clears the entire terminal, Ink re-renders, causing visible flash
+- The `clearScreen` workaround was added in v031 to fix Ink's `log-update` stacking bug, but introduced flicker
+
+### Flicker Fix Analysis
+- Current approach: `clearScreen()` → Ink re-renders from scratch every 10s
+- Better approach: Only clear when the number of rendered lines changes (height-sensitive clear)
+- Best approach: Use Ink's built-in `rerender()` without `clearScreen()` — investigate if `log-update` stacking is actually fixed in current Ink 5.x
+- Alternative: Use `stdout.write(ansiEscapes.clearScreen)` with `ansiEscapes.cursorTo(0,0)` to avoid visible flash
+
+### Outstanding Visual Items
+- [x] Capture live TUI screenshot when display is active — DONE
+- [ ] Verify session cron tasks show lifecycle in detail panel
+- [ ] Test narrow terminal behavior (<100 cols)
+- [ ] **FIX: Auto-refresh flicker (clearScreen P2 — user reported)** — PRIORITY
+- [ ] Isolate agent-jobs TUI in its own terminal panel for better visual review
