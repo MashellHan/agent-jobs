@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/mengxionghan/.superset/projects/Tmp/agent-jobs/scripts/auto-commit.sh",
+            "timeout": 10000,
+            "async": true
+          }
+        ]
+      }
+    ]
+  }
+}

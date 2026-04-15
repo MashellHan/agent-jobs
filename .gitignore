@@ -2,6 +2,34 @@ node_modules/
 dist/
 .DS_Store
 *.log
+coverage/
+
+# Build artifacts
+.build/
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+
+# Binary recordings and test media
+*.mp4
+*.gif
+test-frame.png
+
+# Claude local/session files (machine-specific)
+.claude/settings.local.json
+.claude/scheduled_tasks.json
+.claude/scheduled_tasks.lock
+.claude/.DS_Store
+
+# Demo recordings (binary output)
+.demo-recordings/
+
+# Nested git repos (separate projects, not submodules)
+agent-file-preview/
+auto-demo-recorder/
+claude-session-monitor/
+eye-guard/
 
 # Legacy demo directories (not part of the active project)
 agent-jobs/agent-jobs/
