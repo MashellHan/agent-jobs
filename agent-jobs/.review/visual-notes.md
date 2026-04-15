@@ -113,3 +113,41 @@
 - [ ] Test narrow terminal behavior (<100 cols)
 - [ ] **FIX: Auto-refresh flicker (clearScreen P2 — user reported)** — PRIORITY
 - [ ] Isolate agent-jobs TUI in its own terminal panel for better visual review
+
+## 2026-04-15 08:34 — Visual Review (v036)
+
+### Screenshot Analysis
+- **Display active** — 3.4MB screenshot captured
+- VS Code workspace is focused on a different project ("RAVEN") — an "Agent Team Full" planning document is open in the main editor
+- Right panel shows a Chat/Copilot interface searching for OpenAI Codex documentation
+- macOS dock visible at bottom with multiple app icons
+- No terminal panels visible — the integrated terminal appears to be collapsed or hidden
+
+### Agent-Jobs TUI Status
+- TUI processes confirmed running (PIDs 68094, 68121, 94180) — the dashboard is alive in a background terminal
+- The TUI is not visible in the current VS Code viewport — user has switched to a different workspace/project
+- Cannot assess TUI rendering, column layout, or flicker fix effectiveness visually
+
+### Changes Since Last Visual Review
+- **Flicker fix applied** (`1e44603`): `clearScreen()` removed from auto-refresh callback
+- **JobDetail coverage** (`ebfc01c`): 25 new tests covering all conditional branches — verified via test output that all fields render correctly
+- **No component changes** — layout/rendering code unchanged since v033
+
+### Verification via Tests (in lieu of visual)
+- 334/334 tests pass
+- Components coverage: 100% statements, 97.7% branches
+- Full table snapshot test confirms layout stability
+- JobDetail test confirms: Session, Lifecycle, Port, PID fields render conditionally
+- `clearScreen()` only called on height-changing operations now (10 call sites in keyboard handlers)
+
+### Outstanding Visual Items
+- [x] Auto-refresh flicker fix applied — **needs visual confirmation when TUI is visible**
+- [ ] Verify flicker fix effectiveness (watch dashboard for 30+ seconds)
+- [ ] Verify session cron tasks show lifecycle in detail panel (confirmed via tests)
+- [ ] Test narrow terminal behavior (<100 cols)
+- [ ] Isolate agent-jobs TUI in dedicated terminal for better capture
+
+### Feature Observations from Workspace
+- User is working on a multi-agent team planning document ("Agent Team Full")
+- Multiple projects active simultaneously — the dashboard would benefit from a **project filter** to show jobs grouped by project
+- The Copilot chat panel suggests interest in AI agent tooling — agent-jobs could integrate with more AI assistant platforms beyond Claude Code
