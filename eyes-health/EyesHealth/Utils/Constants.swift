@@ -56,8 +56,14 @@ enum Constants {
     static let fullScreenCountdownSeconds: Int = 20
     static let skipButtonDelaySeconds: Double = 5
 
+    // Mascot
+    static let mascotWindowWidth: CGFloat = 100
+    static let mascotWindowHeight: CGFloat = 130
+    static let mascotSize: CGFloat = 60
+
     // UserDefaults keys
     static let reminderModeKey = "reminderMode"
+    static let showMascotKey = "showEyeGuardian"
 }
 
 enum StatusColor {
