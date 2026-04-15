@@ -344,3 +344,34 @@ Since screencapture has failed 4 out of 7 attempts (display sleep), switched to 
 | 9 | 10:31 | Active | screencapture | ⚠️ VS Code, review output visible |
 
 **Screencapture TUI hit rate: 2/8 (25%).** Snapshot analysis remains the primary verification method.
+
+## 2026-04-15 10:58 — Visual Review (v041)
+
+### Screenshot
+- **Display active** — Microsoft Edge browser in foreground
+- WeChat QR login page visible (请使用「微信」扫码打开)
+- Browser tabs show: pew tokens (×3), Copilot Connectivity Kanban (×2), NousResearch/hermes-agent, opencode, Codex/OpenAI, Hermes Agent Quickstart
+- macOS notification: "python3 can run in the background"
+- Agent-jobs TUI not visible — browser is the foreground app
+
+### Notable Browser Tabs
+- **opencode: Lightweight cod...** — user researching OpenCode, relevant to v038 multi-assistant brainstorm
+- **Hermes Agent / NousResearch** — exploring open-source agent frameworks
+- **Codex | OpenAI** — investigating OpenAI's Codex agent tool
+- **pew tokens** — related to the `pew sync` service monitored by agent-jobs
+
+### Updated Reliability Summary
+| # | Time | Display | Method | TUI Visible |
+|---|------|---------|--------|-------------|
+| 1 | 00:05 | Active | screencapture | ✅ Yes |
+| 2 | 00:10 | Active | screencapture | ✅ Yes |
+| 3 | 05:52 | Sleep | screencapture | ❌ Black |
+| 4 | 07:58 | Active | screencapture | ⚠️ Other app |
+| 5 | 08:34 | Active | screencapture | ⚠️ VS Code |
+| 6 | 08:59 | Active | screencapture | ⚠️ Teams |
+| 7 | 09:28 | Sleep | snapshot | ✅ Verified |
+| 8 | 10:25 | Locked | screencapture | ❌ Lock screen |
+| 9 | 10:31 | Active | screencapture | ⚠️ VS Code |
+| 10 | 10:58 | Active | screencapture | ⚠️ Browser |
+
+**Screencapture TUI hit rate: 2/9 (22%).** TUI is consistently a background process.
