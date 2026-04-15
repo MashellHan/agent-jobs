@@ -287,4 +287,53 @@ describe("watchJobsFile", () => {
     // Should not throw when calling cleanup
     expect(() => cleanup()).not.toThrow();
   });
+
+  it("debounces rapid file changes (clears pending timer)", () => {
+    vi.useFakeTimers();
+    let watchCallback: (() => void) | null = null;
+
+    mockWatch.mockImplementation((_path, cb) => {
+      // Capture the first watcher's callback
+      if (!watchCallback) watchCallback = cb as () => void;
+      return { close: vi.fn() } as unknown as ReturnType<typeof watch>;
+    });
+
+    const onChange = vi.fn();
+    watchJobsFile(onChange);
+
+    // Fire change twice in rapid succession — second should clear first timer
+    watchCallback!();
+    watchCallback!();
+
+    // After 300ms only one call should fire (the debounced one)
+    vi.advanceTimersByTime(300);
+    expect(onChange).toHaveBeenCalledTimes(1);
+
+    vi.useRealTimers();
+  });
+
+  it("clears pending debounce timer on cleanup", () => {
+    vi.useFakeTimers();
+    let watchCallback: (() => void) | null = null;
+
+    mockWatch.mockImplementation((_path, cb) => {
+      if (!watchCallback) watchCallback = cb as () => void;
+      return { close: vi.fn() } as unknown as ReturnType<typeof watch>;
+    });
+
+    const onChange = vi.fn();
+    const cleanup = watchJobsFile(onChange);
+
+    // Fire a change to start the debounce timer
+    watchCallback!();
+
+    // Cleanup before the 300ms debounce fires
+    cleanup();
+
+    // Advance past debounce — onChange should NOT fire
+    vi.advanceTimersByTime(500);
+    expect(onChange).not.toHaveBeenCalled();
+
+    vi.useRealTimers();
+  });
 });
