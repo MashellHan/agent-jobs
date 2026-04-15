@@ -3,6 +3,7 @@ import SwiftUI
 struct MenuBarView: View {
     @Bindable var appState: AppState
     let onTakeBreak: () -> Void
+    @Binding var showMascot: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -11,6 +12,8 @@ struct MenuBarView: View {
             statsSection
             Divider()
             modeSection
+            Divider()
+            mascotSection
             Divider()
             actionSection
         }
@@ -93,6 +96,21 @@ struct MenuBarView: View {
                 .font(.system(size: 10))
                 .foregroundStyle(.tertiary)
         }
+    }
+
+    // MARK: - Mascot Section
+
+    private var mascotSection: some View {
+        Toggle(isOn: $showMascot) {
+            HStack(spacing: 6) {
+                Image(systemName: "sparkles")
+                    .foregroundStyle(.secondary)
+                Text("Show Eye Guardian")
+                    .font(.system(size: 12))
+            }
+        }
+        .toggleStyle(.switch)
+        .controlSize(.small)
     }
 
     // MARK: - Action Section

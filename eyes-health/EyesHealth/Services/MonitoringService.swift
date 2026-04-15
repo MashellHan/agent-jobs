@@ -4,13 +4,15 @@ import Foundation
 
 final class MonitoringService: NSObject {
     private let appState: AppState
+    private let mascotState: MascotState?
     private var notificationService: NotificationService?
     private var breakWindowService: BreakWindowService?
     private var pollingTimer: Timer?
     private var isScreenLocked: Bool = false
 
-    init(appState: AppState) {
+    init(appState: AppState, mascotState: MascotState? = nil) {
         self.appState = appState
+        self.mascotState = mascotState
         super.init()
         registerScreenLockObservers()
     }
@@ -43,6 +45,7 @@ final class MonitoringService: NSObject {
         appState.recordBreak()
         notificationService?.cancelPendingNotifications()
         breakWindowService?.dismiss()
+        mascotState?.celebrateBreak()
     }
 
     // MARK: - Snooze
@@ -88,6 +91,7 @@ final class MonitoringService: NSObject {
 
         if appState.shouldNotify {
             appState.hasNotifiedThisSession = true
+            mascotState?.alertBreakDue()
 
             switch appState.reminderMode {
             case .gentle:
