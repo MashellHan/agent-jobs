@@ -188,3 +188,98 @@
 - [ ] Test narrow terminal behavior (<100 cols)
 - [ ] Isolate agent-jobs TUI in dedicated terminal for better capture
 - [ ] Consider `tmux capture-pane -p` as text-based TUI verification fallback
+
+## 2026-04-15 09:28 — Visual Review (v038)
+
+### Screenshot Attempt
+- **Display asleep/locked** — 367KB black screen (same as v034 pattern)
+- 4 TUI processes running in background (PIDs 68094, 68121, 79094, 94180)
+- No tmux sessions available for text-based capture
+
+### Snapshot-Based Visual Verification (NEW APPROACH)
+Since screencapture has failed 4 out of 7 attempts (display sleep), switched to analyzing Vitest snapshot output as definitive visual verification. The snapshot captures exactly what Ink renders to the terminal.
+
+**Table Layout (from `job-table.test.tsx.snap`):**
+```
+   ST SERVICE                AGENT        SOURCE     SCHEDULE       LAST RUN     RESULT  CREATED
+────────────────────────────────────────────────────────────────────────────────────────────────────
+▶  ●  my-web-server          claude-code  hook       always-on      04-10 18:00  success 7h ago
+   ●  node server.js         claude-code  hook       always-on      04-10 19:00  success 6h ago
+   ●  pm2 api.js             claude-code  hook       always-on      04-10 20:00  success 5h ago
+   ○  my-very-long-contain…  claude-code  hook       always-on      04-10 21:00  error   4h ago
+   ●  server.js :4000        manual       live       always-on      04-10 22:00  success 8h ago
+   ✗  flask-server           claude-code  hook       always-on      04-10 16:30  error   9h ago
+   ●  pew sync               claude-code  hook       always-on      04-11 09:00  success just now
+   ●  backup script          claude-code  cron       daily 2am      04-11 10:00  success 1d ago
+   ●  openclaw-monitor       openclaw     hook       every 30 min   04-11 00:30  success 11h ago
+   ○  pending-task           claude-code  hook       weekdays 9am   -            unknown 2h ago
+   ●  pew sync               manual       launchd    every 10 min   04-11 00:50  success 9d ago
+   ●  pew update             manual       launchd    daily 9am      04-11 17:00  success 9d ago
+   ●  node gateway           openclaw     launchd    always-on      04-11 01:00  success 8d ago
+```
+
+### Snapshot Visual Analysis
+✅ **Column alignment**: All 8 columns (ST, SERVICE, AGENT, SOURCE, SCHEDULE, LAST RUN, RESULT, CREATED) perfectly aligned
+✅ **Status icons**: ● (active/green), ○ (stopped/gray), ✗ (error/red) — correct per status
+✅ **SOURCE labels**: hook, live, cron, launchd — all showing short labels (sourceToShort working)
+✅ **SCHEDULE display**: always-on, daily 2am, every 30 min, every 10 min, weekdays 9am — all human-readable
+✅ **LAST RUN format**: MM-DD HH:MM compact format, dash for never-run jobs
+✅ **CREATED column**: Relative time (Xh ago, Xd ago, just now)
+✅ **Name truncation**: "my-very-long-contain…" truncated with ellipsis
+✅ **Selection indicator**: ▶ on first row (selected, not expanded)
+✅ **Multi-source data**: registered (hook), live, cron, launchd all present in one table
+✅ **AGENT diversity**: claude-code, manual, openclaw — three agent types visible
+
+**Detail Panel (expanded view):**
+```
+▼  ●  my-web-server  [expanded]
+   ╭─────────────────────────────────────────╮
+   │  Command:       node src/server.js ...  │
+   │  Status:        active                  │
+   │  Agent:         claude-code             │
+   │  Source:        Hook-registered          │  ← sourceToHuman (verbose)
+   │  Project:       /Users/dev/my-project   │
+   │  Port:          3000                    │
+   │  ── Schedule ──                         │
+   │  Frequency:     always-on               │
+   │  ── History ──                          │
+   │  Created:       2026-04-10 18:00 (7h)   │
+   │  Last Run:      2026-04-10 18:00 (7h)   │
+   │  Run Count:     5                       │
+   │  Last Result:   success                 │
+   │    ... and 4 earlier runs               │
+   │  ESC or d to close                      │
+   ╰─────────────────────────────────────────╯
+```
+
+✅ **Rounded border**: ╭╮╰╯ box drawing characters
+✅ **Labeled fields**: Command, Status, Agent, Source, Project, Port — all present
+✅ **Source label**: "Hook-registered" (sourceToHuman, verbose for detail panel)
+✅ **Run history**: "... and 4 earlier runs" with singular/plural handling
+✅ **Close instruction**: "ESC or d to close" at bottom
+
+### Issues Identified from Snapshot
+- **None.** The layout is clean, well-aligned, and all data sources are represented.
+- The only missing elements from the snapshot are sessionId/lifecycle fields — those fixtures don't have those fields set. Verified by separate JobDetail tests (24/24 pass) that Session and Lifecycle fields render correctly when present.
+
+### Visual Review Reliability Summary
+| Review | Method | Result |
+|--------|--------|--------|
+| v033 00:05 | screencapture | ✅ TUI visible |
+| v033 00:10 | screencapture | ✅ TUI visible (post-fix) |
+| v034 05:52 | screencapture | ❌ Black screen |
+| v035 07:58 | screencapture | ⚠️ Different TUI visible |
+| v036 08:34 | screencapture | ⚠️ VS Code, TUI not focused |
+| v037 08:59 | screencapture | ⚠️ Teams meeting |
+| v038 09:28 | **snapshot analysis** | ✅ **Complete layout verified** |
+
+**Conclusion:** Snapshot-based verification is more reliable than screencapture for this project. It captures the exact Ink render output independent of display state. Recommend using this as the primary visual verification method going forward, with screencapture as supplementary when the display is active.
+
+### Outstanding Visual Items
+- [x] Column alignment verified via snapshot ✅
+- [x] Source labels verified (hook/live/cron/launchd) ✅
+- [x] Multi-source data in one table verified ✅
+- [x] Detail panel layout verified ✅
+- [x] Session/lifecycle fields verified via JobDetail tests ✅
+- [ ] **Verify flicker fix live** — still not observed in real terminal (4 reviews)
+- [ ] Test narrow terminal behavior (<100 cols)
