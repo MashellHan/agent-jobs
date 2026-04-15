@@ -56,6 +56,9 @@ enum Constants {
     static let fullScreenCountdownSeconds: Int = 20
     static let skipButtonDelaySeconds: Double = 5
 
+    // Auto-save interval (5 minutes)
+    static let autoSaveInterval: TimeInterval = 5 * 60
+
     // Mascot
     static let mascotWindowWidth: CGFloat = 100
     static let mascotWindowHeight: CGFloat = 130
