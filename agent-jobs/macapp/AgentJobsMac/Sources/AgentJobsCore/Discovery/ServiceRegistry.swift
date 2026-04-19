@@ -20,21 +20,45 @@ public actor ServiceRegistry {
     /// Discover from all providers concurrently. A failing provider does not
     /// poison the rest — its error is logged and its slice is empty.
     public func discoverAll() async -> [Service] {
-        await withTaskGroup(of: [Service].self, returning: [Service].self) { group in
+        await discoverAllDetailed().services
+    }
+
+    public struct DiscoverResult: Sendable {
+        public let services: [Service]
+        /// Number of providers that completed without throwing (regardless of
+        /// whether they returned services). Used by the view model to tell
+        /// "all providers failed" (→ error) from "all providers legitimately
+        /// returned empty" (→ loaded). Resolves M-007 false-positive.
+        public let succeededCount: Int
+        public let totalCount: Int
+        public var allFailed: Bool { totalCount > 0 && succeededCount == 0 }
+    }
+
+    /// Same as `discoverAll()` but also reports how many providers succeeded.
+    public func discoverAllDetailed() async -> DiscoverResult {
+        let total = providers.count
+        let perProvider: [(slice: [Service], ok: Bool)] = await withTaskGroup(
+            of: (slice: [Service], ok: Bool).self,
+            returning: [(slice: [Service], ok: Bool)].self
+        ) { group in
             for provider in providers {
                 group.addTask { [logger] in
                     do {
-                        return try await provider.discover()
+                        let svcs = try await provider.discover()
+                        return (svcs, true)
                     } catch {
                         logger.error("provider \(type(of: provider).providerId, privacy: .public) failed: \(String(describing: error), privacy: .public)")
-                        return []
+                        return ([], false)
                     }
                 }
             }
-            var all: [Service] = []
-            for await chunk in group { all.append(contentsOf: chunk) }
-            return all
+            var collected: [(slice: [Service], ok: Bool)] = []
+            for await item in group { collected.append(item) }
+            return collected
         }
+        let services = perProvider.flatMap { $0.slice }
+        let succeeded = perProvider.filter { $0.ok }.count
+        return DiscoverResult(services: services, succeededCount: succeeded, totalCount: total)
     }
 
     /// Default registry for production: ships with the providers we have today.

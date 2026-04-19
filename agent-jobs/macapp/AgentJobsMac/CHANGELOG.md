@@ -5,6 +5,15 @@ All notable changes to the Mac app live here. Format: Keep a Changelog.
 ## [Unreleased]
 
 ### Added
+- (cycle 10) `Sources/AgentJobsMac/Components/{MenuBarLabel,SummaryChip,
+  MemoryBadge,HoverableIconButton,ErrorBanner,ServiceRowCompact,EmptyHintView,
+  SkeletonRow}.swift` — extracted 8 reusable atoms from MenuBarViews.swift.
+  MenuBarViews.swift now 120 LOC (was 324, −204) and holds only
+  `MenuBarPopoverView` (code-003 P1 #2).
+- (cycle 10) `ServiceRegistry.discoverAllDetailed()` returns per-provider
+  success/fail counts via new `DiscoverResult` struct. Used by view model to
+  distinguish "all providers failed" from "all providers legitimately empty"
+  — fixes M-007 false-positive ErrorBanner on a fresh box (strict-iter-007).
 - (cycle 9) `Sources/AgentJobsCore/Discovery/Providers/LaunchdUserProvider.swift` —
   parses `launchctl list` 3-column output into Service records, skips Apple
   system jobs, maps PID/exit-status to .running/.scheduled/.failed. Wired into

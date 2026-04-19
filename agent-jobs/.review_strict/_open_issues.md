@@ -5,16 +5,21 @@
 ## Open
 
 ### CRITICAL
-*(none — build green at d5764a5, 27/27 tests)*
+*(none — build green at e53dbd6 + uncommitted feature work, 34/34 tests)*
 
 ### HIGH
-*(none)*
+
+| ID | Iter opened | Title | File / location | Status |
+|----|-------------|-------|-----------------|--------|
+| H-004 | 007 | `LaunchdUserProvider` + 7 tests + `ServiceRegistry`/`AgentJobsMacApp` 修改全部 **未提交** — 直接证实 M-005 失效 | `git status` (working tree) | OPEN |
 
 ### MEDIUM
 
 | ID | Iter opened | Title | File / location | Status |
 |----|-------------|-------|-----------------|--------|
-| M-005 | 006 | Commit-gate 未实装 — implementer 自律修复 C-005，但下一次 stale-cache 仍会重现 iter-005 的"谎称 passing" | `.claude/settings.json` PreToolUse / implementer loop | OPEN |
+| M-005 | 006 | Commit-gate 未实装 — implementer 自律修复 C-005，但下一次 stale-cache 仍会重现 iter-005 的"谎称 passing" | `.claude/settings.json` PreToolUse / implementer loop | OPEN (now demonstrably needed — H-004) |
+| M-006 | 007 | `LaunchdUserProvider` 用 `Date()` 合成 `createdAt`，违反 feedback_tui_history 的"真实注册时间"偏好 | `LaunchdUserProvider.swift:84` | OPEN |
+| M-007 | 007 | `"No providers responded"` error 在合法的"无服务"场景误报 — 应跟踪每个 provider 的 success/fail 而不是仅看结果是否为空 | `AgentJobsMacApp.swift:60` | OPEN |
 
 ### LOW
 
@@ -22,6 +27,9 @@
 |----|-------------|-------|-----------------|--------|
 | L-005 | 004 | `Shell.onCancel` 用 `DispatchQueue.global().asyncAfter` 做 SIGKILL，跳出 structured concurrency | `Shell.swift:107-117` | OPEN (nit) |
 | L-006 | 004 | `AgentJobsJsonProvider.readWithTimeout` 内仍是 sync `Data(contentsOf:)` | `AgentJobsJsonProvider.swift:64-67` | OPEN (acceptable) |
+| L-007 | 007 | Launchd `.schedule = .onDemand` — 没解析 calendar/interval plist，违反 feedback_schedule_display | `LaunchdUserProvider.swift:88` | OPEN (defer) |
+| L-008 | 007 | `kind: .daemon vs .scheduled` 仅靠 PID 判断 — 同 L-007 根因 | `LaunchdUserProvider.swift:87` | OPEN (defer) |
+| L-009 | 007 | `command: ""` 应为 `nil` 或哨兵值 | `LaunchdUserProvider.swift:91` | OPEN (nit) |
 
 ---
 
