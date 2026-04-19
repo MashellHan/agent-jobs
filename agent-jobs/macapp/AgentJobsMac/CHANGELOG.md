@@ -5,6 +5,20 @@ All notable changes to the Mac app live here. Format: Keep a Changelog.
 ## [Unreleased]
 
 ### Added
+- (cycle 9) `Sources/AgentJobsCore/Discovery/Providers/LaunchdUserProvider.swift` —
+  parses `launchctl list` 3-column output into Service records, skips Apple
+  system jobs, maps PID/exit-status to .running/.scheduled/.failed. Wired into
+  `ServiceRegistry.defaultRegistry()` as the second production provider
+  (code-003 P1 #3 / architecture-spec coverage).
+- (cycle 9) `LaunchdUserProviderTests` — 7 cases including header skipping,
+  Apple-prefix filtering, status mapping, injected-runner discover().
+- (cycle 9) `ServiceRegistry.providerCount` actor-isolated read-only counter,
+  used by the view model to distinguish "no providers configured" (idle) from
+  "providers configured but all empty" (error). Enables LoadPhase.error wiring.
+- (cycle 9) `ServiceRegistryViewModel.refresh()` now sets
+  `phase = .error("No providers responded")` when discovered.isEmpty &&
+  providerCount > 0 — the cycle-7 ErrorBanner UI is now reachable
+  (code-003 M1 / honest reporting).
 - (cycle 8) `Sources/AgentJobsMac/Components/StatusBadge.swift` —
   extracted from DashboardView for reuse + token-locked styling (code-002 M3).
 - (cycle 8) `Sources/AgentJobsMac/Components/MetricTile.swift` —

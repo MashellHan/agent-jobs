@@ -51,10 +51,19 @@ final class ServiceRegistryViewModel {
     func refresh() async {
         if case .loaded = phase { } else { phase = .loading }
         let discovered = await registry.discoverAll()
+        let providerCount = await registry.providerCount
         services = discovered.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         summary = MenuBarSummary.from(services: services)
         lastRefresh = Date()
-        phase = .loaded
+        // Wire LoadPhase.error → ErrorBanner UI (code-003 M1). When the registry
+        // has providers but every one of them returned empty/failed, surface
+        // that as an error rather than silently showing "no services" — the
+        // ErrorBanner with Retry is more honest than an empty list.
+        if discovered.isEmpty && providerCount > 0 {
+            phase = .error("No providers responded")
+        } else {
+            phase = .loaded
+        }
     }
 
     /// Begin a background loop that refreshes every `refreshIntervalSeconds`.
