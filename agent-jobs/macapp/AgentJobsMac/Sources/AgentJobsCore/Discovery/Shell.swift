@@ -25,14 +25,19 @@ public enum Shell {
     }
 
     public enum Failure: Error, Sendable, Equatable {
-        case timeout(seconds: TimeInterval, partialStdout: String)
+        case timeout(seconds: TimeInterval)
         case launchFailed(String)
         case nonZeroExit(code: Int32, stderr: String)
     }
 
     /// Default timeout for read-only discovery commands (`launchctl list`,
-    /// `crontab -l`, `brew services list`, etc.).
+    /// `crontab -l`, `brew services list`, etc.). Long-running tools must
+    /// pass an explicit timeout; this default protects discovery refresh.
     public static let defaultTimeoutSeconds: TimeInterval = 5
+
+    /// Grace window after SIGTERM before escalating to SIGKILL. Enough for a
+    /// well-behaved child to flush + exit; short enough to bound the caller.
+    public static let sigtermGraceSeconds: TimeInterval = 0.5
 
     /// Run an executable with an argv array. Returns once the process exits
     /// or `Failure.timeout` fires, whichever comes first.
@@ -49,11 +54,12 @@ public enum Shell {
         args: [String] = [],
         timeout: TimeInterval = defaultTimeoutSeconds
     ) async throws -> Result {
-        try await withThrowingTaskGroup(of: Result.self) { group in
+        precondition(executable.hasPrefix("/"), "Shell.run requires absolute executable path; got \(executable)")
+        return try await withThrowingTaskGroup(of: Result.self) { group in
             group.addTask { try await runProcess(executable: executable, args: args) }
             group.addTask {
                 try await Task.sleep(for: .seconds(timeout))
-                throw Failure.timeout(seconds: timeout, partialStdout: "")
+                throw Failure.timeout(seconds: timeout)
             }
             guard let first = try await group.next() else {
                 throw Failure.launchFailed("no result")
@@ -93,8 +99,21 @@ public enum Shell {
             }
         } onCancel: {
             // Cancellation arrived (e.g. sibling timeout task threw). Reap the
-            // child immediately so the test / caller doesn't block on it.
-            if process.isRunning { process.terminate() }
+            // child so the test / caller doesn't block on a zombie.
+            //
+            // Two-stage reap: SIGTERM first (graceful), then SIGKILL after a
+            // short grace window if the child ignored SIGTERM. This bounds the
+            // worst case to `sigtermGraceSeconds` past the timeout.
+            guard process.isRunning else { return }
+            process.terminate()
+            let pid = process.processIdentifier
+            DispatchQueue.global(qos: .utility).asyncAfter(
+                deadline: .now() + sigtermGraceSeconds
+            ) {
+                if process.isRunning {
+                    kill(pid, SIGKILL)
+                }
+            }
         }
     }
 }

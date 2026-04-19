@@ -41,7 +41,7 @@ struct ShellTests {
         do {
             _ = try await Shell.run("/bin/sleep", args: ["10"], timeout: 0.3)
             Issue.record("expected timeout")
-        } catch let Shell.Failure.timeout(seconds, _) {
+        } catch let Shell.Failure.timeout(seconds) {
             #expect(seconds == 0.3)
         }
     }

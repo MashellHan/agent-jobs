@@ -5,6 +5,11 @@ All notable changes to the Mac app live here. Format: Keep a Changelog.
 ## [Unreleased]
 
 ### Added
+- (cycle 6) `ServiceRegistryTests` — 3 cases: aggregates across providers,
+  failing provider does NOT poison the rest, empty registry. Verifies the
+  TaskGroup failure-isolation contract (code-002 P1 #3 / M2).
+- (cycle 6) `Shell.sigtermGraceSeconds = 0.5` — bounded SIGTERM→SIGKILL
+  escalation in cancellation handler (code-002 P0 #2).
 - (cycle 5) `Shell.run(_:args:timeout:)` — argv-array subprocess wrapper with
   default 5s timeout, separate stdout/stderr capture, `withTaskCancellationHandler`
   reaps the child on cancel. Honors `sandbox-decision.md` commitments.
@@ -42,6 +47,10 @@ All notable changes to the Mac app live here. Format: Keep a Changelog.
   design tokens, MenuBarExtra entry, NavigationSplitView dashboard, 4 unit tests.
 
 ### Changed
+- (cycle 6) `Shell.Failure.timeout` — dropped dead `partialStdout` associated
+  value (was always `""`). New shape: `.timeout(seconds:)`. (code-002 M1)
+- (cycle 6) `Shell.run` — `precondition(executable.hasPrefix("/"))` enforces
+  the doc-comment promise of explicit auditable paths (code-002 L2).
 - (cycle 5) `Package.swift` → `swift-tools-version: 6.0` (strict-review L-004).
 - (cycle 5) `CronHumanizer.dayName(_:)` 8-element array gets explicit comment
   documenting cron BSD/Vixie convention (0 and 7 both = Sunday) (strict-review L-003).
