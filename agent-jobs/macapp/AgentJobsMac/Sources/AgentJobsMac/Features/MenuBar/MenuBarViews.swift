@@ -33,8 +33,10 @@ struct MenuBarPopoverView: View {
             Divider()
             ScrollView {
                 VStack(alignment: .leading, spacing: DesignTokens.Spacing.l) {
-                    section(title: "Active Now", services: activeServices)
-                    section(title: "Scheduled Soon", services: upcomingServices)
+                    section(title: "Active Now", services: activeServices,
+                            emptyMessage: "No services running right now.")
+                    section(title: "Scheduled Soon", services: upcomingServices,
+                            emptyMessage: "Nothing scheduled in the next hour.")
                 }
                 .padding(.vertical, DesignTokens.Spacing.s)
             }
@@ -77,25 +79,29 @@ struct MenuBarPopoverView: View {
     }
 
     private var activeServices: [Service] {
-        registry.services.filter { $0.status == .running }
+        registry.services.filter { $0.status == .running }.prefix(8).map { $0 }
     }
 
     private var upcomingServices: [Service] {
         registry.services
             .filter { $0.nextRun != nil && $0.status != .running }
             .sorted { ($0.nextRun ?? .distantFuture) < ($1.nextRun ?? .distantFuture) }
-            .prefix(5).map { $0 }
+            .prefix(8).map { $0 }
     }
 
     @ViewBuilder
-    private func section(title: String, services: [Service]) -> some View {
+    private func section(title: String, services: [Service], emptyMessage: String) -> some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
             Text(title)
                 .font(DesignTokens.Typography.caption)
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, DesignTokens.Spacing.m)
-            if services.isEmpty {
-                EmptyHintView(message: "Nothing here yet")
+            if registry.phase == .loading && services.isEmpty {
+                ForEach(0..<3, id: \.self) { _ in
+                    SkeletonRow().padding(.horizontal, DesignTokens.Spacing.s)
+                }
+            } else if services.isEmpty {
+                EmptyHintView(message: emptyMessage)
                     .padding(.horizontal, DesignTokens.Spacing.m)
             } else {
                 ForEach(services) { svc in
@@ -152,6 +158,7 @@ struct MemoryBadge: View {
 
 struct ServiceRowCompact: View {
     let service: Service
+    @State private var isHovered = false
     var body: some View {
         HStack(spacing: DesignTokens.Spacing.s) {
             statusDot
@@ -170,7 +177,14 @@ struct ServiceRowCompact: View {
         .padding(.horizontal, DesignTokens.Spacing.s)
         .padding(.vertical, DesignTokens.Spacing.xs)
         .contentShape(Rectangle())
-        .background(.thinMaterial.opacity(0), in: RoundedRectangle(cornerRadius: DesignTokens.Radius.s))
+        .background(
+            isHovered ? Color.primary.opacity(0.06) : .clear,
+            in: RoundedRectangle(cornerRadius: DesignTokens.Radius.s)
+        )
+        .onHover { isHovered = $0 }
+        .animation(.easeOut(duration: 0.12), value: isHovered)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(service.name), \(service.status.rawValue), \(service.schedule.humanDescription)")
     }
 
     private var statusDot: some View {
@@ -216,5 +230,33 @@ struct EmptyHintView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, DesignTokens.Spacing.xs)
+    }
+}
+
+/// Loading-state placeholder. Pulses subtly via `.redacted(reason: .placeholder)`.
+/// Honors Reduce Motion: pulse opacity animation is gated.
+struct SkeletonRow: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var pulse = false
+    var body: some View {
+        HStack(spacing: DesignTokens.Spacing.s) {
+            Circle().fill(.quaternary).frame(width: 8, height: 8)
+            VStack(alignment: .leading, spacing: 2) {
+                RoundedRectangle(cornerRadius: 3).fill(.quaternary).frame(width: 140, height: 10)
+                RoundedRectangle(cornerRadius: 3).fill(.quaternary).frame(width: 80, height: 8)
+            }
+            Spacer()
+            RoundedRectangle(cornerRadius: 3).fill(.quaternary).frame(width: 48, height: 8)
+        }
+        .padding(.horizontal, DesignTokens.Spacing.s)
+        .padding(.vertical, DesignTokens.Spacing.xs)
+        .opacity(pulse ? 0.5 : 1.0)
+        .onAppear {
+            guard !reduceMotion else { return }
+            withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
+                pulse = true
+            }
+        }
+        .accessibilityHidden(true)
     }
 }

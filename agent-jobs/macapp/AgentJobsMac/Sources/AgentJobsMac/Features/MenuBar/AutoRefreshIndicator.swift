@@ -7,6 +7,7 @@ struct AutoRefreshIndicator: View {
     let lastRefresh: Date
     let intervalSeconds: TimeInterval
     @State private var now = Date()
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var body: some View {
@@ -14,7 +15,7 @@ struct AutoRefreshIndicator: View {
             Image(systemName: "arrow.clockwise.circle")
                 .imageScale(.small)
                 .foregroundStyle(.secondary)
-                .symbolEffect(.pulse, options: .repeating, isActive: nextIn <= 3)
+                .symbolEffect(.pulse, options: .repeating, isActive: !reduceMotion && nextIn <= 3)
             Text(label)
                 .font(DesignTokens.Typography.caption.monospacedDigit())
                 .foregroundStyle(.secondary)

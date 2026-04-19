@@ -41,6 +41,10 @@ public enum DesignTokens {
     }
 
     public enum ResourceColor {
+        /// CPU thresholds (per-core %, 100% = 1 fully-pinned core).
+        /// - <  5%: green  — idle / negligible
+        /// -   5–50%: yellow — meaningful work, normal range for active services
+        /// - ≥ 50%: red    — sustained high usage; investigate or throttle
         public static func cpu(_ pct: Double) -> Color {
             switch pct {
             case ..<5:  return .green
@@ -48,6 +52,10 @@ public enum DesignTokens {
             default:    return .red
             }
         }
+        /// RSS thresholds for at-a-glance memory pressure.
+        /// - <100 MB: green  — typical script / lightweight daemon
+        /// - 100–500 MB: yellow — substantial; review periodically
+        /// - ≥500 MB: red — large; potential leak or heavyweight workload
         public static func memory(_ rss: UInt64) -> Color {
             switch rss {
             case ..<(100 * 1024 * 1024):  return .green
