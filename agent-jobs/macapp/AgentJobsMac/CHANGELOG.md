@@ -5,6 +5,12 @@ All notable changes to the Mac app live here. Format: Keep a Changelog.
 ## [Unreleased]
 
 ### Added
+- (cycle 5) `Shell.run(_:args:timeout:)` — argv-array subprocess wrapper with
+  default 5s timeout, separate stdout/stderr capture, `withTaskCancellationHandler`
+  reaps the child on cancel. Honors `sandbox-decision.md` commitments.
+- (cycle 5) `ShellTests` — 5 cases including timeout reap verification.
+- (cycle 5) `AgentJobsJsonProvider.readWithTimeout()` — races file read against
+  5s timer to prevent NFS / locked-file hangs (strict-review M-003).
 - (cycle 4) `SkeletonRow` — reduce-motion aware loading placeholder for menubar sections.
 - (cycle 4) Hover state + combined `accessibilityLabel` on `ServiceRowCompact`
   (design D-P0-1, prior dead `.thinMaterial.opacity(0)` replaced).
@@ -36,6 +42,9 @@ All notable changes to the Mac app live here. Format: Keep a Changelog.
   design tokens, MenuBarExtra entry, NavigationSplitView dashboard, 4 unit tests.
 
 ### Changed
+- (cycle 5) `Package.swift` → `swift-tools-version: 6.0` (strict-review L-004).
+- (cycle 5) `CronHumanizer.dayName(_:)` 8-element array gets explicit comment
+  documenting cron BSD/Vixie convention (0 and 7 both = Sunday) (strict-review L-003).
 - (cycle 4) MenuBarPopoverView sections accept differentiated `emptyMessage` and
   use symmetric `prefix(8)` limits — strict-review M-004.
 - (cycle 4) Sidebar "All" filter shows total service count — strict-review L-001.

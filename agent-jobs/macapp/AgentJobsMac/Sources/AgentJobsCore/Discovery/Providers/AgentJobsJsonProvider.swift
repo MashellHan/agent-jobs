@@ -22,9 +22,14 @@ public struct AgentJobsJsonProvider: ServiceProvider {
 
     public func discover() async throws -> [Service] {
         guard FileManager.default.fileExists(atPath: jobsPath.path) else { return [] }
+        // Race file read against a timeout so a hung filesystem (NFS, locked
+        // file) cannot stall the registry refresh. Resolves strict-review M-003.
         let data: Data
         do {
-            data = try Data(contentsOf: jobsPath)
+            data = try await Self.readWithTimeout(url: jobsPath, seconds: Self.readTimeoutSeconds)
+        } catch ProviderError.timeout {
+            logger.error("Read timed out after \(Self.readTimeoutSeconds, privacy: .public)s: \(self.jobsPath.path, privacy: .public)")
+            throw ProviderError.timeout
         } catch {
             throw ProviderError.ioError("read \(jobsPath.path): \(error.localizedDescription)")
         }
@@ -48,6 +53,27 @@ public struct AgentJobsJsonProvider: ServiceProvider {
     }
 
     public static let supportedSchemaVersion = 1
+    public static let readTimeoutSeconds: TimeInterval = 5
+
+    /// Reads `url` off the main thread and races it against a timeout.
+    /// Throws `ProviderError.timeout` if the read does not finish in time.
+    static func readWithTimeout(url: URL, seconds: TimeInterval) async throws -> Data {
+        try await withThrowingTaskGroup(of: Data.self) { group in
+            group.addTask(priority: .utility) {
+                try Data(contentsOf: url)   // sync IO, but isolated to a child task
+            }
+            group.addTask {
+                try await Task.sleep(for: .seconds(seconds))
+                throw ProviderError.timeout
+            }
+            // First completion wins; cancel siblings.
+            guard let first = try await group.next() else {
+                throw ProviderError.ioError("no result")
+            }
+            group.cancelAll()
+            return first
+        }
+    }
 }
 
 // MARK: - Wire format (mirrors src/types.ts)

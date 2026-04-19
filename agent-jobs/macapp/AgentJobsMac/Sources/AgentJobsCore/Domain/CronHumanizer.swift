@@ -63,6 +63,9 @@ public enum CronHumanizer {
     }
 
     private static func dayName(_ d: Int) -> String {
+        // Cron day-of-week: 0 and 7 both mean Sunday (BSD/Vixie cron).
+        // Array has 8 entries so indexing by either 0 or 7 yields "Sunday"
+        // without a branch — the trailing "Sunday" is intentional, not off-by-one.
         let names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
         return names[d]
     }
