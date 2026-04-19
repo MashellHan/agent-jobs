@@ -30,6 +30,10 @@ struct MenuBarPopoverView: View {
             header
             Divider()
             summaryStrip
+            if case .error(let msg) = registry.phase {
+                Divider()
+                ErrorBanner(message: msg) { Task { await registry.refresh() } }
+            }
             Divider()
             ScrollView {
                 VStack(alignment: .leading, spacing: DesignTokens.Spacing.l) {
@@ -54,9 +58,9 @@ struct MenuBarPopoverView: View {
             Spacer()
             AutoRefreshIndicator(lastRefresh: registry.lastRefresh,
                                  intervalSeconds: registry.refreshIntervalSeconds)
-            Button { Task { await registry.refresh() } } label: { Image(systemName: "arrow.clockwise") }
-                .buttonStyle(.plain)
-                .help("Refresh now")
+            HoverableIconButton(systemImage: "arrow.clockwise", help: "Refresh now") {
+                Task { await registry.refresh() }
+            }
         }
         .padding(DesignTokens.Spacing.m)
     }
@@ -142,6 +146,8 @@ struct SummaryChip: View {
         .padding(.horizontal, DesignTokens.Spacing.s)
         .padding(.vertical, DesignTokens.Spacing.xxs)
         .background(color.opacity(0.12), in: Capsule())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(label)
     }
 }
 
@@ -153,6 +159,62 @@ struct MemoryBadge: View {
             Image(systemName: "memorychip").imageScale(.small).foregroundStyle(.secondary)
             Text(formatted).font(DesignTokens.Typography.caption.monospacedDigit())
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Total memory: \(formatted)")
+    }
+}
+
+/// Borderless icon button with a hover-revealed background. Replaces ad-hoc
+/// `.buttonStyle(.plain)` icon buttons that lacked discoverability.
+struct HoverableIconButton: View {
+    let systemImage: String
+    let help: String
+    let action: () -> Void
+    @State private var isHovered = false
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .padding(DesignTokens.Spacing.xs)
+                .background(
+                    isHovered ? Color.primary.opacity(0.08) : .clear,
+                    in: RoundedRectangle(cornerRadius: DesignTokens.Radius.s)
+                )
+        }
+        .buttonStyle(.plain)
+        .help(help)
+        .onHover { isHovered = $0 }
+        .animation(.easeOut(duration: 0.12), value: isHovered)
+    }
+}
+
+/// Compact error strip rendered between the summary and the service list when
+/// the registry's `LoadPhase == .error`. Offers a one-tap retry so refresh
+/// failures are recoverable instead of silent.
+struct ErrorBanner: View {
+    let message: String
+    let retry: () -> Void
+    var body: some View {
+        HStack(spacing: DesignTokens.Spacing.s) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(DesignTokens.StatusColor.failed)
+            VStack(alignment: .leading, spacing: 1) {
+                Text("Refresh failed")
+                    .font(DesignTokens.Typography.caption.weight(.semibold))
+                Text(message)
+                    .font(DesignTokens.Typography.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+            Spacer()
+            Button("Retry", action: retry)
+                .buttonStyle(.borderless)
+                .font(DesignTokens.Typography.caption)
+        }
+        .padding(.horizontal, DesignTokens.Spacing.m)
+        .padding(.vertical, DesignTokens.Spacing.s)
+        .background(DesignTokens.StatusColor.failed.opacity(0.08))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Refresh failed: \(message)")
     }
 }
 

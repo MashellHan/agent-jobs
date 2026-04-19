@@ -5,6 +5,17 @@ All notable changes to the Mac app live here. Format: Keep a Changelog.
 ## [Unreleased]
 
 ### Added
+- (cycle 7) `ErrorBanner` in MenuBarPopoverView — renders when
+  `ServiceRegistryViewModel.phase == .error(...)`, includes one-tap Retry,
+  composite VoiceOver label. Refresh failures are no longer silent (design D-H6).
+- (cycle 7) `HoverableIconButton` — borderless icon button with hover-revealed
+  background; replaces `.buttonStyle(.plain)` refresh button (design D-H3).
+- (cycle 7) `TabChipRow` + `TabChip` — chip-style tab row replacing
+  `pickerStyle(.segmented)` for the inspector, with active/hover states,
+  `.isSelected` accessibility trait, and SF Symbol per tab (design D-H2).
+- (cycle 7) Zero-filter `ContentUnavailableView` in DashboardView serviceTable
+  (design D-H5).
+- (cycle 7) VoiceOver labels on `SummaryChip`, `MemoryBadge` (design D-M6/M7).
 - (cycle 6) `ServiceRegistryTests` — 3 cases: aggregates across providers,
   failing provider does NOT poison the rest, empty registry. Verifies the
   TaskGroup failure-isolation contract (code-002 P1 #3 / M2).
@@ -47,6 +58,12 @@ All notable changes to the Mac app live here. Format: Keep a Changelog.
   design tokens, MenuBarExtra entry, NavigationSplitView dashboard, 4 unit tests.
 
 ### Changed
+- (cycle 7) `MetricTile` — added 1pt `.strokeBorder(.quaternary)` overlay and
+  `minHeight: 64` for visual depth + alignment (design D-M8 + D-L5).
+- (cycle 7) `ServiceInspector.Tab` gained `sfSymbol` per tab; rendered by
+  the new `TabChipRow` instead of segmented Picker.
+- (cycle 7) `MenuBarPopoverView` body — inserts `ErrorBanner` between summary
+  and section list when in `.error` phase.
 - (cycle 6) `Shell.Failure.timeout` — dropped dead `partialStdout` associated
   value (was always `""`). New shape: `.timeout(seconds:)`. (code-002 M1)
 - (cycle 6) `Shell.run` — `precondition(executable.hasPrefix("/"))` enforces

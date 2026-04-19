@@ -62,42 +62,55 @@ struct DashboardView: View {
     }
 
     private var serviceTable: some View {
-        Table(filteredServices, selection: $selection) {
-            TableColumn("Name") { svc in
-                HStack(spacing: DesignTokens.Spacing.xs) {
-                    Image(systemName: svc.source.category.sfSymbol)
-                        .foregroundStyle(.secondary)
-                    Text(svc.name)
+        Group {
+            if filteredServices.isEmpty {
+                ContentUnavailableView(
+                    categoryFilter == nil ? "No services discovered yet" : "No \(categoryFilter!.displayName) services",
+                    systemImage: categoryFilter?.sfSymbol ?? "tray",
+                    description: Text(categoryFilter == nil
+                                      ? "Providers will populate this view as they discover work."
+                                      : "Try clearing the filter, or run something in this category.")
+                )
+            } else {
+                Table(filteredServices, selection: $selection) {
+                    TableColumn("Name") { svc in
+                        HStack(spacing: DesignTokens.Spacing.xs) {
+                            Image(systemName: svc.source.category.sfSymbol)
+                                .foregroundStyle(.secondary)
+                            Text(svc.name)
+                        }
+                    }
+                    TableColumn("Status") { svc in StatusBadge(status: svc.status) }
+                        .width(min: 70, ideal: 90)
+                    TableColumn("Schedule") { svc in
+                        Text(svc.schedule.humanDescription)
+                            .font(DesignTokens.Typography.monoSmall)
+                    }
+                    TableColumn("Created") { svc in
+                        Text(svc.createdAt.formatted(.relative(presentation: .named)))
+                            .foregroundStyle(.secondary)
+                            .help(svc.createdAt.formatted(date: .abbreviated, time: .standard))
+                    }
+                    TableColumn("CPU") { svc in
+                        if let m = svc.metrics {
+                            Text(m.cpuPercentClampedFormatted)
+                                .foregroundStyle(DesignTokens.ResourceColor.cpu(m.cpuPercent))
+                                .font(.body.monospacedDigit())
+                        } else { Text("—").foregroundStyle(.tertiary) }
+                    }.width(min: 60, ideal: 70)
+                    TableColumn("Memory") { svc in
+                        if let m = svc.metrics {
+                            Text(m.memoryRSSFormatted)
+                                .foregroundStyle(DesignTokens.ResourceColor.memory(m.memoryRSS))
+                                .font(.body.monospacedDigit())
+                        } else { Text("—").foregroundStyle(.tertiary) }
+                    }.width(min: 80, ideal: 90)
+                    TableColumn("Last Run") { svc in
+                        Text(svc.lastRun.map { $0.formatted(.relative(presentation: .named)) } ?? "—")
+                            .foregroundStyle(.secondary)
+                    }
                 }
-            }
-            TableColumn("Status") { svc in StatusBadge(status: svc.status) }
-                .width(min: 70, ideal: 90)
-            TableColumn("Schedule") { svc in
-                Text(svc.schedule.humanDescription)
-                    .font(DesignTokens.Typography.monoSmall)
-            }
-            TableColumn("Created") { svc in
-                Text(svc.createdAt.formatted(.relative(presentation: .named)))
-                    .foregroundStyle(.secondary)
-                    .help(svc.createdAt.formatted(date: .abbreviated, time: .standard))
-            }
-            TableColumn("CPU") { svc in
-                if let m = svc.metrics {
-                    Text(m.cpuPercentClampedFormatted)
-                        .foregroundStyle(DesignTokens.ResourceColor.cpu(m.cpuPercent))
-                        .font(.body.monospacedDigit())
-                } else { Text("—").foregroundStyle(.tertiary) }
-            }.width(min: 60, ideal: 70)
-            TableColumn("Memory") { svc in
-                if let m = svc.metrics {
-                    Text(m.memoryRSSFormatted)
-                        .foregroundStyle(DesignTokens.ResourceColor.memory(m.memoryRSS))
-                        .font(.body.monospacedDigit())
-                } else { Text("—").foregroundStyle(.tertiary) }
-            }.width(min: 80, ideal: 90)
-            TableColumn("Last Run") { svc in
-                Text(svc.lastRun.map { $0.formatted(.relative(presentation: .named)) } ?? "—")
-                    .foregroundStyle(.secondary)
+                .tableStyle(.inset(alternatesRowBackgrounds: true))
             }
         }
     }
@@ -151,17 +164,22 @@ struct ServiceInspector: View {
     enum Tab: String, CaseIterable, Identifiable {
         case overview = "Overview", logs = "Logs", config = "Config", metrics = "Metrics"
         var id: String { rawValue }
+        var sfSymbol: String {
+            switch self {
+            case .overview: return "square.text.square"
+            case .logs:     return "text.alignleft"
+            case .config:   return "doc.text"
+            case .metrics:  return "chart.bar.xaxis"
+            }
+        }
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             header
-            Picker("", selection: $tab) {
-                ForEach(Tab.allCases) { t in Text(t.rawValue).tag(t) }
-            }
-            .pickerStyle(.segmented)
-            .padding(.horizontal, DesignTokens.Spacing.l)
-            .padding(.bottom, DesignTokens.Spacing.s)
+            TabChipRow(selection: $tab)
+                .padding(.horizontal, DesignTokens.Spacing.l)
+                .padding(.bottom, DesignTokens.Spacing.s)
             Divider()
             ScrollView { content.padding(DesignTokens.Spacing.l) }
         }
@@ -260,8 +278,58 @@ struct MetricTile: View {
             Text(value).font(mono ? DesignTokens.Typography.mono : DesignTokens.Typography.metric)
         }
         .padding(DesignTokens.Spacing.m)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
         .background(.quaternary.opacity(0.4),
                     in: RoundedRectangle(cornerRadius: DesignTokens.Radius.m))
+        .overlay(
+            RoundedRectangle(cornerRadius: DesignTokens.Radius.m)
+                .strokeBorder(.quaternary, lineWidth: 1)
+        )
+    }
+}
+
+/// Chip-style tab row replacing `pickerStyle(.segmented)` for the inspector.
+/// Linear/Things-flavored: capsule background on the active tab, transparent
+/// for the rest. Each tab is a real `Button` so VoiceOver and keyboard nav
+/// work without bespoke `accessibilityElement` plumbing.
+struct TabChipRow: View {
+    @Binding var selection: ServiceInspector.Tab
+    var body: some View {
+        HStack(spacing: DesignTokens.Spacing.xs) {
+            ForEach(ServiceInspector.Tab.allCases) { t in
+                TabChip(tab: t, isSelected: selection == t) { selection = t }
+            }
+            Spacer()
+        }
+    }
+}
+
+private struct TabChip: View {
+    let tab: ServiceInspector.Tab
+    let isSelected: Bool
+    let action: () -> Void
+    @State private var isHovered = false
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: DesignTokens.Spacing.xs) {
+                Image(systemName: tab.sfSymbol).imageScale(.small)
+                Text(tab.rawValue).font(DesignTokens.Typography.caption)
+            }
+            .padding(.horizontal, DesignTokens.Spacing.s)
+            .padding(.vertical, DesignTokens.Spacing.xs)
+            .background(background, in: Capsule())
+            .foregroundStyle(isSelected ? Color.accentColor : .primary)
+        }
+        .buttonStyle(.plain)
+        .onHover { isHovered = $0 }
+        .animation(.easeOut(duration: 0.12), value: isSelected)
+        .animation(.easeOut(duration: 0.12), value: isHovered)
+        .accessibilityLabel(tab.rawValue)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+    private var background: Color {
+        if isSelected { return Color.accentColor.opacity(0.15) }
+        if isHovered  { return Color.primary.opacity(0.06) }
+        return .clear
     }
 }
