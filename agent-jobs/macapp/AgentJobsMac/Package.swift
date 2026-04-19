@@ -25,6 +25,7 @@ let package = Package(
             name: "AgentJobsCoreTests",
             dependencies: [
                 "AgentJobsCore",
+                "AgentJobsMac",
                 .product(name: "Testing", package: "swift-testing"),
             ],
             path: "Tests/AgentJobsCoreTests"

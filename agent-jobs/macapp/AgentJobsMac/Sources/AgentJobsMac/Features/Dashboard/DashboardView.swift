@@ -26,8 +26,14 @@ struct DashboardView: View {
     private var sidebar: some View {
         List(selection: $categoryFilter) {
             Section("Filters") {
-                Label("All", systemImage: "tray.full")
-                    .tag(Optional<ServiceSource.Category>.none)
+                HStack {
+                    Label("All", systemImage: "tray.full")
+                    Spacer()
+                    Text("\(registry.services.count)")
+                        .font(DesignTokens.Typography.monoSmall)
+                        .foregroundStyle(.secondary)
+                }
+                .tag(Optional<ServiceSource.Category>.none)
             }
             Section("Categories") {
                 ForEach(ServiceSource.Category.allCases, id: \.self) { cat in
@@ -100,12 +106,30 @@ struct DashboardView: View {
 struct StatusBadge: View {
     let status: ServiceStatus
     var body: some View {
-        Text(status.rawValue.capitalized)
-            .font(DesignTokens.Typography.caption)
-            .padding(.horizontal, DesignTokens.Spacing.s)
-            .padding(.vertical, 2)
-            .background(color.opacity(0.18), in: Capsule())
-            .foregroundStyle(color)
+        HStack(spacing: 4) {
+            Image(systemName: symbol)
+                .imageScale(.small)
+            Text(status.rawValue.capitalized)
+                .font(DesignTokens.Typography.caption)
+        }
+        .padding(.horizontal, DesignTokens.Spacing.s)
+        .padding(.vertical, 2)
+        .background(color.opacity(0.18), in: Capsule())
+        .foregroundStyle(color)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Status: \(status.rawValue)")
+    }
+    private var symbol: String {
+        switch status {
+        case .running:   return "circle.fill"
+        case .scheduled: return "clock.fill"
+        case .failed:    return "xmark.octagon.fill"
+        case .paused:    return "pause.circle.fill"
+        case .done:      return "checkmark.circle.fill"
+        case .idle:      return "moon.zzz.fill"
+        case .orphaned:  return "questionmark.circle.fill"
+        case .unknown:   return "questionmark.circle"
+        }
     }
     private var color: Color {
         switch status {
@@ -162,8 +186,14 @@ struct ServiceInspector: View {
     private var content: some View {
         switch tab {
         case .overview: overviewContent
-        case .logs:     Text("Logs streaming — implemented in M1.2").foregroundStyle(.secondary)
-        case .config:   Text("Raw config — implemented in M1.3").foregroundStyle(.secondary)
+        case .logs:
+            ContentUnavailableView("Logs streaming",
+                                   systemImage: "text.alignleft",
+                                   description: Text("Live log tail lands in M1.2."))
+        case .config:
+            ContentUnavailableView("Raw configuration",
+                                   systemImage: "doc.text.below.ecg",
+                                   description: Text("plist / cron / json source view lands in M1.3."))
         case .metrics:  metricsContent
         }
     }

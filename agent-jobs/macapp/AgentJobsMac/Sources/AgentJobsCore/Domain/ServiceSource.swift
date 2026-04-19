@@ -76,7 +76,7 @@ public enum Schedule: Hashable, Sendable {
     /// Human-readable rendering ("every 30s", "daily at 09:00", "0 9 * * *").
     public var humanDescription: String {
         switch self {
-        case .cron(let expr):       return "cron: \(expr)"
+        case .cron(let expr):       return CronHumanizer.humanize(expr)
         case .interval(let s):      return "every \(formatSeconds(s))"
         case .eventTrigger(let t):  return "on \(t)"
         case .calendar:             return "calendar trigger"
