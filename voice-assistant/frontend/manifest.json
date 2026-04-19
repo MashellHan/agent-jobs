@@ -1,0 +1,42 @@
+{
+  "name": "nio 语音助手",
+  "short_name": "nio",
+  "description": "nio 智能语音助手 – 随时随地与 AI 对话",
+  "lang": "zh-CN",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0d0d0d",
+  "theme_color": "#6c63ff",
+  "categories": ["utilities", "productivity"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='38' fill='%230d0d0d'/%3E%3Ccircle cx='96' cy='96' r='72' fill='%236c63ff' opacity='0.15'/%3E%3Ccircle cx='96' cy='96' r='52' fill='%236c63ff'/%3E%3Crect x='83' y='62' width='26' height='52' rx='13' fill='white'/%3E%3Cpath d='M66 98 Q66 128 96 128 Q126 128 126 98' stroke='white' stroke-width='7' fill='none' stroke-linecap='round'/%3E%3Crect x='89.5' y='128' width='13' height='18' rx='3' fill='white'/%3E%3Crect x='76' y='144' width='40' height='8' rx='4' fill='white'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='38' fill='%230d0d0d'/%3E%3Ccircle cx='96' cy='96' r='72' fill='%236c63ff' opacity='0.15'/%3E%3Ccircle cx='96' cy='96' r='52' fill='%236c63ff'/%3E%3Crect x='83' y='62' width='26' height='52' rx='13' fill='white'/%3E%3Cpath d='M66 98 Q66 128 96 128 Q126 128 126 98' stroke='white' stroke-width='7' fill='none' stroke-linecap='round'/%3E%3Crect x='89.5' y='128' width='13' height='18' rx='3' fill='white'/%3E%3Crect x='76' y='144' width='40' height='8' rx='4' fill='white'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%230d0d0d'/%3E%3Ccircle cx='256' cy='256' r='192' fill='%236c63ff' opacity='0.15'/%3E%3Ccircle cx='256' cy='256' r='140' fill='%236c63ff'/%3E%3Crect x='221' y='162' width='70' height='138' rx='35' fill='white'/%3E%3Cpath d='M174 258 Q174 342 256 342 Q338 342 338 258' stroke='white' stroke-width='18' fill='none' stroke-linecap='round'/%3E%3Crect x='238' y='342' width='36' height='48' rx='8' fill='white'/%3E%3Crect x='202' y='386' width='108' height='20' rx='10' fill='white'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%230d0d0d'/%3E%3Ccircle cx='256' cy='256' r='192' fill='%236c63ff' opacity='0.15'/%3E%3Ccircle cx='256' cy='256' r='140' fill='%236c63ff'/%3E%3Crect x='221' y='162' width='70' height='138' rx='35' fill='white'/%3E%3Cpath d='M174 258 Q174 342 256 342 Q338 342 338 258' stroke='white' stroke-width='18' fill='none' stroke-linecap='round'/%3E%3Crect x='238' y='342' width='36' height='48' rx='8' fill='white'/%3E%3Crect x='202' y='386' width='108' height='20' rx='10' fill='white'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": []
+}

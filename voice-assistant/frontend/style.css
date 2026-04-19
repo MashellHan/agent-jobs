@@ -1,0 +1,480 @@
+/* ═══════════════════════════════════════════════════════════════
+   nio Voice Assistant – style.css
+   Mobile-first dark theme
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Reset & Custom Properties ─────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+  /* Colors */
+  --bg:              #0d0d0d;
+  --bg-surface:      #161616;
+  --bg-card:         #1a1a1a;
+  --bg-bubble-user:  #6c63ff;
+  --bg-bubble-asst:  #252525;
+  --accent:          #6c63ff;
+  --accent-light:    #9d97ff;
+  --accent-dim:      rgba(108, 99, 255, 0.25);
+  --text:            #e0e0e0;
+  --text-secondary:  #a0a0a0;
+  --text-muted:      #555;
+  --border:          #2a2a2a;
+
+  /* State colors */
+  --clr-idle:       #555;
+  --clr-connecting: #ffa000;
+  --clr-listening:  #00c853;
+  --clr-thinking:   #ffa000;
+  --clr-speaking:   #2196f3;
+  --clr-error:      #ff5252;
+
+  /* Radius */
+  --r-bubble: 18px;
+  --r-pill:   100px;
+  --r-btn:    50%;
+}
+
+/* ─── Base ───────────────────────────────────────────────────── */
+html {
+  height: 100%;
+  height: -webkit-fill-available;
+}
+
+body {
+  height: 100%;
+  height: 100dvh;
+  min-height: -webkit-fill-available;
+  width: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB',
+               'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Header ─────────────────────────────────────────────────── */
+#status-bar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(env(safe-area-inset-top) + 10px) 16px 10px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  z-index: 20;
+}
+
+#app-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#app-logo {
+  flex-shrink: 0;
+}
+
+#app-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.01em;
+}
+
+/* ─── Connection chip ────────────────────────────────────────── */
+#connection-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  padding: 4px 10px;
+  transition: border-color 0.3s, color 0.3s;
+}
+
+#connection-chip .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--clr-idle);
+  transition: background 0.3s;
+  flex-shrink: 0;
+}
+
+#connection-chip.connected  .dot { background: var(--clr-listening); }
+#connection-chip.connecting .dot {
+  background: var(--clr-connecting);
+  animation: blink 1s ease-in-out infinite;
+}
+#connection-chip.disconnected .dot { background: var(--clr-error); }
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.2; }
+}
+
+/* ─── Chat / Transcript area ─────────────────────────────────── */
+#chat-area {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px 14px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Empty state */
+#chat-area:empty::before {
+  content: "你好，我是 nio 👋\A说点什么开始吧～";
+  white-space: pre;
+  color: var(--text-muted);
+  font-size: 15px;
+  text-align: center;
+  margin: auto;
+  padding: 24px 20px;
+  line-height: 2;
+}
+
+/* ─── Bubble wrap ────────────────────────────────────────────── */
+.bubble-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-width: 80%;
+  animation: bubble-in 0.22s ease-out both;
+}
+
+@keyframes bubble-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+.bubble-wrap.user      { align-self: flex-end;  align-items: flex-end; }
+.bubble-wrap.assistant { align-self: flex-start; align-items: flex-start; }
+
+.bubble-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 0 6px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.bubble {
+  padding: 10px 14px;
+  border-radius: var(--r-bubble);
+  font-size: 15px;
+  line-height: 1.55;
+  word-break: break-word;
+}
+
+.bubble-wrap.user .bubble {
+  background: var(--bg-bubble-user);
+  color: #fff;
+  border-bottom-right-radius: 5px;
+}
+
+.bubble-wrap.assistant .bubble {
+  background: var(--bg-bubble-asst);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 5px;
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────────── */
+#chat-area::-webkit-scrollbar       { width: 3px; }
+#chat-area::-webkit-scrollbar-track { background: transparent; }
+#chat-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ─── Footer ─────────────────────────────────────────────────── */
+#bottom-bar {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px calc(env(safe-area-inset-bottom) + 20px);
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border);
+}
+
+/* ─── Status pill ────────────────────────────────────────────── */
+#status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: var(--r-pill);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  transition: background 0.3s, color 0.3s, border-color 0.3s;
+}
+
+#status-pill::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--clr-idle);
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+
+/* Pill state variants */
+#status-pill.idle {
+  color: var(--text-muted);
+}
+#status-pill.idle::before { background: var(--clr-idle); }
+
+#status-pill.connecting {
+  color: var(--clr-connecting);
+  border-color: rgba(255,160,0,0.3);
+}
+#status-pill.connecting::before {
+  background: var(--clr-connecting);
+  animation: blink 1s infinite;
+}
+
+#status-pill.listening {
+  color: var(--clr-listening);
+  border-color: rgba(0,200,83,0.3);
+  background: rgba(0,200,83,0.06);
+}
+#status-pill.listening::before {
+  background: var(--clr-listening);
+  animation: pulse-dot 1s ease-in-out infinite;
+}
+
+#status-pill.thinking {
+  color: var(--clr-thinking);
+  border-color: rgba(255,160,0,0.3);
+  background: rgba(255,160,0,0.06);
+}
+#status-pill.thinking::before {
+  background: var(--clr-thinking);
+  animation: blink 0.7s infinite;
+}
+
+#status-pill.speaking {
+  color: var(--clr-speaking);
+  border-color: rgba(33,150,243,0.3);
+  background: rgba(33,150,243,0.06);
+}
+#status-pill.speaking::before {
+  background: var(--clr-speaking);
+  animation: pulse-dot 0.8s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1);   opacity: 1; }
+  50%       { transform: scale(1.5); opacity: 0.6; }
+}
+
+/* ─── Visualizer ─────────────────────────────────────────────── */
+#visualizer-wrap {
+  width: 100%;
+  max-width: 320px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#visualizer {
+  width: 100%;
+  height: 60px;
+  display: block;
+}
+
+/* ─── Mic Button ─────────────────────────────────────────────── */
+#mic-btn {
+  width: 150px;
+  height: 150px;
+  border-radius: var(--r-btn);
+  border: none;
+  background: linear-gradient(135deg, var(--accent) 0%, #a855f7 100%);
+  color: #fff;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, box-shadow 0.25s ease, background 0.3s ease;
+  box-shadow: 0 6px 32px rgba(108, 99, 255, 0.45);
+  user-select: none;
+  touch-action: manipulation;
+  outline: none;
+}
+
+#mic-btn:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+#mic-btn:focus-visible {
+  outline: 3px solid var(--accent-light);
+  outline-offset: 4px;
+}
+
+#mic-btn:disabled,
+#mic-btn.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* ─── Listening state: pulse rings ──────────────────────────── */
+#mic-btn.listening {
+  box-shadow: 0 6px 32px rgba(0, 200, 83, 0.5);
+  background: linear-gradient(135deg, #00c853 0%, #00e676 100%);
+}
+
+#mic-btn.listening::before,
+#mic-btn.listening::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  border: 2.5px solid rgba(0, 200, 83, 0.7);
+  pointer-events: none;
+  animation: mic-pulse 1.6s ease-out infinite;
+}
+
+#mic-btn.listening::before {
+  width: 174px;
+  height: 174px;
+  animation-delay: 0s;
+}
+
+#mic-btn.listening::after {
+  width: 204px;
+  height: 204px;
+  animation-delay: 0.5s;
+}
+
+@keyframes mic-pulse {
+  0%   { transform: scale(0.88); opacity: 0.9; }
+  100% { transform: scale(1.1);  opacity: 0; }
+}
+
+/* ─── Thinking state: spinner ────────────────────────────────── */
+#mic-btn.thinking {
+  background: linear-gradient(135deg, #ffa000 0%, #ff6f00 100%);
+  box-shadow: 0 6px 32px rgba(255, 160, 0, 0.45);
+}
+
+#mic-btn.thinking .mic-icon {
+  opacity: 0.35;
+}
+
+#mic-btn.thinking::before {
+  content: '';
+  position: absolute;
+  width: 86px;
+  height: 86px;
+  border: 3.5px solid rgba(255, 255, 255, 0.15);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.85s linear infinite;
+  pointer-events: none;
+}
+
+/* ─── Speaking state ─────────────────────────────────────────── */
+#mic-btn.speaking {
+  background: linear-gradient(135deg, #2196f3 0%, #00b0ff 100%);
+  box-shadow: 0 6px 32px rgba(33, 150, 243, 0.5);
+}
+
+#mic-btn.speaking::before,
+#mic-btn.speaking::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  border: 2.5px solid rgba(33, 150, 243, 0.6);
+  pointer-events: none;
+  animation: mic-pulse 1.2s ease-out infinite;
+}
+
+#mic-btn.speaking::before {
+  width: 174px;
+  height: 174px;
+  animation-delay: 0s;
+}
+
+#mic-btn.speaking::after {
+  width: 204px;
+  height: 204px;
+  animation-delay: 0.35s;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Hint text ──────────────────────────────────────────────── */
+#hint-text {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+  min-height: 18px;
+  transition: color 0.3s;
+  letter-spacing: 0.01em;
+}
+
+/* ─── Toast ──────────────────────────────────────────────────── */
+#toast {
+  position: fixed;
+  bottom: calc(env(safe-area-inset-bottom) + 220px);
+  left: 50%;
+  transform: translateX(-50%) translateY(14px);
+  background: rgba(30, 30, 30, 0.96);
+  border: 1px solid rgba(255, 82, 82, 0.5);
+  color: #ff8a80;
+  padding: 10px 20px;
+  border-radius: 24px;
+  font-size: 14px;
+  font-weight: 500;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  white-space: nowrap;
+  max-width: 88vw;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  z-index: 100;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+#toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ─── Utility ────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
