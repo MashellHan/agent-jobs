@@ -92,4 +92,29 @@ struct ServiceRegistryTests {
         let result = await registry.discoverAll()
         #expect(result.isEmpty)
     }
+
+    @Test("all providers failing → empty result, no propagation")
+    func allFailingProvidersReturnEmpty() async {
+        let registry = ServiceRegistry(providers: [
+            StubFailingProvider(),
+            StubFailingProvider(),
+            StubFailingProvider()
+        ])
+        let result = await registry.discoverAll()
+        // No throw, just empty — failure isolation must hold even when every
+        // provider fails. UI sees "no services" instead of a crash.
+        #expect(result.isEmpty)
+    }
+
+    @Test("preserves order-independent set semantics across many providers")
+    func aggregatesAcrossManyProviders() async {
+        let services = (0..<10).map { Self.makeService(id: "svc\($0)") }
+        let providers: [any ServiceProvider] = services.map { svc in
+            StubGoodProvider(services: [svc])
+        }
+        let registry = ServiceRegistry(providers: providers)
+        let result = await registry.discoverAll()
+        #expect(result.count == 10)
+        #expect(Set(result.map { $0.id }) == Set(services.map { $0.id }))
+    }
 }

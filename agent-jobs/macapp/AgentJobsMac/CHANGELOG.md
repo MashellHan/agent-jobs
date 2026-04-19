@@ -5,6 +5,13 @@ All notable changes to the Mac app live here. Format: Keep a Changelog.
 ## [Unreleased]
 
 ### Added
+- (cycle 8) `Sources/AgentJobsMac/Components/StatusBadge.swift` —
+  extracted from DashboardView for reuse + token-locked styling (code-002 M3).
+- (cycle 8) `Sources/AgentJobsMac/Components/MetricTile.swift` —
+  extracted from DashboardView (code-002 M3).
+- (cycle 8) `ServiceRegistryTests` +2 cases: all-providers-failing returns
+  empty (failure-isolation under total-failure scenario), and a 10-provider
+  aggregation test verifying set semantics.
 - (cycle 7) `ErrorBanner` in MenuBarPopoverView — renders when
   `ServiceRegistryViewModel.phase == .error(...)`, includes one-tap Retry,
   composite VoiceOver label. Refresh failures are no longer silent (design D-H6).

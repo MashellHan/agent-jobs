@@ -116,47 +116,6 @@ struct DashboardView: View {
     }
 }
 
-struct StatusBadge: View {
-    let status: ServiceStatus
-    var body: some View {
-        HStack(spacing: 4) {
-            Image(systemName: symbol)
-                .imageScale(.small)
-            Text(status.rawValue.capitalized)
-                .font(DesignTokens.Typography.caption)
-        }
-        .padding(.horizontal, DesignTokens.Spacing.s)
-        .padding(.vertical, 2)
-        .background(color.opacity(0.18), in: Capsule())
-        .foregroundStyle(color)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Status: \(status.rawValue)")
-    }
-    private var symbol: String {
-        switch status {
-        case .running:   return "circle.fill"
-        case .scheduled: return "clock.fill"
-        case .failed:    return "xmark.octagon.fill"
-        case .paused:    return "pause.circle.fill"
-        case .done:      return "checkmark.circle.fill"
-        case .idle:      return "moon.zzz.fill"
-        case .orphaned:  return "questionmark.circle.fill"
-        case .unknown:   return "questionmark.circle"
-        }
-    }
-    private var color: Color {
-        switch status {
-        case .running:   return DesignTokens.StatusColor.running
-        case .scheduled: return DesignTokens.StatusColor.scheduled
-        case .failed:    return DesignTokens.StatusColor.failed
-        case .paused:    return DesignTokens.StatusColor.paused
-        case .done:      return DesignTokens.StatusColor.done
-        case .idle:      return DesignTokens.StatusColor.idle
-        default:         return DesignTokens.StatusColor.unknown
-        }
-    }
-}
-
 struct ServiceInspector: View {
     let service: Service
     @State private var tab: Tab = .overview
@@ -263,28 +222,6 @@ struct ServiceInspector: View {
         case .user: return "user"
         case .agent(let n): return n.displayName
         }
-    }
-}
-
-struct MetricTile: View {
-    let title: String
-    let value: String
-    var mono: Bool = false
-    var body: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
-            Text(title.uppercased())
-                .font(DesignTokens.Typography.caption)
-                .foregroundStyle(.secondary)
-            Text(value).font(mono ? DesignTokens.Typography.mono : DesignTokens.Typography.metric)
-        }
-        .padding(DesignTokens.Spacing.m)
-        .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
-        .background(.quaternary.opacity(0.4),
-                    in: RoundedRectangle(cornerRadius: DesignTokens.Radius.m))
-        .overlay(
-            RoundedRectangle(cornerRadius: DesignTokens.Radius.m)
-                .strokeBorder(.quaternary, lineWidth: 1)
-        )
     }
 }
 
