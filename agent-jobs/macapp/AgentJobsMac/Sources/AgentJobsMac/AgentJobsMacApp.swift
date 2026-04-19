@@ -27,9 +27,17 @@ struct AgentJobsMacApp: App {
 final class ServiceRegistryViewModel {
     var services: [Service] = []
     var summary: MenuBarSummary = .empty
+    var lastRefresh: Date = Date()
+    let refreshIntervalSeconds: TimeInterval = 30
 
     init() {
         // Wire actual ServiceRegistry in M2 cycle.
+    }
+
+    @MainActor
+    func refresh() async {
+        // Stub: real Provider orchestration lands in M2 cycle 3.
+        lastRefresh = Date()
     }
 }
 

@@ -50,7 +50,9 @@ struct MenuBarPopoverView: View {
             Text("Agent Jobs")
                 .font(DesignTokens.Typography.heading)
             Spacer()
-            Button { } label: { Image(systemName: "arrow.clockwise") }
+            AutoRefreshIndicator(lastRefresh: registry.lastRefresh,
+                                 intervalSeconds: registry.refreshIntervalSeconds)
+            Button { Task { await registry.refresh() } } label: { Image(systemName: "arrow.clockwise") }
                 .buttonStyle(.plain)
                 .help("Refresh now")
         }
@@ -107,7 +109,7 @@ struct MenuBarPopoverView: View {
     private var footer: some View {
         HStack {
             Button("Open Dashboard") {
-                NSWorkspace.shared.open(URL(string: "agentjobsmac://dashboard")!)
+                openWindow(id: "dashboard")
             }
             .keyboardShortcut("d", modifiers: .command)
             Spacer()
@@ -117,6 +119,7 @@ struct MenuBarPopoverView: View {
         .padding(DesignTokens.Spacing.m)
         .font(DesignTokens.Typography.caption)
     }
+    @Environment(\.openWindow) private var openWindow
 }
 
 // MARK: - Reusable bits

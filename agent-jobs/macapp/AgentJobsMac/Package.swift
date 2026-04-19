@@ -8,6 +8,9 @@ let package = Package(
         .executable(name: "AgentJobsMac", targets: ["AgentJobsMac"]),
         .library(name: "AgentJobsCore", targets: ["AgentJobsCore"]),
     ],
+    dependencies: [
+        .package(url: "https://github.com/apple/swift-testing.git", from: "0.10.0"),
+    ],
     targets: [
         .executableTarget(
             name: "AgentJobsMac",
@@ -20,9 +23,12 @@ let package = Package(
         ),
         .testTarget(
             name: "AgentJobsCoreTests",
-            dependencies: ["AgentJobsCore"],
-            path: "Tests/AgentJobsCoreTests",
-            resources: [.copy("Fixtures")]
+            dependencies: [
+                "AgentJobsCore",
+                .product(name: "Testing", package: "swift-testing"),
+            ],
+            path: "Tests/AgentJobsCoreTests"
         ),
     ]
 )
+

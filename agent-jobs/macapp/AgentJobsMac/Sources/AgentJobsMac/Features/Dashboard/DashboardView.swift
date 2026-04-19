@@ -70,6 +70,11 @@ struct DashboardView: View {
                 Text(svc.schedule.humanDescription)
                     .font(DesignTokens.Typography.monoSmall)
             }
+            TableColumn("Created") { svc in
+                Text(svc.createdAt.formatted(.relative(presentation: .named)))
+                    .foregroundStyle(.secondary)
+                    .help(svc.createdAt.formatted(date: .abbreviated, time: .standard))
+            }
             TableColumn("CPU") { svc in
                 if let m = svc.metrics {
                     Text(m.cpuPercentClampedFormatted)
@@ -146,8 +151,8 @@ struct ServiceInspector: View {
                 Spacer()
                 StatusBadge(status: service.status)
             }
-            if let cmd = service.command {
-                Text(cmd).font(DesignTokens.Typography.monoSmall).foregroundStyle(.secondary).lineLimit(2)
+            if !service.command.isEmpty {
+                Text(service.command).font(DesignTokens.Typography.monoSmall).foregroundStyle(.secondary).lineLimit(2)
             }
         }
         .padding(DesignTokens.Spacing.l)
@@ -208,7 +213,7 @@ struct ServiceInspector: View {
         switch service.owner {
         case .os: return "system"
         case .user: return "user"
-        case .agent(let n): return n
+        case .agent(let n): return n.displayName
         }
     }
 }

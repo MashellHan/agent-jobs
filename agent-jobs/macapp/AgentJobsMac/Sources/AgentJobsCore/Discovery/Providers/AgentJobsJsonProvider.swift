@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 /// Reads `~/.agent-jobs/jobs.json` produced by the existing TS scanner.
 /// Schema kept in sync with src/types.ts.
@@ -8,6 +9,7 @@ public struct AgentJobsJsonProvider: ServiceProvider {
     public static let category = ServiceSource.Category.agentJobs
 
     public let jobsPath: URL
+    private let logger = Logger(subsystem: "com.agentjobs.mac", category: "AgentJobsJsonProvider")
 
     public init(jobsPath: URL? = nil) {
         if let p = jobsPath {
@@ -34,16 +36,24 @@ public struct AgentJobsJsonProvider: ServiceProvider {
         do {
             payload = try decoder.decode(JobsFile.self, from: data)
         } catch {
-            // Malformed input: return empty rather than crash; surface via diagnostics later.
+            // Resilient: return empty rather than crash, but log diagnostic
+            // so silent failure doesn't hide real bugs (code-review-001 H1).
+            logger.error("Malformed jobs.json: \(error.localizedDescription, privacy: .public)")
             return []
+        }
+        if let v = payload.schemaVersion, v > Self.supportedSchemaVersion {
+            logger.warning("jobs.json schemaVersion=\(v) exceeds supported \(Self.supportedSchemaVersion); attempting best-effort parse")
         }
         return payload.jobs.map { $0.toService() }
     }
+
+    public static let supportedSchemaVersion = 1
 }
 
 // MARK: - Wire format (mirrors src/types.ts)
 
 private struct JobsFile: Decodable {
+    let schemaVersion: Int?
     let jobs: [JobEntry]
 }
 
@@ -54,9 +64,11 @@ private struct JobEntry: Decodable {
     let command: String?
     let status: String?
     let pid: Int32?
+    let createdAt: Date?
     let startedAt: Date?
     let finishedAt: Date?
     let schedule: String?
+    let origin: String?
 
     func toService() -> Service {
         let status: ServiceStatus = {
@@ -81,15 +93,19 @@ private struct JobEntry: Decodable {
             kind: schedule == .onDemand ? .oneshot : .scheduled,
             name: name,
             project: project,
-            command: command,
+            command: command ?? "",
             schedule: schedule,
             status: status,
+            createdAt: createdAt ?? startedAt ?? Date(),
             lastRun: finishedAt ?? startedAt,
             nextRun: nil,
             pid: pid,
             metrics: nil,
             logsPath: nil,
-            owner: .user
+            owner: .user,
+            history: [],
+            origin: origin.map { ServiceOrigin(agent: .custom($0)) }
         )
     }
 }
+

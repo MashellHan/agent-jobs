@@ -37,7 +37,7 @@ public enum DesignTokens {
         public static let idle      = Color(.systemGray)
         public static let paused    = Color(.systemOrange)
         public static let done      = Color(.systemTeal)
-        public static let unknown   = Color(.systemGray3)
+        public static let unknown   = Color.gray.opacity(0.6)
     }
 
     public enum ResourceColor {
