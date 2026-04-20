@@ -5,16 +5,13 @@
 ## Open
 
 ### CRITICAL
-*(none — build green, 38/38 tests after cycle-11)*
+*(none — HEAD `838ba93`, build green, 38/38 tests)*
 
 ### HIGH
-*(none — H-004 resolved in iter-008)*
+*(none)*
 
 ### MEDIUM
-
-| ID | Iter opened | Title | File / location | Status |
-|----|-------------|-------|-----------------|--------|
-| M-010 | 011 | M-006 + M-008 修复在 working tree 但未提交 — pre-commit gate 已就位，commit 时会自动跑 build/test | `git status` (working tree) | OPEN (1 cycle) — implementer 单 commit 即可清 |
+*(none — first empty MEDIUM table since project start; iter-012 cleanest cycle)*
 
 ### LOW
 
@@ -22,8 +19,6 @@
 |----|-------------|-------|-----------------|--------|
 | L-005 | 004 | `Shell.onCancel` 用 `DispatchQueue.global().asyncAfter` 做 SIGKILL，跳出 structured concurrency | `Shell.swift:107-117` | OPEN (nit) |
 | L-006 | 004 | `AgentJobsJsonProvider.readWithTimeout` 内仍是 sync `Data(contentsOf:)` | `AgentJobsJsonProvider.swift:64-67` | OPEN (acceptable) |
-| L-007 | 007 | Launchd `.schedule = .onDemand` — 没解析 calendar/interval plist，违反 feedback_schedule_display | `LaunchdUserProvider.swift:88` | OPEN (defer) |
-| L-008 | 007 | `kind: .daemon vs .scheduled` 仅靠 PID 判断 — 同 L-007 根因 | `LaunchdUserProvider.swift:87` | OPEN (defer) |
 | L-009 | 007 | `command: ""` 应为 `nil` 或哨兵值 | `LaunchdUserProvider.swift:91` | OPEN (nit) |
 
 ---
@@ -55,3 +50,6 @@
 | M-006 | 007 | 011 | `LaunchdUserProvider` 合成 `Date()` createdAt — cycle-11 把 `Service.createdAt` 改为 `Date?`，launchd 传 `nil`，DashboardView 显示 `—` 不再撒谎 |
 | M-008 | 008 | 011 | `DiscoverResult.allFailed` 测试覆盖 — cycle-11 在 `ServiceRegistryTests.swift` 加 4 个 test 覆盖 all-fail/partial/all-empty-success/empty-registry 全四象限 |
 | M-009 | 010 | 011 | Implementer cron 停滞 — cycle-11 实证恢复：working tree 出现针对 M-006/M-008 的 coherent diff，build/test 38/38 |
+| M-010 | 011 | 012 | Working-tree 未提交 — implementer cycle-11 提交 `838ba93`，pre-commit gate 首次实战触发并通过（swift build 1.55s + test 38/38） |
+| L-007 | 007 | 012 | Launchd schedule 占位 `.onDemand` — cycle-12 引入 `LaunchdPlistReader` 解析 `~/Library/LaunchAgents/*.plist` 的 `StartInterval`/`StartCalendarInterval`，UI 现显示真实频率（"daily at 09:00"、"hourly at :05"…） |
+| L-008 | 007 | 012 | `kind` 仅靠 PID — cycle-12 当 plist 含触发器（StartInterval/Calendar/WatchPaths）时强制 `.scheduled`，与 L-007 同 commit 修复 |

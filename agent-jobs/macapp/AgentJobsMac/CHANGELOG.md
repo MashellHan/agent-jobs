@@ -5,6 +5,27 @@ All notable changes to the Mac app live here. Format: Keep a Changelog.
 ## [Unreleased]
 
 ### Added
+- (cycle 12) `Sources/AgentJobsCore/Discovery/Providers/LaunchdPlistReader.swift` —
+  reads `~/Library/LaunchAgents/<label>.plist` (and `/Library/LaunchAgents`)
+  and extracts `ProgramArguments`/`Program` (real command), `StartInterval`/
+  `StartCalendarInterval` (real schedule), and watch-path triggers. Tolerant
+  of missing/malformed plists (degrades to no-enrichment, never throws).
+  Closes strict L-007 / L-008 — launchd jobs now show real frequency in the
+  dashboard instead of the placeholder `.onDemand` (`feedback_schedule_display`).
+- (cycle 12) `LaunchdUserProvider` accepts an injected `LaunchdPlistReader`
+  and enriches each row with command + schedule. Kind promoted to `.scheduled`
+  whenever the plist defines a trigger (was previously gated only on PID).
+- (cycle 12) `Schedule.humanDescription` now renders `.calendar` cases
+  meaningfully: "daily at 09:00", "weekly Mon at 03:30", "monthly on day 15
+  at 12:00", "hourly at :05", "2× 09:00", or fallback "N calendar triggers".
+  Previously rendered the static placeholder "calendar trigger".
+- (cycle 12) `LaunchdPlistReaderTests.swift` — 17 new tests covering plist
+  parsing (XML), single/array `StartCalendarInterval`, weekday translation
+  (launchd Sun=0 → Cocoa Sun=1), watch-path triggers, malformed-plist
+  tolerance, and `Schedule.humanDescription` calendar cases. Test count:
+  38 → 55.
+
+### Added
 - (cycle 11) `Tests/AgentJobsCoreTests/ServiceRegistryTests.swift` — 4 new
   tests covering the `DiscoverResult` contract: all-failing→allFailed=true,
   partial-success→allFailed=false, all-empty-success→allFailed=false (the

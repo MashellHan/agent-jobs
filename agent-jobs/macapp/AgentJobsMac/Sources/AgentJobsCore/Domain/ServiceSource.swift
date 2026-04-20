@@ -79,10 +79,63 @@ public enum Schedule: Hashable, Sendable {
         case .cron(let expr):       return CronHumanizer.humanize(expr)
         case .interval(let s):      return "every \(formatSeconds(s))"
         case .eventTrigger(let t):  return "on \(t)"
-        case .calendar:             return "calendar trigger"
+        case .calendar(let comps):  return Self.humanizeCalendar(comps)
         case .onDemand:             return "on demand"
         case .unknown:              return "—"
         }
+    }
+
+    /// Render a `[DateComponents]` (one entry per launchd CalendarInterval
+    /// dict) into a single user-facing line. Common cases get nice names
+    /// ("daily at 09:00", "weekly Mon at 03:00"); anything more exotic falls
+    /// back to a count ("3 calendar triggers"). Per `feedback_schedule_display`
+    /// — show the actual frequency, not "always-on".
+    static func humanizeCalendar(_ comps: [DateComponents]) -> String {
+        guard let first = comps.first else { return "calendar trigger" }
+        if comps.count == 1 {
+            return describe(first)
+        }
+        // If every entry shares the same time-of-day, surface that.
+        let timeStrings = Set(comps.map { timeOfDay($0) })
+        if timeStrings.count == 1, let t = timeStrings.first {
+            return "\(comps.count)× \(t)"
+        }
+        return "\(comps.count) calendar triggers"
+    }
+
+    private static func describe(_ c: DateComponents) -> String {
+        let time = timeOfDay(c)
+        // weekday-only (with optional time)
+        if let wd = c.weekday {
+            let name = weekdayShort(cocoaWeekday: wd)
+            return "weekly \(name)\(time.isEmpty ? "" : " at \(time)")"
+        }
+        // monthly: day-of-month set
+        if let day = c.day {
+            return "monthly on day \(day)\(time.isEmpty ? "" : " at \(time)")"
+        }
+        // hour set, no day/weekday → daily at HH:MM
+        if c.hour != nil {
+            return "daily at \(time)"
+        }
+        // only minute → every hour at MM
+        if let m = c.minute {
+            return "hourly at :\(String(format: "%02d", m))"
+        }
+        return "calendar trigger"
+    }
+
+    private static func timeOfDay(_ c: DateComponents) -> String {
+        guard let h = c.hour else { return "" }
+        let m = c.minute ?? 0
+        return String(format: "%02d:%02d", h, m)
+    }
+
+    private static func weekdayShort(cocoaWeekday: Int) -> String {
+        // Cocoa: 1=Sun … 7=Sat
+        let names = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+        let idx = max(1, min(7, cocoaWeekday)) - 1
+        return names[idx]
     }
 
     private func formatSeconds(_ s: Int) -> String {

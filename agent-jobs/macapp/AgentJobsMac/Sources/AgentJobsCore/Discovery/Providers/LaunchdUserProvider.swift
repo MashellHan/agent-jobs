@@ -21,10 +21,12 @@ public struct LaunchdUserProvider: ServiceProvider {
     /// `/bin/launchctl list` via `Shell.run`.
     public typealias Runner = @Sendable () async throws -> String
     private let runner: Runner?
+    private let plistReader: LaunchdPlistReader
     private let logger = Logger(subsystem: "com.agentjobs.mac", category: "LaunchdUserProvider")
 
-    public init(runner: Runner? = nil) {
+    public init(runner: Runner? = nil, plistReader: LaunchdPlistReader = LaunchdPlistReader()) {
         self.runner = runner
+        self.plistReader = plistReader
     }
 
     public func discover() async throws -> [Service] {
@@ -42,7 +44,7 @@ public struct LaunchdUserProvider: ServiceProvider {
                 throw ProviderError.ioError("launchctl: \(failure)")
             }
         }
-        return Self.parse(raw)
+        return Self.parse(raw, enrichWith: plistReader)
     }
 
     /// Parse `launchctl list` 3-column output into `Service` records.
@@ -50,7 +52,13 @@ public struct LaunchdUserProvider: ServiceProvider {
     /// Header line ("PID Status Label") and blank lines are skipped.
     /// Labels prefixed `com.apple.` are filtered out — those are system
     /// jobs that pollute the user view without being actionable here.
-    static func parse(_ output: String) -> [Service] {
+    ///
+    /// When `enrichWith` is provided, each row is augmented with data from
+    /// the on-disk plist: real `command` (ProgramArguments / Program), real
+    /// `schedule` (StartInterval / StartCalendarInterval), and `kind`
+    /// promoted to `.scheduled` when a trigger exists. Closes strict
+    /// L-007 / L-008.
+    static func parse(_ output: String, enrichWith reader: LaunchdPlistReader? = nil) -> [Service] {
         var services: [Service] = []
         for line in output.split(whereSeparator: \.isNewline) {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
@@ -75,13 +83,23 @@ public struct LaunchdUserProvider: ServiceProvider {
                 return .scheduled
             }()
 
+            let enrichment = reader?.enrich(label: label) ?? .empty
+            let schedule = enrichment.schedule ?? .onDemand
+            // Kind promotion (L-008): if the plist defines a trigger we
+            // call this `.scheduled` regardless of whether it's currently
+            // running. Pure-daemon jobs (KeepAlive=true with no trigger)
+            // remain `.daemon` only when nothing scheduled was found.
+            let kind: ServiceKind = enrichment.isScheduled
+                ? .scheduled
+                : (pid != nil ? .daemon : .scheduled)
+
             services.append(Service(
                 id: "launchd.user:\(label)",
                 source: .launchdUser,
-                kind: pid != nil ? .daemon : .scheduled,
+                kind: kind,
                 name: label,
-                command: "",
-                schedule: .onDemand,
+                command: enrichment.command ?? "",
+                schedule: schedule,
                 status: status,
                 createdAt: nil, // launchctl doesn't expose load time (M-006)
                 pid: pid,
