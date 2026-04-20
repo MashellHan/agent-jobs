@@ -87,9 +87,13 @@ struct DashboardView: View {
                             .font(DesignTokens.Typography.monoSmall)
                     }
                     TableColumn("Created") { svc in
-                        Text(svc.createdAt.formatted(.relative(presentation: .named)))
-                            .foregroundStyle(.secondary)
-                            .help(svc.createdAt.formatted(date: .abbreviated, time: .standard))
+                        if let created = svc.createdAt {
+                            Text(created.formatted(.relative(presentation: .named)))
+                                .foregroundStyle(.secondary)
+                                .help(created.formatted(date: .abbreviated, time: .standard))
+                        } else {
+                            Text("—").foregroundStyle(.tertiary)
+                        }
                     }
                     TableColumn("CPU") { svc in
                         if let m = svc.metrics {

@@ -83,7 +83,7 @@ public struct LaunchdUserProvider: ServiceProvider {
                 command: "",
                 schedule: .onDemand,
                 status: status,
-                createdAt: Date(),
+                createdAt: nil, // launchctl doesn't expose load time (M-006)
                 pid: pid,
                 owner: .user,
                 history: [],

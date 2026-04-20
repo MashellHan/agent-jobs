@@ -117,4 +117,59 @@ struct ServiceRegistryTests {
         #expect(result.count == 10)
         #expect(Set(result.map { $0.id }) == Set(services.map { $0.id }))
     }
+
+    // MARK: - DiscoverResult contract (M-007 fix coverage / strict-iter-008 M-008)
+
+    @Test("discoverAllDetailed: every provider failing → allFailed == true")
+    func detailed_allFailing_setsAllFailed() async {
+        let registry = ServiceRegistry(providers: [
+            StubFailingProvider(),
+            StubFailingProvider(),
+            StubFailingProvider()
+        ])
+        let result = await registry.discoverAllDetailed()
+        #expect(result.totalCount == 3)
+        #expect(result.succeededCount == 0)
+        #expect(result.allFailed == true)
+        #expect(result.services.isEmpty)
+    }
+
+    @Test("discoverAllDetailed: partial success → allFailed == false")
+    func detailed_partialSuccess_clearsAllFailed() async {
+        let svc = Self.makeService(id: "ok")
+        let registry = ServiceRegistry(providers: [
+            StubGoodProvider(services: [svc]),
+            StubFailingProvider()
+        ])
+        let result = await registry.discoverAllDetailed()
+        #expect(result.totalCount == 2)
+        #expect(result.succeededCount == 1)
+        #expect(result.allFailed == false)
+        #expect(result.services.count == 1)
+    }
+
+    @Test("discoverAllDetailed: every provider succeeds with empty slice → allFailed == false")
+    func detailed_allEmptySuccess_doesNotMisreportAsFailed() async {
+        // The M-007 false-positive scenario: every provider runs cleanly but
+        // returns no services. UI must show "loaded with 0 results", NOT an
+        // error banner.
+        let registry = ServiceRegistry(providers: [
+            StubGoodProvider(services: []),
+            StubGoodProvider(services: [])
+        ])
+        let result = await registry.discoverAllDetailed()
+        #expect(result.totalCount == 2)
+        #expect(result.succeededCount == 2)
+        #expect(result.allFailed == false)
+        #expect(result.services.isEmpty)
+    }
+
+    @Test("discoverAllDetailed: empty registry → allFailed == false (no providers, no error)")
+    func detailed_emptyRegistry_isNotAFailure() async {
+        let registry = ServiceRegistry(providers: [])
+        let result = await registry.discoverAllDetailed()
+        #expect(result.totalCount == 0)
+        #expect(result.succeededCount == 0)
+        #expect(result.allFailed == false)
+    }
 }

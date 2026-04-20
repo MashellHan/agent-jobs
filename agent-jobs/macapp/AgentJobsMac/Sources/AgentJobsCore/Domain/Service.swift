@@ -17,9 +17,12 @@ public struct Service: Identifiable, Hashable, Sendable {
     public let command: String
     public let schedule: Schedule
     public let status: ServiceStatus
-    /// When the service record was first registered/observed.
-    /// Surfaced in the dashboard table per memory `feedback_tui_history`.
-    public let createdAt: Date
+    /// When the service record was first registered/observed. `nil` when the
+    /// underlying source doesn't expose a real registration time (e.g. launchd
+    /// — `launchctl list` only reports current PID + last-exit, never load
+    /// time). The UI shows "—" for nil rather than a synthetic `Date()` that
+    /// would lie about provenance (strict-iter-007 M-006).
+    public let createdAt: Date?
     public let lastRun: Date?
     public let nextRun: Date?
     public let pid: Int32?
@@ -42,7 +45,7 @@ public struct Service: Identifiable, Hashable, Sendable {
         command: String = "",
         schedule: Schedule = .onDemand,
         status: ServiceStatus = .unknown,
-        createdAt: Date = Date(),
+        createdAt: Date? = nil,
         lastRun: Date? = nil,
         nextRun: Date? = nil,
         pid: Int32? = nil,

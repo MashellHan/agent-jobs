@@ -5,6 +5,22 @@ All notable changes to the Mac app live here. Format: Keep a Changelog.
 ## [Unreleased]
 
 ### Added
+- (cycle 11) `Tests/AgentJobsCoreTests/ServiceRegistryTests.swift` — 4 new
+  tests covering the `DiscoverResult` contract: all-failing→allFailed=true,
+  partial-success→allFailed=false, all-empty-success→allFailed=false (the
+  M-007 false-positive scenario), empty-registry→allFailed=false. Locks in
+  the cycle-9/10 LoadPhase wiring (closes strict M-008). Test count: 34→38.
+
+### Changed
+- (cycle 11) `Service.createdAt` is now optional `Date?`. Sources that
+  genuinely lack a registration timestamp (e.g. launchd's `launchctl list`,
+  which only reports current PID + last-exit) pass `nil` instead of
+  synthesizing `Date()` — which previously lied about provenance. Dashboard
+  "Created" column renders `—` for nil rather than a fake "just now"
+  (closes strict M-006). `AgentJobsJsonProvider` is unchanged behaviorally
+  — it still falls back via `createdAt ?? startedAt ?? Date()`.
+
+### Added
 - (cycle 10) `Sources/AgentJobsMac/Components/{MenuBarLabel,SummaryChip,
   MemoryBadge,HoverableIconButton,ErrorBanner,ServiceRowCompact,EmptyHintView,
   SkeletonRow}.swift` — extracted 8 reusable atoms from MenuBarViews.swift.

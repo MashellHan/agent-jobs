@@ -75,9 +75,13 @@ struct AgentJobsJsonProviderTests {
         let url = try writeFixture(contents: json)
         defer { try? FileManager.default.removeItem(at: url) }
         let services = try await AgentJobsJsonProvider(jobsPath: url).discover()
-        #expect(abs(services[0].createdAt.timeIntervalSince1970 - 1776592800) < 1)
-        #expect(abs(services[1].createdAt.timeIntervalSince1970 - 1776596400) < 1)
-        #expect(abs(services[2].createdAt.timeIntervalSinceNow) < 5)
+        // AgentJobsJsonProvider always synthesizes a non-nil createdAt
+        // (createdAt ?? startedAt ?? Date()), so unwrap is safe here.
+        // M-006 made the field optional at the Domain layer for sources
+        // (e.g. launchd) that genuinely lack a registration time.
+        #expect(abs(services[0].createdAt!.timeIntervalSince1970 - 1776592800) < 1)
+        #expect(abs(services[1].createdAt!.timeIntervalSince1970 - 1776596400) < 1)
+        #expect(abs(services[2].createdAt!.timeIntervalSinceNow) < 5)
     }
 
     private func writeFixture(contents: String) throws -> URL {

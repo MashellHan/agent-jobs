@@ -5,21 +5,16 @@
 ## Open
 
 ### CRITICAL
-*(none — build green at e53dbd6 + uncommitted feature work, 34/34 tests)*
+*(none — build green, 38/38 tests after cycle-11)*
 
 ### HIGH
-
-| ID | Iter opened | Title | File / location | Status |
-|----|-------------|-------|-----------------|--------|
-| H-004 | 007 | `LaunchdUserProvider` + 7 tests + `ServiceRegistry`/`AgentJobsMacApp` 修改全部 **未提交** — 直接证实 M-005 失效 | `git status` (working tree) | OPEN |
+*(none — H-004 resolved in iter-008)*
 
 ### MEDIUM
 
 | ID | Iter opened | Title | File / location | Status |
 |----|-------------|-------|-----------------|--------|
-| M-005 | 006 | Commit-gate 未实装 — implementer 自律修复 C-005，但下一次 stale-cache 仍会重现 iter-005 的"谎称 passing" | `.claude/settings.json` PreToolUse / implementer loop | OPEN (now demonstrably needed — H-004) |
-| M-006 | 007 | `LaunchdUserProvider` 用 `Date()` 合成 `createdAt`，违反 feedback_tui_history 的"真实注册时间"偏好 | `LaunchdUserProvider.swift:84` | OPEN |
-| M-007 | 007 | `"No providers responded"` error 在合法的"无服务"场景误报 — 应跟踪每个 provider 的 success/fail 而不是仅看结果是否为空 | `AgentJobsMacApp.swift:60` | OPEN |
+| M-010 | 011 | M-006 + M-008 修复在 working tree 但未提交 — pre-commit gate 已就位，commit 时会自动跑 build/test | `git status` (working tree) | OPEN (1 cycle) — implementer 单 commit 即可清 |
 
 ### LOW
 
@@ -54,3 +49,9 @@
 | L-004 | 003 | 004 | `swift-tools-version: 6.0` |
 | C-005 | 005 | 006 | `StatusBadge` 重复声明 — cycle-8 删除 `DashboardView.swift:119` 旧定义 |
 | C-006 | 005 | 006 | Implementer commit 流程缺 build/test gate — 本轮 implementer 自律修复，但流程层降级为 M-005 |
+| H-004 | 007 | 008 | LaunchdUserProvider + 7 tests + ServiceRegistry/AgentJobsMacApp 修改全部未提交 — cycle-9 (`297aafb`) 作为单一 coherent commit 提交 |
+| M-007 | 007 | 008 | `"No providers responded"` error 误报 — cycle-10 (`c67de9c`) 引入 `discoverAllDetailed() → DiscoverResult { allFailed }`，refresh() 仅在 `allFailed` 时翻 `.error` |
+| M-005 | 006 | 010 | Commit-gate 未实装 — 经 4 轮挂账后 reviewer 在 iter-010 直接实装：`scripts/pre-commit-gate.sh` + `.claude/settings.json` PreToolUse `Bash(git commit:*)` hook，含"无 macapp 改动则跳过"优化 |
+| M-006 | 007 | 011 | `LaunchdUserProvider` 合成 `Date()` createdAt — cycle-11 把 `Service.createdAt` 改为 `Date?`，launchd 传 `nil`，DashboardView 显示 `—` 不再撒谎 |
+| M-008 | 008 | 011 | `DiscoverResult.allFailed` 测试覆盖 — cycle-11 在 `ServiceRegistryTests.swift` 加 4 个 test 覆盖 all-fail/partial/all-empty-success/empty-registry 全四象限 |
+| M-009 | 010 | 011 | Implementer cron 停滞 — cycle-11 实证恢复：working tree 出现针对 M-006/M-008 的 coherent diff，build/test 38/38 |
