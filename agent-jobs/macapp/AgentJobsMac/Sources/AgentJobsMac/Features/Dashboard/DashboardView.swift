@@ -156,6 +156,13 @@ struct ServiceInspector: View {
                 Spacer()
                 StatusBadge(status: service.status)
             }
+            // design-003 Top-3 #2 / D-M3: quiet provenance subtitle so users
+            // immediately see WHERE the service comes from and which project
+            // owns it. Both fields are already in the Service model — just
+            // unsurfaced.
+            Text("\(service.source.category.displayName) · \(service.project ?? "—")")
+                .font(DesignTokens.Typography.caption)
+                .foregroundStyle(.secondary)
             if !service.command.isEmpty {
                 Text(service.command).font(DesignTokens.Typography.monoSmall).foregroundStyle(.secondary).lineLimit(2)
             }

@@ -35,6 +35,11 @@ struct MenuBarPopoverView: View {
             Divider()
             footer
         }
+        // design-003 Top-3 #1 (D-popover-material): blends popover with the
+        // desktop wallpaper instead of rendering against the OS default flat
+        // background — matches Raycast / Things and adapts to dark mode for
+        // free.
+        .background(.regularMaterial)
     }
 
     private var header: some View {

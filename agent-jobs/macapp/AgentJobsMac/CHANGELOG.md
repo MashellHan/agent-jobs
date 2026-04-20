@@ -5,6 +5,19 @@ All notable changes to the Mac app live here. Format: Keep a Changelog.
 ## [Unreleased]
 
 ### Added
+- (cycle 14) `MenuBarPopoverView` outer `VStack` now carries
+  `.background(.regularMaterial)` — the popover blends with the desktop
+  wallpaper (vibrancy) instead of rendering against the OS default flat
+  background. Closes design-003 Top-3 #1; lifts macOS-native feel.
+- (cycle 14) `ServiceInspector.header` now renders a quiet provenance
+  subtitle: `"<source.category.displayName> · <project ?? '—'>"`. Both
+  fields were already in the `Service` model — just unsurfaced.
+  Closes design-003 Top-3 #2 / D-M3 (carried since design-001).
+- (cycle 13) `macapp/AgentJobsMac/LICENSE` (MIT, mirror of repo-root
+  LICENSE) so the SwiftPM package is self-contained for distribution.
+  Closes code-004 L8 — the only identified blocker for public release.
+
+### Added
 - (cycle 12) `Sources/AgentJobsCore/Discovery/Providers/LaunchdPlistReader.swift` —
   reads `~/Library/LaunchAgents/<label>.plist` (and `/Library/LaunchAgents`)
   and extracts `ProgramArguments`/`Program` (real command), `StartInterval`/
