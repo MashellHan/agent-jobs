@@ -5,13 +5,13 @@
 ## Open
 
 ### CRITICAL
-*(none — HEAD `b089dd0`, build green, 55/55 tests)*
+*(none — HEAD `af430ba`, build green, 55/55 tests)*
 
 ### HIGH
 *(none)*
 
 ### MEDIUM
-*(none — 2nd consecutive empty MEDIUM cycle; **iter-013 hits 3-PASS streak / termination criterion**)*
+*(none — empty since iter-012; **iter-013 hit 3-PASS termination criterion; iter-016 confirms 6-PASS post-DECLARE-DONE (`.implementation/COMPLETE.md`)**)*
 
 ### LOW
 
