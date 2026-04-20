@@ -5,13 +5,13 @@
 ## Open
 
 ### CRITICAL
-*(none — HEAD `838ba93`, build green, 38/38 tests)*
+*(none — HEAD `b089dd0`, build green, 55/55 tests)*
 
 ### HIGH
 *(none)*
 
 ### MEDIUM
-*(none — first empty MEDIUM table since project start; iter-012 cleanest cycle)*
+*(none — 2nd consecutive empty MEDIUM cycle; **iter-013 hits 3-PASS streak / termination criterion**)*
 
 ### LOW
 
