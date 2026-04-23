@@ -35,7 +35,8 @@ yarn-error.log*
 *.out
 
 # Agent artifacts
-.claude/
+.claude/.tick-activity.log
+.claude/local/
 .implementation/
 .test/
 .demo-recordings/

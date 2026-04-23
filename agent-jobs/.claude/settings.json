@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(swift build:*)",
+      "Bash(swift test:*)",
+      "Bash(swift run:*)",
+      "Bash(swift package:*)",
+      "Bash(xcodebuild:*)",
+      "Bash(xcrun:*)",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git branch:*)",
+      "Bash(git stash:*)",
+      "Bash(npm test:*)",
+      "Bash(npm run build:*)",
+      "Bash(mkdir:*)",
+      "Bash(screencapture:*)",
+      "Bash(osascript:*)",
+      "Bash(sips:*)",
+      "Bash(plutil:*)",
+      "Bash(lsof:*)",
+      "Bash(launchctl list:*)",
+      "Bash(launchctl print:*)",
+      "Bash(date:*)",
+      "Bash(find .workflow:*)",
+      "Bash(find macapp:*)",
+      "Bash(find src:*)",
+      "Bash(grep -rn:*)",
+      "Bash(rg:*)",
+      "Bash(wc:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(tail:*)",
+      "Bash(head:*)",
+      "Bash(diff:*)",
+      "Bash(compare:*)",
+      "WebSearch",
+      "WebFetch"
+    ],
+    "deny": [
+      "Bash(git push:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git clean -f:*)",
+      "Bash(git checkout --:*)",
+      "Bash(rm -rf:*)",
+      "Bash(npm publish:*)",
+      "Bash(launchctl bootstrap:*)",
+      "Bash(launchctl bootout:*)",
+      "Bash(sudo:*)"
+    ]
+  },
+  "model": {
+    "subagents": {
+      "pm": "claude-opus-4-6",
+      "architect": "claude-opus-4-6",
+      "reviewer": "claude-opus-4-6",
+      "retrospective": "claude-opus-4-6",
+      "implementer": "claude-sonnet-4-6",
+      "tester": "claude-sonnet-4-6"
+    }
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'echo \"$(date -u +%FT%TZ) edited\" >> .workflow/.tick-activity.log'"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'if [ -f .workflow/CURRENT.md ]; then phase=$(grep -E \"^phase:\" .workflow/CURRENT.md | head -1 | awk \"{print \\$2}\"); owner=$(grep -E \"^owner:\" .workflow/CURRENT.md | head -1 | awk \"{print \\$2}\"); echo \"[workflow] phase=$phase owner=$owner — run /tick to advance, /status to inspect\" >&2; fi'"
+          }
+        ]
+      }
+    ]
+  }
+}
