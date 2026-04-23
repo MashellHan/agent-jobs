@@ -1,37 +1,24 @@
 ---
-milestone: M00
-phase: BOOTSTRAPPING
-cycle: 0
+milestone: M01
+phase: SPECCING
+cycle: 1
 owner: null
 lock_acquired_at: null
 lock_expires_at: null
-last_transition: 2026-04-23T18:30:00Z
+last_transition: 2026-04-23T18:55:00Z
 last_actor: human
 ---
 
 # Current Workflow State
 
-**Milestone:** M00 — Bootstrap
-**Phase:** BOOTSTRAPPING (one-time)
-**Cycle:** 0
-**Owner:** none
+**Milestone:** M01 — Discovery audit + gap fill
+**Phase:** SPECCING
+**Cycle:** 1
+**Owner:** none — pm agent should pick this up
 
-## What "BOOTSTRAPPING" means
-
-The workflow itself was just installed. The legacy `.review/`, `.review_strict/`, `.review-prompts/`, `.implementation/`, `.design-review/` directories from the previous TUI iteration remain on disk as historical reference but are no longer the active workflow.
-
-Existing Swift code at `macapp/AgentJobsMac/` is partial — it has menu bar + dashboard scaffolding + Discovery layer. The new workflow must inherit this state (do not start from zero).
-
-## To start the new workflow
-
-Run: `/milestone-start`
-
-This will:
-1. Invoke `pm` agent to write ROADMAP entries (audit existing macapp/, identify what's done, plan next milestones)
-2. PM picks M01 and writes its spec
-3. Phase transitions to ARCHITECTING
+## Phase History (this milestone)
+- 2026-04-23T18:55:00Z BOOTSTRAPPING → SPECCING (human via /milestone-start)
 
 ## Next Allowed Transitions
-
-From BOOTSTRAPPING:
-- → SPECCING (when `/milestone-start` is invoked)
+From SPECCING:
+- → ARCHITECTING (after pm writes spec.md, competitive-analysis.md, acceptance.md)
