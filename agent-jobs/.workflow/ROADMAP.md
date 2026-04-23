@@ -29,8 +29,9 @@ Existing Swift work at `macapp/AgentJobsMac/`:
 | ID | Theme | Status | Acceptance summary |
 |---|---|---|---|
 | M00 | Bootstrap workflow | IN PROGRESS | this file + .claude/ + .workflow/ created |
-| M01 | Discovery audit + gap fill | PENDING | All 4 data sources working; tests pass |
-| M02 | Live process scanner | PENDING | `lsof` provider returns running listeners; integrated into ServiceRegistry |
+| M01 | Discovery audit + gap fill | IN PROGRESS | Adds `LsofProcessProvider` + `ClaudeScheduledTasksProvider`; wires both into default registry; launchd `createdAt` provenance fixed; ≥12 new tests; no UI changes |
+| M01.5 | Claude session-JSONL cron parser | PENDING | Streams `~/.claude/projects/**/*.jsonl`, reconstructs CronCreate/Delete net set, dedups against `scheduled_tasks.json` (parity with TS `scanSessionCronTasks`) |
+| M02 | (was: live process scanner) — folded into M01 | DROPPED | Moved into M01 as part of "all 4 data sources" goal |
 | M03 | Detail panel UI | PENDING | Click row → detail view with command/PID/port/history |
 | M04 | Actions (stop/hide) | PENDING | Stop sends SIGTERM/launchctl unload; hide persists; both with undo |
 | M05 | Auto-refresh + fs.watch | PENDING | jobs.json change → UI updates within 500ms |
@@ -51,3 +52,4 @@ Existing Swift work at `macapp/AgentJobsMac/`:
 ## Update Log
 
 - 2026-04-23: Initial roadmap. PM has not yet audited existing code; M01 is the first real milestone where PM writes a spec.
+- 2026-04-23 (pm SPECCING M01): After auditing `src/scanner.ts`, the original M02 ("Live process scanner") is functionally a subset of M01's "Discovery audit + gap fill" goal — there is no value in shipping discovery half-complete. M02 is folded into M01. The complex Claude session-JSONL parser (`scanSessionCronTasks` in TS, ~170 LOC of streaming parse + 7-day age + dedup) is split out as new milestone **M01.5** so M01 stays at a 1–2 day equivalent and M01.5 can be tackled independently.
