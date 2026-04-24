@@ -2,9 +2,9 @@
 milestone: M01
 phase: REVIEWING
 cycle: 1
-owner: null
-lock_acquired_at: null
-lock_expires_at: null
+owner: reviewer
+lock_acquired_at: 2026-04-23T12:35:00Z
+lock_expires_at: 2026-04-23T13:05:00Z
 last_transition: 2026-04-23T12:30:00Z
 last_actor: implementer
 ---
