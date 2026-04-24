@@ -48,7 +48,7 @@
   fallback, plain command. Each branch has ≥ 1 test case.
 - **Estimated diff size:** M
 
-## T04 — `AsyncSemaphore` actor + tests
+## T04 — `AsyncSemaphore` actor + tests [DONE]
 - **Files (create):**
   - `Sources/AgentJobsCore/Discovery/Concurrency/AsyncSemaphore.swift`
   - `Tests/AgentJobsCoreTests/AsyncSemaphoreTests.swift`
