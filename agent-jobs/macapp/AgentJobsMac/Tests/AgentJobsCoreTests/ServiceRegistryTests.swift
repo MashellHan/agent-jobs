@@ -215,4 +215,32 @@ struct ServiceRegistryTests {
             #expect(Set(result.map { $0.id }) == Set(["a", "b", "c", "d"]))
         }
     }
+
+    // MARK: - M01 T10 perf gate (AC-P-02)
+
+    @Test("AC-P-02: 100 iterations of discoverAll() on 4-stub registry — median < 50 ms")
+    func perfP02_HundredIters() async {
+        if ProcessInfo.processInfo.environment["AGENTJOBS_SKIP_PERF"] != nil {
+            return
+        }
+        let registry = ServiceRegistry(providers: [
+            StubGoodProvider(services: [Self.makeService(id: "a")]),
+            StubGoodProvider(services: [Self.makeService(id: "b")]),
+            StubGoodProvider(services: []),
+            StubGoodProvider(services: [Self.makeService(id: "c")])
+        ])
+        let clock = ContinuousClock()
+        var samples: [Duration] = []
+        samples.reserveCapacity(100)
+        for _ in 0..<100 {
+            let elapsed = await clock.measure {
+                _ = await registry.discoverAll()
+            }
+            samples.append(elapsed)
+        }
+        samples.sort()
+        let median = samples[samples.count / 2]
+        // 50 ms hard cap from AC-P-02.
+        #expect(median < .milliseconds(50))
+    }
 }

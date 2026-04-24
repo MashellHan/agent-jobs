@@ -150,4 +150,34 @@ struct LsofProcessProviderTests {
         #expect(high <= 8)
         #expect(high > 0)
     }
+
+    // MARK: - M01 T10 perf gate (AC-P-03)
+
+    @Test("AC-P-03: 200 PIDs through stubbed lsof + ps complete in < 500 ms")
+    func perfP03_200Pids() async throws {
+        // Skip on CI where measurement is noisy.
+        if ProcessInfo.processInfo.environment["AGENTJOBS_SKIP_PERF"] != nil {
+            return
+        }
+        var lines = ["COMMAND   PID   USER   FD   TYPE  DEVICE SIZE/OFF NODE NAME"]
+        for i in 0..<200 {
+            let pid = 30_000 + i
+            let port = 40_000 + i
+            lines.append("node     \(pid)   alice   23u  IPv4  0xabc      0t0  TCP *:\(port) (LISTEN)")
+        }
+        let raw = lines.joined(separator: "\n")
+
+        let p = LsofProcessProvider(
+            lsofRunner: { raw },
+            psRunner: { _ in "" },
+            psConcurrency: 8
+        )
+
+        let clock = ContinuousClock()
+        let elapsed = try await clock.measure {
+            _ = try await p.discover()
+        }
+        // 500 ms hard cap from AC-P-03.
+        #expect(elapsed < .milliseconds(500))
+    }
 }

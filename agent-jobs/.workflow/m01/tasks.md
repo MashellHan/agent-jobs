@@ -134,7 +134,7 @@
   result with no duplicates.
 - **Estimated diff size:** S
 
-## T10 — Performance + concurrency-cap tests (XCTMeasure)
+## T10 — Performance + concurrency-cap tests (XCTMeasure) [DONE]
 - **Files (create / modify):**
   - `Tests/AgentJobsCoreTests/LsofProcessProviderTests.swift` — add
     200-PID throughput case with concurrency-cap assertion (AC-P-03).
