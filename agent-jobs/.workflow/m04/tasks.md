@@ -72,7 +72,7 @@
   - `FakeVisibilityProvider.set(false)` flips the AsyncStream value within one iteration
 - **Estimated diff size:** M (~280 LOC)
 
-## T05 — ServiceRegistryViewModel rewire (startWatchers + lastRefreshError + popoverOpen)
+## T05 — ServiceRegistryViewModel rewire (startWatchers + lastRefreshError + popoverOpen) [DONE]
 
 - **Files (modify):**
   - `Sources/AgentJobsMac/AgentJobsMacApp.swift` (~+90 LOC, ~−15 LOC)

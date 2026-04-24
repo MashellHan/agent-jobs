@@ -41,6 +41,12 @@ struct MenuBarPopoverView: View {
         // background — matches Raycast / Things and adapts to dark mode for
         // free.
         .background(.regularMaterial)
+        .task {
+            // M04 AC-F-07: tells AppKitVisibilityProvider the popover
+            // is on-screen. Cleared in .onDisappear.
+            registry.popoverOpen = true
+        }
+        .onDisappear { registry.popoverOpen = false }
     }
 
     private var header: some View {

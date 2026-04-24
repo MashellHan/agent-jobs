@@ -54,16 +54,30 @@ struct PerformanceTests {
     }
 
     /// AC-P-03 — auto-refresh loop must remain a single live Task and must
-    /// not duplicate on repeat calls.
+    /// not duplicate on repeat calls. M04: `startAutoRefresh` was replaced
+    /// by `startWatchers`, which is also idempotent.
     @Test("AC-P-03 auto-refresh loop is idempotent (no leak)")
     @MainActor
     func autoRefreshIsIdempotent() async throws {
-        let vm = ServiceRegistryViewModel(registry: ServiceRegistry.fixtureRegistry())
-        await vm.startAutoRefresh()
-        await vm.startAutoRefresh()
-        await vm.startAutoRefresh()
-        // We can't peek into the private autoRefreshTask without reflection,
-        // but stop() is idempotent and won't crash if there's only one Task.
+        // Isolate to a temp WatchPaths so we never touch real ~/.
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("agentjobs-perf-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let cd = root.appendingPathComponent("cd")
+        try FileManager.default.createDirectory(at: cd, withIntermediateDirectories: true)
+        try Data("{}".utf8).write(to: root.appendingPathComponent("jobs.json"))
+        try Data("{}".utf8).write(to: root.appendingPathComponent("st.json"))
+        let paths = WatchPaths(
+            jobsJson: root.appendingPathComponent("jobs.json"),
+            scheduledTasks: root.appendingPathComponent("st.json"),
+            claudeProjectsDir: cd)
+        let vm = ServiceRegistryViewModel(registry: ServiceRegistry.fixtureRegistry(),
+                                          watchPaths: paths)
+        let visibility = FakeVisibilityProvider(initial: true)
+        await vm.startWatchers(visibility: visibility)
+        await vm.startWatchers(visibility: visibility)
+        await vm.startWatchers(visibility: visibility)
         vm.stop()
     }
 

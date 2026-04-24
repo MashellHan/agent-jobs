@@ -17,7 +17,7 @@ struct AgentJobsMacApp: App {
             MenuBarPopoverView()
                 .environment(registry)
                 .frame(width: 360)
-                .task { await registry.startAutoRefresh() }
+                .task { await registry.startWatchers() }
         } label: {
             MenuBarLabel(state: registry.summary)
         }
@@ -27,7 +27,7 @@ struct AgentJobsMacApp: App {
             DashboardView()
                 .environment(registry)
                 .frame(minWidth: 900, minHeight: 560)
-                .task { await registry.refresh() }
+                .task { await registry.startWatchers() }
         }
     }
 }
@@ -48,7 +48,9 @@ final class ServiceRegistryViewModel {
     private(set) var summary: MenuBarSummary = .empty
     private(set) var lastRefresh: Date = Date()
     private(set) var phase: LoadPhase = .idle
-    let refreshIntervalSeconds: TimeInterval = 30
+    /// Periodic-tick interval (live-process rescan). Reduced from 30 s
+    /// (M03) to 10 s (M04) since visibility-pause now bounds idle cost.
+    let refreshIntervalSeconds: TimeInterval = 10
 
     // M03 additions
     private(set) var hiddenIds: Set<String> = []
@@ -59,16 +61,35 @@ final class ServiceRegistryViewModel {
     /// expire after 2× refresh interval to bound memory.
     private var optimisticallyStopped: [Service.ID: Date] = [:]
 
+    // M04 additions
+    /// Most-recent refresh outcome surface — drives AutoRefreshIndicator
+    /// red state (AC-F-09). Non-nil iff the last refresh `allFailed` OR
+    /// a watcher install raised an error.
+    private(set) var lastRefreshError: String? = nil
+    /// Toggled by MenuBarPopoverView .task / .onDisappear. Read by the
+    /// AppKitVisibilityProvider closure to compute the pause predicate.
+    var popoverOpen: Bool = false
+
     private let registry: ServiceRegistry
     private let stopExecutor: any StopExecutor
     private let hiddenStore: HiddenStore?
-    private var autoRefreshTask: Task<Void, Never>?
+    private let watchPaths: WatchPaths
     private var errorClearTasks: [Service.ID: Task<Void, Never>] = [:]
+
+    // M04 watcher infrastructure
+    private var scheduler: RefreshScheduler?
+    private var jobsWatcher: FileObjectWatcher?
+    private var schedTasksWatcher: FileObjectWatcher?
+    private var claudeDirWatcher: DirectoryEventWatcher?
+    private var ticker: PeriodicTicker?
+    private var visibilityTask: Task<Void, Never>?
 
     init(registry: ServiceRegistry = .defaultRegistry(),
          stopExecutor: (any StopExecutor)? = nil,
-         hiddenStore: HiddenStore? = nil) {
+         hiddenStore: HiddenStore? = nil,
+         watchPaths: WatchPaths = .production) {
         self.registry = registry
+        self.watchPaths = watchPaths
         // Avoid constructing RealStopExecutor under AGENTJOBS_TEST=1 — that
         // guard's whole purpose is to catch test wiring that forgot to inject
         // a fake. Production callers pass nil and get the real one.
@@ -99,6 +120,7 @@ final class ServiceRegistryViewModel {
 
     func refresh() async {
         if case .loaded = phase { } else { phase = .loading }
+        isRefreshing = true
         let refreshStartedAt = Date()
         let result = await registry.discoverAllDetailed()
         var sorted = result.services.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
@@ -108,9 +130,12 @@ final class ServiceRegistryViewModel {
         lastRefresh = Date()
         if result.allFailed {
             phase = .error("All providers failed to respond")
+            lastRefreshError = "All providers failed to respond"
         } else {
             phase = .loaded
+            lastRefreshError = nil
         }
+        isRefreshing = false
     }
 
     /// Q4 race guard: any service whose flip timestamp is newer than the
@@ -132,26 +157,91 @@ final class ServiceRegistryViewModel {
         }
     }
 
-    /// Begin a background loop that refreshes every `refreshIntervalSeconds`.
-    /// Idempotent — safe to call from multiple `.task` modifiers.
-    func startAutoRefresh() async {
-        guard autoRefreshTask == nil else { return }
+    /// M04: wire 3 file watchers + a periodic ticker + a visibility
+    /// observer through one shared `RefreshScheduler`. Idempotent —
+    /// safe for both `MenuBarPopoverView.task` and the dashboard
+    /// `Window.task` to call.
+    func startWatchers(visibility: (any VisibilityProvider)? = nil) async {
+        guard scheduler == nil else { return }
+        let visibilityProvider: any VisibilityProvider = visibility
+            ?? AppKitVisibilityProvider(popoverOpen: { [weak self] in
+                self?.popoverOpen ?? false
+            })
+        let sched = RefreshScheduler(debounceMilliseconds: 250) { [weak self] in
+            await self?.refresh()
+        }
+        scheduler = sched
         await refresh()
-        autoRefreshTask = Task { [weak self] in
-            guard let self else { return }
-            while !Task.isCancelled {
-                let interval = self.refreshIntervalSeconds
-                try? await Task.sleep(for: .seconds(interval))
+        installWatchers(scheduler: sched)
+        startPeriodicTicker(scheduler: sched)
+        observeVisibility(visibility: visibilityProvider)
+    }
+
+    private func installWatchers(scheduler: RefreshScheduler) {
+        let onError: @Sendable (Error) -> Void = { [weak self] err in
+            Task { @MainActor [weak self] in
+                self?.lastRefreshError = String(describing: err)
+            }
+        }
+        let jobs = FileObjectWatcher(
+            url: watchPaths.jobsJson,
+            onEvent: { Task { await scheduler.trigger(.fileEvent(.jobsJson)) } },
+            onInstallFailure: onError)
+        jobs.start()
+        jobsWatcher = jobs
+        let st = FileObjectWatcher(
+            url: watchPaths.scheduledTasks,
+            onEvent: { Task { await scheduler.trigger(.fileEvent(.scheduledTasks)) } },
+            onInstallFailure: onError)
+        st.start()
+        schedTasksWatcher = st
+        let cd = DirectoryEventWatcher(
+            directory: watchPaths.claudeProjectsDir,
+            onEvent: { Task { await scheduler.trigger(.fileEvent(.claudeProjects)) } },
+            onInstallFailure: onError)
+        cd.start()
+        claudeDirWatcher = cd
+    }
+
+    private func startPeriodicTicker(scheduler: RefreshScheduler) {
+        let t = PeriodicTicker(intervalSeconds: refreshIntervalSeconds,
+                               keepaliveSeconds: 300.0) {
+            await scheduler.trigger(.periodic)
+        }
+        ticker = t
+        Task { await t.start() }
+    }
+
+    private func observeVisibility(visibility: any VisibilityProvider) {
+        let ticker = self.ticker
+        visibilityTask = Task { [weak self] in
+            for await visible in visibility.changes() {
                 if Task.isCancelled { break }
-                await self.refresh()
+                _ = self  // keep alive
+                if visible {
+                    await ticker?.resume()
+                } else {
+                    await ticker?.pause()
+                }
             }
         }
     }
 
     /// Stop the auto-refresh loop. Call before discarding the view model.
+    /// Cancels: scheduler, all 3 watchers, periodic ticker, visibility task.
     func stop() {
-        autoRefreshTask?.cancel()
-        autoRefreshTask = nil
+        let sched = scheduler
+        let t = ticker
+        scheduler = nil
+        jobsWatcher?.stop(); jobsWatcher = nil
+        schedTasksWatcher?.stop(); schedTasksWatcher = nil
+        claudeDirWatcher?.stop(); claudeDirWatcher = nil
+        visibilityTask?.cancel(); visibilityTask = nil
+        ticker = nil
+        Task {
+            await sched?.cancel()
+            await t?.cancel()
+        }
     }
 
     // MARK: - M03 actions
@@ -203,12 +293,17 @@ final class ServiceRegistryViewModel {
         }
     }
 
-    /// AC-F-12: manual refresh. No-op if already in flight.
+    /// AC-F-12: manual refresh. Routes through the scheduler when one
+    /// exists (uses `flushNow()` so the press feels instant + still
+    /// honors the in-flight guard); falls back to a direct `refresh()`
+    /// when called before `startWatchers()`.
     func refreshNow() async {
-        guard !isRefreshing else { return }
-        isRefreshing = true
-        defer { isRefreshing = false }
-        await refresh()
+        if let sched = scheduler {
+            await sched.flushNow()
+        } else {
+            guard !isRefreshing else { return }
+            await refresh()
+        }
     }
 
     private func scheduleErrorClear(for id: Service.ID) {
