@@ -30,6 +30,58 @@ public enum ServiceSource: Hashable, Sendable {
         }
     }
 
+    /// User-facing data-source bucket. ORTHOGONAL to `Category`.
+    /// `Category` groups by *kind of scheduler* (Claude/launchd/cron/...).
+    /// `Bucket` groups by *which discovery provider produced this row* — what
+    /// the M02 summary strip displays. Five cases align 1-1 with the five
+    /// providers wired into `defaultRegistry()`.
+    ///
+    /// Cases not produced by any wired provider in M02 fall back to the
+    /// closest bucket; they will not appear in the strip's counts unless a
+    /// future provider emits them.
+    public var bucket: Bucket {
+        switch self {
+        case .agentJobsJson:        return .registered
+        case .claudeScheduledTask:  return .claudeScheduled
+        case .claudeLoop:           return .claudeSession
+        case .launchdUser:          return .launchd
+        case .process:              return .liveProcess
+        case .cron, .at:            return .launchd       // placeholder
+        case .brewServices:         return .liveProcess   // placeholder
+        case .loginItem:            return .registered    // placeholder
+        }
+    }
+
+    /// AC-F-05 chip ordering: registered → claudeScheduled → claudeSession →
+    /// launchd → liveProcess. `Bucket.allCases` IS the authoritative order.
+    public enum Bucket: String, CaseIterable, Sendable, Hashable {
+        case registered
+        case claudeScheduled
+        case claudeSession
+        case launchd
+        case liveProcess
+
+        public var displayName: String {
+            switch self {
+            case .registered:      return "registered"
+            case .claudeScheduled: return "claude-sched"
+            case .claudeSession:   return "claude-loop"
+            case .launchd:         return "launchd"
+            case .liveProcess:     return "live-proc"
+            }
+        }
+
+        public var sfSymbol: String {
+            switch self {
+            case .registered:      return "doc.badge.gearshape"
+            case .claudeScheduled: return "brain.head.profile"
+            case .claudeSession:   return "terminal"
+            case .launchd:         return "desktopcomputer"
+            case .liveProcess:     return "bolt.horizontal"
+            }
+        }
+    }
+
     public enum Category: String, CaseIterable, Sendable, Hashable {
         case claude
         case launchd
