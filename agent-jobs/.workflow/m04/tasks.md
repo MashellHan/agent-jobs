@@ -102,7 +102,7 @@
 - **Acceptance:** drives AC-V-01, V-02, V-03, V-05. Indicator renders three states from view-model state; placed in BOTH popover (existing) and dashboard toolbar (new — left of M03 Refresh button). Tooltip names the failure when in error state. Pulse animation gated by `accessibilityReduceMotion`.
 - **Estimated diff size:** S (~110 LOC net)
 
-## T07 — Visual baselines: 3 indicator states + placement + selection persistence
+## T07 — Visual baselines: 3 indicator states + placement + selection persistence [DONE]
 
 - **Files (create):**
   - `Tests/AgentJobsCoreTests/Visual/AutoRefreshIndicatorVisualTests.swift` (~140 LOC, 4 `@Test`s)
