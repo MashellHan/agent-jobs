@@ -1,20 +1,20 @@
 ---
 milestone: M04
-phase: TESTING
+phase: ACCEPTED
 cycle: 1
 owner: null
 lock_acquired_at: null
 lock_expires_at: null
-last_transition: 2026-04-24T12:18:00Z
-last_actor: reviewer
+last_transition: 2026-04-24T12:40:00Z
+last_actor: tester
 ---
 
 # Current Workflow State
 
 **Milestone:** M04 — Auto-refresh + fs.watch
-**Phase:** TESTING
+**Phase:** ACCEPTED
 **Cycle:** 1
-**Owner:** none — tester pick up
+**Owner:** none — awaiting `/ship`
 
 ## Phase History (workflow-wide)
 - M01 SHIPPED 2026-04-24T00:30:00Z (37/37 ACs PASS, pushed)
@@ -26,6 +26,7 @@ last_actor: reviewer
 - M04 ARCHITECTING → IMPLEMENTING 2026-04-24T11:30:00Z (architect: 8 tasks, AC-F-15 dropped, AC-V-05 kept)
 - M04 IMPLEMENTING → REVIEWING 2026-04-24T12:05:00Z (T01..T08 done, 266 tests, 1 pre-existing M01 flake)
 - M04 REVIEWING → TESTING 2026-04-24T12:18:00Z (cycle 1 PASS, score 88/100, 0 CRITICAL)
+- M04 TESTING → ACCEPTED 2026-04-24T12:40:00Z (cycle 1 PASS, 29/30 in-scope ACs PASS, AC-P-04 deferred to retro, AC-F-15 dropped)
 
 ## M04 architect decisions
 - AC-F-15 DROPPED (M03 overlay continuity covered indirectly)
@@ -50,4 +51,16 @@ last_actor: reviewer
 - See `.workflow/m04/review-cycle-001.md` for full review
 
 ## Next
-- tester: read `.workflow/m04/review-cycle-001.md` + `acceptance.md`. Run full strict-mode `AGENTJOBS_PERF=1 swift test`, run `scripts/visual-diff.sh`, measure coverage, verify each AC against the "Acceptance criteria status" table. Report PASS/FAIL per AC. Decide AC-P-04 disposition (write test now, or retro item).
+- Awaiting `/ship` to trigger retrospective and milestone bump.
+
+## M04 tester notes (cycle 1)
+- Build PASS; default `swift test` 266 tests PASS / 0 fail / 3 skipped (perf-gated, expected).
+- `AGENTJOBS_PERF=1 --no-parallel`: 1 fail (M02 AC-P-02 lsof discovery, pre-existing, not M04 scope).
+- AC-P-01 strict 500 ms median PASSES in isolation (~305 ms median); flakes under full parallel suite contention (1561 ms median) — recommend `.serialized` trait in retro polish (T1).
+- AC-P-04 main-thread non-block deferred (no test, honest E001 deferral) — track for retro.
+- Visual: 7 baselines all match.
+- Runtime: app launch stable for 20 s, fd count steady at 38 (no leak).
+- Atomic-rename re-open binding code path verified (FileObjectWatcherTests.atomicRenameReopens).
+- Coverage on testable changed surface ≥80% per llvm-cov (excluding AppKitVisibilityProvider which is App-layer AppKit-bound).
+- Reviewer's M1 (visibility-task self capture) and M2 (dir-watcher path prefix) carried to retro.
+- See `.workflow/m04/test-cycle-001.md`.
