@@ -94,7 +94,7 @@ Conventions:
   **AC-F-09** (vm side), **AC-F-12**, **AC-F-13** (vm side).
 - Estimated diff: **L**
 
-## T06 — `RowActionStack` + `ServiceRowNameCell` + `StopConfirmationDialog` views
+## T06 — `RowActionStack` + `ServiceRowNameCell` + `StopConfirmationDialog` views [DONE]
 - Files:
   - **new** `Sources/AgentJobsMac/Features/Dashboard/RowActionStack.swift` (~100 LOC)
   - **new** `Sources/AgentJobsMac/Features/Dashboard/ServiceRowNameCell.swift` (~120 LOC; `@State isHovered`, reveals stack on hover OR selected, calls `vm.pendingStop = service` etc.)
