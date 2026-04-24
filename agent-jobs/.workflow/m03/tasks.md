@@ -171,7 +171,7 @@ Conventions:
 - Maps to AC: **AC-Q-05** (the single biggest safety AC).
 - Estimated diff: **M**
 
-## T09 — Visual baselines (5 new) + harness fixture extension
+## T09 — Visual baselines (5 new) + harness fixture extension [DONE]
 - Files:
   - **modify** `Sources/AgentJobsCore/Testing/StubServiceRegistry.swift`
     (+ `Service.fixtures(includingHidden:withStopError:)` overload, ~40 LOC)

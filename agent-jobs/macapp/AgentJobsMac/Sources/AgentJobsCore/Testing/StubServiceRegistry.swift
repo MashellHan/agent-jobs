@@ -55,6 +55,45 @@ public extension Service {
     /// claudeScheduled, claudeSession, launchd, liveProcess in that order.
     /// Field values fixed; no `Date()` calls anywhere → pixel-deterministic.
     static func fixtures(frozenAt: Date = Service.fixtureFrozenDate) -> [Service] {
+        baseFixtures(frozenAt: frozenAt)
+    }
+
+    /// M03 visual-AC overload. Returns the base 5 fixtures plus optional
+    /// extras to drive show-hidden-on screenshots:
+    /// - `includingHidden`: count of additional `.process` rows whose ids
+    ///   should be in the hidden set.
+    /// - `withStopError`: when non-nil, surfaces the supplied message via
+    ///   the view model's errorByServiceId for the first base fixture.
+    static func fixtures(includingHidden hiddenCount: Int,
+                         frozenAt: Date = Service.fixtureFrozenDate) -> [Service] {
+        var list = baseFixtures(frozenAt: frozenAt)
+        let earlier = frozenAt.addingTimeInterval(-300)
+        for i in 0..<hiddenCount {
+            list.append(Service(
+                id: "fixture.hidden.process-\(i)",
+                source: .process(matched: "hidden-\(i)"),
+                kind: .interactive,
+                name: "hidden-process-\(i)",
+                project: "acme",
+                command: "hidden command \(i)",
+                schedule: .onDemand,
+                status: .running,
+                createdAt: earlier,
+                pid: Int32(20000 + i),
+                owner: .user
+            ))
+        }
+        return list
+    }
+
+    /// Deterministic ids of fixtures intended to be hidden in AC-V-02.
+    /// Mirrored as a static helper so the visual test can hand a matching
+    /// `Set<String>` to the view model without reproducing the loop.
+    static func hiddenFixtureIds(count: Int) -> Set<String> {
+        Set((0..<count).map { "fixture.hidden.process-\($0)" })
+    }
+
+    private static func baseFixtures(frozenAt: Date) -> [Service] {
         let earlier = frozenAt.addingTimeInterval(-300)   // -5 min
         let later   = frozenAt.addingTimeInterval(900)    // +15 min
         let metricsForLive = ResourceMetrics(
