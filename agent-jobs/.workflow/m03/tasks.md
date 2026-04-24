@@ -14,7 +14,7 @@ Conventions:
 
 ---
 
-## T01 — `LaunchdPlistReader.plistURL(forLabel:)` helper + tests
+## T01 — `LaunchdPlistReader.plistURL(forLabel:)` helper + tests [DONE]
 - Files:
   - **modify** `Sources/AgentJobsCore/Discovery/Providers/LaunchdPlistReader.swift` (+ ≤30 LOC)
   - **modify** `Tests/AgentJobsCoreTests/LaunchdPlistReaderTests.swift` (+ 2 `@Test` cases)

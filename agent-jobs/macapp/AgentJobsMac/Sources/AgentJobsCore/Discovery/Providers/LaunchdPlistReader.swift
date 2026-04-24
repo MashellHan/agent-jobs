@@ -82,6 +82,27 @@ public struct LaunchdPlistReader: Sendable {
         )
     }
 
+    // MARK: - Public URL helper (M03)
+
+    /// Returns the URL of the first existing `<label>.plist` under the
+    /// user/admin LaunchAgents search path, or `nil` if neither exists.
+    /// Used by `RealStopExecutor` to build a `launchctl unload` argv and by
+    /// the `Service.canStop` refusal predicate for `.launchdUser` rows.
+    /// Mirrors the candidate list used by `defaultFilesystemLoaders()`.
+    public static func plistURL(forLabel label: String) -> URL? {
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        let candidates: [URL] = [
+            home.appendingPathComponent("Library/LaunchAgents")
+                .appendingPathComponent("\(label).plist"),
+            URL(fileURLWithPath: "/Library/LaunchAgents")
+                .appendingPathComponent("\(label).plist")
+        ]
+        for url in candidates where FileManager.default.fileExists(atPath: url.path) {
+            return url
+        }
+        return nil
+    }
+
     // MARK: - Filesystem loader
 
     /// Build a (data, mtime) pair of loaders that share the same candidate
