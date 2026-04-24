@@ -148,3 +148,20 @@ public struct ServiceOrigin: Hashable, Sendable {
     }
 }
 
+// MARK: - M03 actions
+
+public extension Service {
+    /// Pure derived gate. UI uses it to pre-disable the Stop button. The
+    /// executor re-checks the same predicates at action time. Implementation
+    /// delegates to `RealStopExecutor.refusalReason` so there is exactly one
+    /// source of truth for the six predicates.
+    var canStop: Bool {
+        RealStopExecutor.refusalReason(
+            for: self,
+            selfPid: ProcessInfo.processInfo.processIdentifier,
+            plistURL: LaunchdPlistReader.plistURL(forLabel:)
+        ) == nil
+    }
+}
+
+

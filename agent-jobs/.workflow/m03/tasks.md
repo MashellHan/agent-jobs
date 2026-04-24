@@ -26,7 +26,7 @@ Conventions:
 - Maps to AC: enables AC-F-04 + safety predicate #5 (consumed in T02/T03).
 - Estimated diff: **S**
 
-## T02 — `Service.canStop` + `RealStopExecutor.refusalReason` (pure refusal logic)
+## T02 — `Service.canStop` + `RealStopExecutor.refusalReason` (pure refusal logic) [DONE]
 - Files:
   - **new** `Sources/AgentJobsCore/Actions/StopExecutor.swift` (protocol + `StopError` + `RealStopExecutor` skeleton with `static refusalReason` only — no `stop()` body yet, ~80 LOC)
   - **modify** `Sources/AgentJobsCore/Domain/Service.swift` (+ `canStop` extension, ~15 LOC)
