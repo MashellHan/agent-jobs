@@ -28,7 +28,7 @@
   - `lastTriggers` records the storm for logging
 - **Estimated diff size:** M (~340 LOC)
 
-## T02 — FileObjectWatcher (DispatchSource + atomic-rename re-open)
+## T02 — FileObjectWatcher (DispatchSource + atomic-rename re-open) [DONE]
 
 - **Files (create):**
   - `Sources/AgentJobsCore/Refresh/FileObjectWatcher.swift` (~150 LOC)
