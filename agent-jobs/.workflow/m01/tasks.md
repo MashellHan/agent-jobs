@@ -10,7 +10,7 @@
 
 ---
 
-## T01 — Test fixture loader + Fixtures/ scaffold
+## T01 — Test fixture loader + Fixtures/ scaffold [DONE]
 - **Files (create):**
   - `Tests/AgentJobsCoreTests/FixtureLoader.swift`
   - `Tests/AgentJobsCoreTests/Fixtures/lsof.listen.canonical.txt`

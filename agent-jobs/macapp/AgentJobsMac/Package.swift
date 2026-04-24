@@ -28,7 +28,8 @@ let package = Package(
                 "AgentJobsMac",
                 .product(name: "Testing", package: "swift-testing"),
             ],
-            path: "Tests/AgentJobsCoreTests"
+            path: "Tests/AgentJobsCoreTests",
+            resources: [.copy("Fixtures")]
         ),
     ]
 )

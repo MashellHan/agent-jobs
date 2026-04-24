@@ -1,0 +1,4 @@
+[
+  {"prompt": "Summarize today's PRs and post to slack", "cron": "0 17 * * 1-5"},
+  {"prompt": "Run nightly housekeeping", "cron": "0 2 * * *"}
+]
