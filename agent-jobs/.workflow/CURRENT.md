@@ -1,20 +1,20 @@
 ---
 milestone: M04
-phase: SPECCING
+phase: ARCHITECTING
 cycle: 1
 owner: null
 lock_acquired_at: null
 lock_expires_at: null
-last_transition: 2026-04-24T10:50:00Z
-last_actor: human
+last_transition: 2026-04-24T11:15:00Z
+last_actor: pm
 ---
 
 # Current Workflow State
 
 **Milestone:** M04 — Auto-refresh + fs.watch
-**Phase:** SPECCING
+**Phase:** ARCHITECTING
 **Cycle:** 1
-**Owner:** none — pm pick up
+**Owner:** none — architect pick up
 
 ## Phase History (workflow-wide)
 - M01 SHIPPED 2026-04-24T00:30:00Z (37/37 ACs PASS, pushed)
@@ -34,4 +34,4 @@ last_actor: human
 - Tester MUST verify a real file mutation triggers UI update (write to temp file under `~/.agent-jobs-test/`, NOT real ~/.agent-jobs/)
 
 ## Next
-- pm: short competitive scan (Activity Monitor refresh patterns, Stats sampling intervals), then spec
+- architect: read m04/spec.md + m04/acceptance.md, write architecture.md + tasks.md (E002: skim Tests/ for swift-testing convention before authoring tasks)
