@@ -40,7 +40,7 @@ Conventions:
   (canStop pre-disable basis).
 - Estimated diff: **M**
 
-## T03 — `RealStopExecutor.stop()` body + `FakeStopExecutor` + shell-shape tests
+## T03 — `RealStopExecutor.stop()` body + `FakeStopExecutor` + shell-shape tests [DONE]
 - Files:
   - **modify** `Sources/AgentJobsCore/Actions/StopExecutor.swift` (+ `stop()` impl, `FakeStopExecutor`, `init` guard for `AGENTJOBS_TEST=1`; ~80 LOC)
   - **new** `Tests/AgentJobsCoreTests/StopExecutorShellTests.swift` (~140 LOC; uses injected `ShellRunner` + `KillRunner` recorder closures; one `@Test` gated by `AGENTJOBS_INTEGRATION=1` env spawns `/bin/sleep 60` and verifies the live SIGTERM path)

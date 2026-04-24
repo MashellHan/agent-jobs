@@ -52,13 +52,35 @@ public struct RealStopExecutor: StopExecutor {
         self.selfPid = selfPid
     }
 
-    /// `stop()` body lands in T03; declared here so the type compiles for T02.
+    /// Stop the service. Refusal predicates run first (defense in depth);
+    /// then we dispatch on `service.source`. Only `.process` and
+    /// `.launchdUser` reach a real side effect — every other source has
+    /// already been turned into `.refused` by the predicate switch.
     public func stop(service: Service) async throws {
         if let reason = Self.refusalReason(for: service, selfPid: selfPid, plistURL: plistURL) {
             throw StopError.refused(reason: reason)
         }
-        // T03 will fill in the kill / launchctl branches.
-        throw StopError.refused(reason: "stop not implemented for \(service.source)")
+        switch service.source {
+        case .process:
+            // Predicate guarantees pid is non-nil and safe (not 0/1/self).
+            guard let pid = service.pid else {
+                throw StopError.refused(reason: "no PID to send SIGTERM")
+            }
+            let rc = killRun(pid, SIGTERM)
+            if rc != 0 {
+                throw StopError.signalFailed(errno: errno)
+            }
+        case .launchdUser:
+            guard let url = plistURL(service.name) else {
+                throw StopError.refused(reason: "plist path unknown; cannot launchctl unload")
+            }
+            let result = try await shellRun("/bin/launchctl", ["unload", url.path])
+            if !result.succeeded {
+                throw StopError.shellFailed(exitCode: result.exitCode, stderr: result.stderr)
+            }
+        default:
+            throw StopError.refused(reason: "stop not implemented for \(service.source)")
+        }
     }
 
     /// Pure refusal predicate. Returns the reason string when the service is
@@ -87,5 +109,46 @@ public struct RealStopExecutor: StopExecutor {
              .cron, .at, .brewServices, .loginItem:
             return "stop not implemented for \(service.source)"
         }
+    }
+}
+
+/// Tests-only stop executor. Records every `stop()` call and replays a
+/// scripted result. The view model accepts `any StopExecutor`, so unit
+/// tests can swap this in via dependency injection without ever touching
+/// `Process` / `kill(2)`.
+public final class FakeStopExecutor: StopExecutor, @unchecked Sendable {
+    public struct Call: Equatable, Sendable {
+        public let serviceId: String
+    }
+
+    private let lock = NSLock()
+    private var _calls: [Call] = []
+    private var _scriptedResult: Result<Void, StopError> = .success(())
+
+    public var calls: [Call] {
+        lock.lock(); defer { lock.unlock() }
+        return _calls
+    }
+
+    public var scriptedResult: Result<Void, StopError> {
+        get { lock.lock(); defer { lock.unlock() }; return _scriptedResult }
+        set { lock.lock(); _scriptedResult = newValue; lock.unlock() }
+    }
+
+    public init() {}
+
+    public func stop(service: Service) async throws {
+        let r = recordAndFetch(service)
+        switch r {
+        case .success: return
+        case .failure(let e): throw e
+        }
+    }
+
+    private func recordAndFetch(_ service: Service) -> Result<Void, StopError> {
+        lock.lock()
+        defer { lock.unlock() }
+        _calls.append(Call(serviceId: service.id))
+        return _scriptedResult
     }
 }
