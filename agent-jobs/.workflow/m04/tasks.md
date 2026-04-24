@@ -57,7 +57,7 @@
   - No spurious history-replay events in first 250 ms after install (uses `kFSEventStreamEventIdSinceNow`)
 - **Estimated diff size:** M (~230 LOC)
 
-## T04 — PeriodicTicker + VisibilityProvider (protocol + Fake)
+## T04 — PeriodicTicker + VisibilityProvider (protocol + Fake) [DONE]
 
 - **Files (create):**
   - `Sources/AgentJobsCore/Refresh/PeriodicTicker.swift` (~80 LOC)
