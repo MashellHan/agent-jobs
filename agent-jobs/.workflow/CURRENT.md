@@ -1,20 +1,20 @@
 ---
 milestone: M02
-phase: IMPLEMENTING
-cycle: 1
+phase: REVIEWING
+cycle: 2
 owner: null
 lock_acquired_at: null
 lock_expires_at: null
-last_transition: 2026-04-24T05:50:00Z
-last_actor: reviewer
+last_transition: 2026-04-24T06:05:00Z
+last_actor: implementer
 ---
 
 # Current Workflow State
 
 **Milestone:** M02 — Functional UI baseline
-**Phase:** IMPLEMENTING (review cycle 001 → REQUEST_CHANGES)
-**Cycle:** 1 (implementer bumps to 2 on entry per PROTOCOL §5)
-**Owner:** none — implementer pick up
+**Phase:** REVIEWING (cycle 002 — C1 fix in)
+**Cycle:** 2
+**Owner:** none — reviewer pick up
 
 ## Phase History (workflow-wide)
 - M01 SHIPPED 2026-04-24T00:30:00Z (37/37 ACs PASS, pushed)
@@ -22,12 +22,11 @@ last_actor: reviewer
 - M02 ARCHITECTING done 2026-04-24T02:05:00Z (9 tasks planned, 26/26 ACs covered)
 - M02 IMPLEMENTING cycle-001 done 2026-04-24T05:30:00Z (9/9 tasks DONE, 178 tests written)
 - M02 REVIEWING cycle-001 done 2026-04-24T05:50:00Z — **REQUEST_CHANGES** (78/100, 1 P0)
-
-## Open issue blocking transition
-- **C1** (`review-cycle-001.md`): `PerformanceTests.firstDiscoveryUnderBudget` fails (8.7s > 5s relaxed budget). Single number-tweak / env-gate fix. AC-P-02 + AC-Q-01 blocked on this.
+- M02 IMPLEMENTING cycle-002 done 2026-04-24T06:05:00Z — C1 (AC-P-02) gated behind AGENTJOBS_PERF; `swift test` 178/178 PASS
 
 ## Next
-- implementer: bump cycle to 2, address C1 (raise dev-box budget OR gate behind env var),
-  re-run `swift test`, commit, transition back to REVIEWING.
+- reviewer: re-review C1 fix; verify `swift test` exits 0 by default and
+  that AGENTJOBS_PERF=1 ungates the perf test honestly. If PASS, transition
+  to TESTING.
 
 
