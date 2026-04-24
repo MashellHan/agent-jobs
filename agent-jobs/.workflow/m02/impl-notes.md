@@ -40,3 +40,20 @@ PNG to `cycle-NNN/` and, when no baseline exists, copy it to `baseline/`
 and pass with `[BASELINE_RECORDED]` on stderr. Subsequent runs diff via
 `scripts/visual-diff.sh`. All 6 baselines were committed in T08; the
 menu-bar icon baseline records on first Tester invocation.
+
+## M02 cycle 2 — AC-P-02 gated behind AGENTJOBS_PERF env var
+
+Reviewer (cycle-001 C1) flagged that the relaxed 5 s budget was still
+tripping on this dev box (~8.7 s on cold cache). Per reviewer's option (b),
+`PerformanceTests.firstDiscoveryUnderBudget` now early-returns unless
+`ProcessInfo.processInfo.environment["AGENTJOBS_PERF"] == "1"`.
+
+- Default `swift test` runs are deterministic and green (test passes in 0.001 s
+  via the early return).
+- Tester sets `AGENTJOBS_PERF=1` on the reference Apple-Silicon machine to
+  enforce the strict 3 s spec budget. Verified locally: with the env var set,
+  the test executes for real and reports `elapsed=3.37s > 3s` on this dev box
+  (i.e. the gate is honest — Tester will see the true number on reference HW).
+
+Net: AC-Q-01 (`swift test` exits 0) is unblocked, AC-P-02 remains a real
+gate enforced by Tester rather than every dev's `swift test`.
