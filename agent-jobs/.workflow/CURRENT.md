@@ -1,20 +1,20 @@
 ---
 milestone: M04
-phase: IMPLEMENTING
+phase: REVIEWING
 cycle: 1
-owner: implementer
-lock_acquired_at: 2026-04-24T11:35:00Z
-lock_expires_at: 2026-04-24T12:20:00Z
-last_transition: 2026-04-24T11:30:00Z
-last_actor: architect
+owner: null
+lock_acquired_at: null
+lock_expires_at: null
+last_transition: 2026-04-24T12:05:00Z
+last_actor: implementer
 ---
 
 # Current Workflow State
 
 **Milestone:** M04 — Auto-refresh + fs.watch
-**Phase:** IMPLEMENTING
+**Phase:** REVIEWING
 **Cycle:** 1
-**Owner:** none — implementer pick up
+**Owner:** none — reviewer pick up
 
 ## Phase History (workflow-wide)
 - M01 SHIPPED 2026-04-24T00:30:00Z (37/37 ACs PASS, pushed)
@@ -24,6 +24,7 @@ last_actor: architect
 - M03 SHIPPED 2026-04-24T10:30:00Z (26/26 ACs PASS first-try, pushed)
 - M03 RETRO 2026-04-24T10:45:00Z (E001 + E002 → ACCEPTED)
 - M04 ARCHITECTING → IMPLEMENTING 2026-04-24T11:30:00Z (architect: 8 tasks, AC-F-15 dropped, AC-V-05 kept)
+- M04 IMPLEMENTING → REVIEWING 2026-04-24T12:05:00Z (T01..T08 done, 266 tests, 1 pre-existing M01 flake)
 
 ## M04 architect decisions
 - AC-F-15 DROPPED (M03 overlay continuity covered indirectly)
@@ -32,5 +33,13 @@ last_actor: architect
 - VisibilityProvider protocol in Core; `AppKitVisibilityProvider` production impl in App layer
 - WatchPaths injection is the test seam; static-grep enforces no real `~/` literals
 
+## M04 implementer notes
+- All 8 tasks committed individually (`impl(M04-T0X): ...`)
+- 266 tests in suite (was 224 in M03 → +42 tests, target was +20/+30)
+- 3 perf-gated tests intentionally skipped (AC-P-01, AC-P-02, AC-P-03 — gated behind AGENTJOBS_PERF=1 per E001)
+- 1 pre-existing M01 flake (`AC-P-02: parse 10,000-line synthetic JSONL in < 500 ms`) NOT in M04 scope; documented in `.workflow/m04/impl-notes.md` as Workaround #1; passes solo (~177 ms) but slow under suite contention (~600-700 ms)
+- 7 visual baselines recorded under `.workflow/m04/screenshots/baseline/` (idle light/dark, refreshing, error, popover-with-indicator, dashboard-toolbar-with-indicator, selection-preserved)
+- See `.workflow/m04/impl-cycle-001.md` for full summary
+
 ## Next
-- implementer: read `.workflow/m04/architecture.md` + `tasks.md`, work T01..T08 in dependency order. Tests use swift-testing per E002. Perf ACs gated behind `AGENTJOBS_PERF=1` per E001.
+- reviewer: read `.workflow/m04/acceptance.md` + `tasks.md` + `impl-cycle-001.md`. Run `swift test` (and `AGENTJOBS_PERF=1 swift test` for the 3 perf-gated tests) and `scripts/visual-diff.sh` against new baselines. Verify each AC.
