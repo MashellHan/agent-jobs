@@ -26,7 +26,7 @@
   green (no test changes yet, just plumbing).
 - **Estimated diff size:** S
 
-## T02 — `LsofOutputParser` + tests
+## T02 — `LsofOutputParser` + tests [DONE]
 - **Files (create):**
   - `Sources/AgentJobsCore/Discovery/Providers/LsofOutputParser.swift`
   - `Tests/AgentJobsCoreTests/LsofOutputParserTests.swift`
