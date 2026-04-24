@@ -138,7 +138,7 @@ Conventions:
   **AC-F-13** (UI side), **AC-P-03**.
 - Estimated diff: **L**
 
-## T08 — Test-isolation guard + `Package.swift` env wiring
+## T08 — Test-isolation guard + `Package.swift` env wiring [DONE]
 - Files:
   - **modify** `Package.swift` — set `AGENTJOBS_TEST=1` on the test target
     via `swiftSettings` `.define()` is not a runtime env; instead use
