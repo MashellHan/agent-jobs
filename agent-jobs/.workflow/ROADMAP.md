@@ -32,7 +32,7 @@ Existing Swift work at `macapp/AgentJobsMac/`:
 | M01 | Discovery audit + gap fill | DONE | Adds `LsofProcessProvider` + `ClaudeScheduledTasksProvider`; wires both into default registry; launchd `createdAt` provenance fixed; +56 new tests; no UI changes |
 | M01.5 | Claude session-JSONL cron parser | DONE | Streams `~/.claude/projects/**/*.jsonl`, reconstructs CronCreate/Delete net set, dedups against `scheduled_tasks.json` (parity with TS `scanSessionCronTasks`); +34 tests |
 | M02 | Functional UI baseline | DONE | Main list shows all 5 sources via `SourceBucketStrip` summary header + click-to-filter, inline `ServiceInspector`, `.accessory` activation policy, visual-test harness (`NSHostingView` + ImageMagick `compare`) with 6 committed baselines, app-launch smoke test; 26/26 ACs PASS, +33 tests |
-| M03 | Actions (stop/hide/refresh) | PENDING | Stop sends SIGTERM/launchctl unload; hide persists to JSON; manual refresh; all with confirmation |
+| M03 | Actions (stop/hide/refresh) | DONE | `StopExecutor` (SIGTERM/launchctl unload) with 6-predicate safety refusal + defense-in-depth; `HiddenStore` actor with atomic persistence + Show-hidden toggle; manual refresh; confirmation dialog; 26/26 ACs PASS first-try, +48 tests |
 | M04 | Auto-refresh + fs.watch | PENDING | jobs.json change → UI updates within 500ms; lsof rescan every 10s |
 | M05 | Hook migration to Swift | PENDING | Native Swift PostToolUse handler; Node CLI no longer required |
 | M06 | Settings window | PENDING | Preferences UI; persists to UserDefaults |
