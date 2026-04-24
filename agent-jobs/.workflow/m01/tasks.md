@@ -90,7 +90,7 @@
 > rule is the only piece that matters for human review and (b) it
 > isolates a bisectable commit if the rule needs tuning later.
 
-## T07 — `ClaudeScheduledTasksProvider.discover()` + tests
+## T07 — `ClaudeScheduledTasksProvider.discover()` + tests [DONE]
 - **Files (modify):**
   - `Sources/AgentJobsCore/Discovery/Providers/ClaudeScheduledTasksProvider.swift`
   - `Tests/AgentJobsCoreTests/ClaudeScheduledTasksProviderTests.swift`
