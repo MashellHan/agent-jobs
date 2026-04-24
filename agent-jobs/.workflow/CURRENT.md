@@ -1,12 +1,12 @@
 ---
 milestone: M03
-phase: TESTING
+phase: ACCEPTED
 cycle: 1
 owner: null
 lock_acquired_at: null
 lock_expires_at: null
-last_transition: 2026-04-24T09:50:00Z
-last_actor: reviewer
+last_transition: 2026-04-24T10:15:00Z
+last_actor: tester
 ---
 
 # Current Workflow State
@@ -25,6 +25,7 @@ last_actor: reviewer
 - M03 ARCHITECTED 2026-04-24T07:55:00Z (architect: 10 tasks, 4 open questions resolved, swift-testing convention applied per E002)
 - M03 IMPLEMENTED 2026-04-24T09:30:00Z (implementer: T01..T10 done, 226 tests passing, +46 over M02, 26/26 ACs PASS or GATED-as-designed)
 - M03 REVIEWED 2026-04-24T09:50:00Z (reviewer: PASS 93/100, 0 CRITICAL, all safety ACs covered with defense-in-depth)
+- M03 TESTED 2026-04-24T10:15:00Z (tester: ACCEPTED 25/26 PASS, 1 SKIP-as-designed AC-F-03 live SIGTERM, 0 FAIL; safety ACs independently verified via static-grep + runtime guard observation)
 
 ## M03 review summary (cycle 1)
 - Build: PASS. Tests: 226/226 PASS.
