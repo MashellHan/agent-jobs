@@ -5,6 +5,46 @@ All notable changes to the Mac app live here. Format: Keep a Changelog.
 ## [Unreleased]
 
 ### Added
+- (M01) `Sources/AgentJobsCore/Discovery/Providers/LsofProcessProvider.swift` —
+  parses `lsof -i -P -n -sTCP:LISTEN`, dedupes on PID, throttles per-PID
+  `ps` enrichment via `AsyncSemaphore` (default 8), and surfaces friendly
+  names + agent inference (claude / cursor / copilot / openclaw) through
+  `LiveProcessNaming`. First production wiring of live-process discovery
+  in the menu bar.
+- (M01) `Sources/AgentJobsCore/Discovery/Providers/ClaudeScheduledTasksProvider.swift` —
+  reads `~/.claude/scheduled_tasks.json` and surfaces each entry as a
+  cron-scheduled `Service`. Tolerant of every disk failure mode (missing,
+  empty, malformed JSON, non-array root → `[]`). Hung reads raise
+  `ProviderError.timeout` (5 s cap, mirrors `AgentJobsJsonProvider`).
+- (M01) `Sources/AgentJobsCore/Discovery/Providers/AsyncSemaphore.swift` —
+  cancellation-aware async permit semaphore used to throttle the lsof
+  provider's per-PID fan-out.
+- (M01) `LaunchdPlistReader.Enrichment.mtime` (additive, default `nil`) —
+  surfaces the plist's modification timestamp so `LaunchdUserProvider` can
+  populate `Service.createdAt` honestly instead of leaving it nil.
+- (M01) ~50 new unit tests across the new providers + helpers, including
+  enforced perf gates: `ServiceRegistryTests` "AC-P-02 — median < 50 ms"
+  and `LsofProcessProviderTests` "AC-P-03 — 200 PIDs < 500 ms".
+
+### Changed
+- (M01) `ServiceRegistry.defaultRegistry()` now ships **four** providers
+  (was two): `AgentJobsJsonProvider`, `LaunchdUserProvider`,
+  `LsofProcessProvider`, `ClaudeScheduledTasksProvider`. Failure isolation
+  contract preserved — one provider throwing leaves the other three
+  unaffected.
+- (M01) `LaunchdUserProvider` now passes `enrichment.mtime` through to
+  `Service.createdAt`. When the plist is unreadable or has no mtime,
+  `createdAt` stays `nil` (no synthetic `Date()`).
+
+### Fixed
+- (M01 cycle 2) `LsofProcessProvider` semaphore release no longer fires
+  from an unstructured `Task`; the permit is credited back via direct
+  `await` inside the structured task closure.
+- (M01 cycle 2) `LiveProcessNaming.friendlyName` framework match anchors
+  on token basenames so `node /opt/openssl-nextstep` no longer mislabels
+  as the `next` framework.
+
+### Added
 - (cycle 14) `MenuBarPopoverView` outer `VStack` now carries
   `.background(.regularMaterial)` — the popover blends with the desktop
   wallpaper (vibrancy) instead of rendering against the OS default flat
