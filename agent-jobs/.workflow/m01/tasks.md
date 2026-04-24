@@ -122,7 +122,7 @@
   pass. Public `Loader` typealias unchanged.
 - **Estimated diff size:** S
 
-## T09 — Wire new providers into `ServiceRegistry.defaultRegistry()`
+## T09 — Wire new providers into `ServiceRegistry.defaultRegistry()` [DONE]
 - **Files (modify):**
   - `Sources/AgentJobsCore/Discovery/ServiceRegistry.swift`
   - `Tests/AgentJobsCoreTests/ServiceRegistryTests.swift`

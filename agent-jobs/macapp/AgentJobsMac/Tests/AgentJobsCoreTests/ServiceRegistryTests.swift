@@ -172,4 +172,47 @@ struct ServiceRegistryTests {
         #expect(result.succeededCount == 0)
         #expect(result.allFailed == false)
     }
+
+    // MARK: - M01 T09 default-registry wiring
+
+    @Test("defaultRegistry() ships with 4 providers (M01)")
+    func defaultRegistryHasFourProviders() async {
+        let registry = ServiceRegistry.defaultRegistry()
+        let count = await registry.providerCount
+        #expect(count == 4)
+    }
+
+    @Test("failure isolation across 4 providers: 1 throws → 3 succeed")
+    func failureIsolationAcrossFour() async {
+        let svc = Self.makeService(id: "x")
+        let registry = ServiceRegistry(providers: [
+            StubGoodProvider(services: [svc]),
+            StubGoodProvider(services: []),
+            StubFailingProvider(),
+            StubGoodProvider(services: [Self.makeService(id: "y")])
+        ])
+        let result = await registry.discoverAllDetailed()
+        #expect(result.totalCount == 4)
+        #expect(result.succeededCount == 3)
+        #expect(result.services.count == 2)
+    }
+
+    @Test("4 disjoint stubs: discoverAll() yields union, deterministic across 10 runs")
+    func fourDisjointDeterministic() async {
+        let a = Self.makeService(id: "a")
+        let b = Self.makeService(id: "b")
+        let c = Self.makeService(id: "c")
+        let d = Self.makeService(id: "d")
+        let registry = ServiceRegistry(providers: [
+            StubGoodProvider(services: [a]),
+            StubGoodProvider(services: [b]),
+            StubGoodProvider(services: [c]),
+            StubGoodProvider(services: [d])
+        ])
+        for _ in 0..<10 {
+            let result = await registry.discoverAll()
+            #expect(result.count == 4)
+            #expect(Set(result.map { $0.id }) == Set(["a", "b", "c", "d"]))
+        }
+    }
 }

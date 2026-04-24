@@ -66,7 +66,9 @@ public actor ServiceRegistry {
     public static func defaultRegistry() -> ServiceRegistry {
         ServiceRegistry(providers: [
             AgentJobsJsonProvider(),
-            LaunchdUserProvider()
+            LaunchdUserProvider(),
+            LsofProcessProvider(),
+            ClaudeScheduledTasksProvider()
         ])
     }
 }
