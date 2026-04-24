@@ -1,20 +1,20 @@
 ---
 milestone: M04
-phase: REVIEWING
+phase: TESTING
 cycle: 1
 owner: null
 lock_acquired_at: null
 lock_expires_at: null
-last_transition: 2026-04-24T12:05:00Z
-last_actor: implementer
+last_transition: 2026-04-24T12:18:00Z
+last_actor: reviewer
 ---
 
 # Current Workflow State
 
 **Milestone:** M04 — Auto-refresh + fs.watch
-**Phase:** REVIEWING
+**Phase:** TESTING
 **Cycle:** 1
-**Owner:** none — reviewer pick up
+**Owner:** none — tester pick up
 
 ## Phase History (workflow-wide)
 - M01 SHIPPED 2026-04-24T00:30:00Z (37/37 ACs PASS, pushed)
@@ -25,6 +25,7 @@ last_actor: implementer
 - M03 RETRO 2026-04-24T10:45:00Z (E001 + E002 → ACCEPTED)
 - M04 ARCHITECTING → IMPLEMENTING 2026-04-24T11:30:00Z (architect: 8 tasks, AC-F-15 dropped, AC-V-05 kept)
 - M04 IMPLEMENTING → REVIEWING 2026-04-24T12:05:00Z (T01..T08 done, 266 tests, 1 pre-existing M01 flake)
+- M04 REVIEWING → TESTING 2026-04-24T12:18:00Z (cycle 1 PASS, score 88/100, 0 CRITICAL)
 
 ## M04 architect decisions
 - AC-F-15 DROPPED (M03 overlay continuity covered indirectly)
@@ -41,5 +42,12 @@ last_actor: implementer
 - 7 visual baselines recorded under `.workflow/m04/screenshots/baseline/` (idle light/dark, refreshing, error, popover-with-indicator, dashboard-toolbar-with-indicator, selection-preserved)
 - See `.workflow/m04/impl-cycle-001.md` for full summary
 
+## M04 reviewer notes (cycle 1)
+- Build PASS; tests PASS 266/266 (M01 flake did not surface this run)
+- Score 88/100, 0 CRITICAL, 0 HIGH, 2 MEDIUM (M1: visibility-task self capture; M2: dir-watcher path prefix check), 4 LOW
+- AC-P-04 (16 ms main-thread non-block) NOTED missing — implementer honestly deferred per E001 (no relaxed assertion written). Tester should decide whether to add the strict test in TESTING phase OR carry to retro.
+- AC-Q-02 (≥80% coverage on changed lines) untracked — tester to run `swift test --enable-code-coverage` and report
+- See `.workflow/m04/review-cycle-001.md` for full review
+
 ## Next
-- reviewer: read `.workflow/m04/acceptance.md` + `tasks.md` + `impl-cycle-001.md`. Run `swift test` (and `AGENTJOBS_PERF=1 swift test` for the 3 perf-gated tests) and `scripts/visual-diff.sh` against new baselines. Verify each AC.
+- tester: read `.workflow/m04/review-cycle-001.md` + `acceptance.md`. Run full strict-mode `AGENTJOBS_PERF=1 swift test`, run `scripts/visual-diff.sh`, measure coverage, verify each AC against the "Acceptance criteria status" table. Report PASS/FAIL per AC. Decide AC-P-04 disposition (write test now, or retro item).
