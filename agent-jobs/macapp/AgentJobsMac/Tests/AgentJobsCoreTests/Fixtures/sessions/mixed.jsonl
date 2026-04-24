@@ -1,0 +1,6 @@
+{"timestamp":"2026-04-23T12:00:00Z","sessionId":"sess-cccccccc-1111-2222-3333-444444444444","cwd":"/Users/dev/proj/gamma","message":{"content":[{"type":"tool_use","id":"tu_100","name":"CronCreate","input":{"cron":"0 0 * * 0","prompt":"weekly report","recurring":true,"durable":false}}]}}
+{"timestamp":"2026-04-23T12:00:01Z","sessionId":"sess-cccccccc-1111-2222-3333-444444444444","cwd":"/Users/dev/proj/gamma","message":{"content":[{"type":"tool_result","tool_use_id":"tu_100"}]},"toolUseResult":{"id":"cron_one","durable":false}}
+this is not json — should be skipped silently
+{"timestamp":"2026-04-23T12:01:00Z","sessionId":"sess-cccccccc-1111-2222-3333-444444444444","cwd":"/Users/dev/proj/gamma","message":{"content":[{"type":"tool_use","id":"tu_101","name":"CronCreate","input":{"cron":"30 14 * * *","prompt":"afternoon ping","recurring":true,"durable":false}}]}}
+{"timestamp":"2026-04-23T12:01:01Z","sessionId":"sess-cccccccc-1111-2222-3333-444444444444","cwd":"/Users/dev/proj/gamma","message":{"content":[{"type":"tool_result","tool_use_id":"tu_101"}]},"toolUseResult":{"id":"cron_two","durable":false}}
+{"timestamp":"2026-04-23T12:02:00Z","sessionId":"sess-cccccccc-1111-2222-3333-444444444444","cwd":"/Users/dev/proj/gamma","message":{"content":[{"type":"tool_use","id":"tu_102","name":"CronDelete","input":{"id":"cron_unrelated"}}]}}

@@ -1,0 +1,2 @@
+{"timestamp":"2026-04-23T10:00:00Z","sessionId":"sess-aaaaaaaa-1111-2222-3333-444444444444","cwd":"/Users/dev/proj/alpha","message":{"content":[{"type":"tool_use","id":"tu_001","name":"CronCreate","input":{"cron":"0 9 * * *","prompt":"summarize the morning standup","recurring":true,"durable":false}}]}}
+{"timestamp":"2026-04-23T10:00:01Z","sessionId":"sess-aaaaaaaa-1111-2222-3333-444444444444","cwd":"/Users/dev/proj/alpha","message":{"content":[{"type":"tool_result","tool_use_id":"tu_001"}]},"toolUseResult":{"id":"cron_abc","durable":false}}

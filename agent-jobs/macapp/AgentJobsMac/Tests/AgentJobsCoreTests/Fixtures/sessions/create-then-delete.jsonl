@@ -1,0 +1,3 @@
+{"timestamp":"2026-04-23T11:00:00Z","sessionId":"sess-bbbbbbbb-1111-2222-3333-444444444444","cwd":"/Users/dev/proj/beta","message":{"content":[{"type":"tool_use","id":"tu_010","name":"CronCreate","input":{"cron":"*/5 * * * *","prompt":"poll status","recurring":true,"durable":true}}]}}
+{"timestamp":"2026-04-23T11:00:01Z","sessionId":"sess-bbbbbbbb-1111-2222-3333-444444444444","cwd":"/Users/dev/proj/beta","message":{"content":[{"type":"tool_result","tool_use_id":"tu_010"}]},"toolUseResult":{"id":"cron_zzz","durable":true}}
+{"timestamp":"2026-04-23T11:05:00Z","sessionId":"sess-bbbbbbbb-1111-2222-3333-444444444444","cwd":"/Users/dev/proj/beta","message":{"content":[{"type":"tool_use","id":"tu_011","name":"CronDelete","input":{"id":"cron_zzz"}}]}}
