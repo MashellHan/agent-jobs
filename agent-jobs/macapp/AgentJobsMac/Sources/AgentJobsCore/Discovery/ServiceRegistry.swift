@@ -68,7 +68,8 @@ public actor ServiceRegistry {
             AgentJobsJsonProvider(),
             LaunchdUserProvider(),
             LsofProcessProvider(),
-            ClaudeScheduledTasksProvider()
+            ClaudeScheduledTasksProvider(),
+            ClaudeSessionCronProvider()
         ])
     }
 }

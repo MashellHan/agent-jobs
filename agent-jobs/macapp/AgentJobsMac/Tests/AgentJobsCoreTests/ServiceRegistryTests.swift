@@ -175,11 +175,11 @@ struct ServiceRegistryTests {
 
     // MARK: - M01 T09 default-registry wiring
 
-    @Test("defaultRegistry() ships with 4 providers (M01)")
+    @Test("defaultRegistry() ships with 5 providers (M01.5)")
     func defaultRegistryHasFourProviders() async {
         let registry = ServiceRegistry.defaultRegistry()
         let count = await registry.providerCount
-        #expect(count == 4)
+        #expect(count == 5)
     }
 
     @Test("failure isolation across 4 providers: 1 throws → 3 succeed")
