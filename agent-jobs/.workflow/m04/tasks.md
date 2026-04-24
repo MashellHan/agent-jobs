@@ -11,7 +11,7 @@
 
 ---
 
-## T01 — Refresh primitives (WatchPaths + RefreshTrigger + RefreshScheduler)
+## T01 — Refresh primitives (WatchPaths + RefreshTrigger + RefreshScheduler) [DONE]
 
 - **Files (create):**
   - `Sources/AgentJobsCore/Refresh/WatchPaths.swift` (~50 LOC)
