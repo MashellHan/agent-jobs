@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Mac app (Swift rewrite, in progress)
+
+- **M02 — Functional UI baseline** (2026-04-24): Dashboard shows all 5 discovery sources with `SourceBucketStrip` summary header (click-to-filter), inline `ServiceInspector` right pane, `.accessory` activation policy (menu bar icon as primary entry), visual-test harness with 6 committed screenshot baselines, app-launch smoke test. 26/26 ACs PASS. (+33 tests, 145 → 178)
+- **M01.5 — Claude session-JSONL cron parser** (2026-04-24): Streams `~/.claude/projects/**/*.jsonl`, reconstructs CronCreate/CronDelete net set, dedups against `scheduled_tasks.json`. 15/15 ACs PASS. (+34 tests)
+- **M01 — Discovery audit + gap fill** (2026-04-24): Adds `LsofProcessProvider` + `ClaudeScheduledTasksProvider`, wires both into the default registry, fixes launchd `createdAt` provenance from plist mtime. 37/37 ACs PASS. (+56 tests, 55 → 111)
+
 ## 0.1.0 (2026-04-11)
 
 Initial public release.
