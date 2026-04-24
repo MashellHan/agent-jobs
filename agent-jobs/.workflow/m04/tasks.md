@@ -43,7 +43,7 @@
   - Two-instance independence (jobs.json and scheduledTasks watchers don't cross-fire)
 - **Estimated diff size:** M (~290 LOC)
 
-## T03 — DirectoryEventWatcher (FSEventStream for ~/.claude/projects/)
+## T03 — DirectoryEventWatcher (FSEventStream for ~/.claude/projects/) [DONE]
 
 - **Files (create):**
   - `Sources/AgentJobsCore/Refresh/DirectoryEventWatcher.swift` (~120 LOC)
