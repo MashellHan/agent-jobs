@@ -240,13 +240,49 @@ struct ServiceInspector: View {
                 MetricTile(title: "Next Run",
                            value: service.nextRun.map { $0.formatted(date: .abbreviated, time: .standard) } ?? "—")
             }
+            // AC-F-08: PID + Owner tiles ONLY when pid is set. When nil we
+            // omit the row entirely (NOT render "0") — the model field is
+            // genuinely absent for non-process-backed services.
             if let pid = service.pid {
                 GridRow {
                     MetricTile(title: "PID", value: "\(pid)", mono: true)
                     MetricTile(title: "Owner", value: ownerLabel)
                 }
             }
+            // AC-F-07: Provenance group — surfaces createdAt + the service's
+            // origin (which agent / sessionId registered it) + log path or
+            // task identifier. Spec §"data flow" requires these fields to
+            // populate for every row regardless of source. Missing fields
+            // render "—" per spec ("render '—'", do NOT extend the model).
+            GridRow {
+                MetricTile(title: "Created",
+                           value: service.createdAt.map { $0.formatted(date: .abbreviated, time: .standard) } ?? "—")
+                MetricTile(title: "Origin", value: originLabel, mono: true)
+            }
+            GridRow {
+                MetricTile(title: "Session", value: sessionLabel, mono: true)
+                MetricTile(title: "Source path", value: sourcePathLabel, mono: true)
+            }
         }
+    }
+
+    /// Origin agent + tool surface (e.g. "Claude · scheduledTask"). "—" when
+    /// the discovery provider didn't attach an origin.
+    private var originLabel: String {
+        guard let o = service.origin else { return "—" }
+        if let tool = o.toolName { return "\(o.agent.displayName) · \(tool)" }
+        return o.agent.displayName
+    }
+
+    private var sessionLabel: String {
+        service.origin?.sessionId ?? "—"
+    }
+
+    /// File path / scheduled-task id surface. The Service model doesn't have
+    /// a dedicated "scheduled task id" field (spec: don't extend the model);
+    /// we use `logsPath` when set, else "—".
+    private var sourcePathLabel: String {
+        service.logsPath ?? "—"
     }
 
     private var metricsContent: some View {
