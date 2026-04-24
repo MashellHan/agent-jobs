@@ -64,9 +64,16 @@ enum LiveProcessNaming {
             }
         }
 
-        // 2) Known frameworks.
+        // 2) Known frameworks. Match on whole tokens (or token basenames)
+        //    rather than raw substring so e.g. `node /opt/openssl-nextstep`
+        //    no longer mislabels as `next`.
         let cmdLower = fullCommand.lowercased()
-        for fw in frameworks where cmdLower.contains(fw) {
+        let tokenBasenames: [String] = cmdLower
+            .split(whereSeparator: \.isWhitespace)
+            .map { tok -> String in
+                String(tok.split(separator: "/").last ?? tok)
+            }
+        for fw in frameworks where tokenBasenames.contains(fw) {
             return formatWithPort(fw, port: port)
         }
 

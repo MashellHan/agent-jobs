@@ -74,6 +74,22 @@ struct LiveProcessNamingFriendlyNameTests {
         #expect(n == "vite :5173")
     }
 
+    @Test("framework token match is anchored: 'openssl-nextstep' is NOT 'next'")
+    func frameworkTokenAnchored() {
+        // Pre-fix this would label as `next :0` because `cmdLower.contains("next")`
+        // matches the substring inside `openssl-nextstep`. Post-fix it must
+        // fall through to the plain-command branch.
+        let n = LiveProcessNaming.friendlyName(
+            command: "node",
+            fullCommand: "node /opt/openssl-nextstep/server",
+            port: 0,
+            agent: nil
+        )
+        #expect(n != "next")
+        #expect(n != "next :0")
+        #expect(n == "node")
+    }
+
     @Test("agent fallback with subcommand → label-subcommand")
     func agentSubcommand() {
         let n = LiveProcessNaming.friendlyName(
