@@ -34,5 +34,10 @@ Ship the current milestone.
    - {N} ACs verified
    - {N} commits over {N} cycles
    ```
-8. Dispatch `retrospective` agent via Task tool.
-9. After retro returns, summarize and prompt: "Retro complete. Run /milestone-start when ready for M{N+1}."
+8. **Push** (this is the only push point in the workflow):
+   ```bash
+   git push origin main
+   ```
+   If push fails (rejected, network), do NOT force. Report and stop. Human resolves.
+9. Dispatch `retrospective` agent via Task tool.
+10. After retro returns, summarize and prompt: "Retro complete. Run /milestone-start when ready for M{N+1}."

@@ -85,6 +85,18 @@ When `owner: null` and `lock_expires_at < now`, the next legal agent for that ph
 | App launches without crash | tester | back to IMPLEMENTING (CRITICAL) |
 | Menu bar interaction works | tester | back to IMPLEMENTING |
 
+## Push Policy (CRITICAL)
+
+**No `git push` until BOTH reviewer AND tester have produced PASS for the latest implementation in the current milestone.**
+
+- Implementer commits locally during IMPLEMENTING — never pushes.
+- Reviewer/Tester commit their report files locally — never push.
+- `/ship` command (or its inline equivalent in autonomous mode) is the **only** trigger that pushes. It runs only after `phase: ACCEPTED` is reached, which requires the most recent test-cycle to be PASS, which in turn requires the most recent review-cycle to be PASS.
+- Push pushes ALL accumulated local commits for the milestone in one go (`git push origin main`).
+- If a milestone is in STUCK: never push. Resolve first.
+
+This protects the remote from broken or unreviewed code. The local repo can churn freely; remote stays clean.
+
 ## File Layout
 
 ```
