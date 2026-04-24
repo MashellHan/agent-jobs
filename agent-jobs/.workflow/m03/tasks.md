@@ -74,7 +74,7 @@ Conventions:
 - Maps to AC: **AC-F-08**, **AC-F-10**, **AC-F-11**, **AC-P-01**.
 - Estimated diff: **L**
 
-## T05 — `ServiceRegistryViewModel` action methods + tests
+## T05 — `ServiceRegistryViewModel` action methods + tests [DONE]
 - Files:
   - **modify** `Sources/AgentJobsMac/AgentJobsMacApp.swift` (+ `hiddenIds`, `errorByServiceId`, `isRefreshing`, `optimisticallyStopped`, injected `stopExecutor` + `hiddenStore`, methods `stop(_:)`, `hide(_:)`, `unhide(_:)`, `refreshNow()`; existing `refresh()` gains optimistic-merge step; ~120 LOC net add)
   - **new** `Tests/AgentJobsCoreTests/ServiceRegistryViewModelActionsTests.swift` (~150 LOC, uses `FakeStopExecutor` + `HiddenStore` against a temp HOME; stub registry from `StubServiceRegistry`)
