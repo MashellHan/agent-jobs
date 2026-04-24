@@ -74,7 +74,7 @@
   → `ProviderError.ioError`. File ≤ 200 LOC.
 - **Estimated diff size:** M
 
-## T06 — Claude friendly-cron-name helper + tests
+## T06 — Claude friendly-cron-name helper + tests [DONE]
 - **Files (create):**
   - Inline static helper in `ClaudeScheduledTasksProvider.swift` (created
     in T07) — but its tests live in `ClaudeScheduledTasksProviderTests.swift`.
