@@ -57,7 +57,7 @@ Conventions:
 - Maps to AC: **AC-F-02**, **AC-F-03**, **AC-F-04**.
 - Estimated diff: **L**
 
-## T04 — `HiddenStore` actor + atomic write + corrupt-recovery + tests
+## T04 — `HiddenStore` actor + atomic write + corrupt-recovery + tests [DONE]
 - Files:
   - **new** `Sources/AgentJobsCore/Persistence/HiddenStore.swift` (~140 LOC)
   - **new** `Tests/AgentJobsCoreTests/HiddenStoreTests.swift` (~150 LOC, temp HOME via `FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)`)
