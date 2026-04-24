@@ -93,7 +93,7 @@
   - Main-thread non-block: 8 ms checkpoint loop during refresh asserts no inter-checkpoint gap > 16 ms (gated AC-P-04)
 - **Estimated diff size:** L (~370 LOC; if it bleeds, split tests into a second file)
 
-## T06 — AutoRefreshIndicator three-state rewrite + dashboard toolbar placement
+## T06 — AutoRefreshIndicator three-state rewrite + dashboard toolbar placement [DONE]
 
 - **Files (modify):**
   - `Sources/AgentJobsMac/Features/MenuBar/AutoRefreshIndicator.swift` (rewrite, ~+90 LOC, −20 LOC)

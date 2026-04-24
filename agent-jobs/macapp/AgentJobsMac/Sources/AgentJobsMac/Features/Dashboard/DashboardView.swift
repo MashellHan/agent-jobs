@@ -50,6 +50,10 @@ struct DashboardView: View {
     @ToolbarContentBuilder
     private var dashboardToolbar: some ToolbarContent {
         ToolbarItemGroup(placement: .primaryAction) {
+            // AC-V-05: indicator visible in BOTH popover AND dashboard
+            // toolbar — so visibility doesn't depend on which surface
+            // the user has open. Placed LEFT of the Refresh button.
+            AutoRefreshIndicator()
             Toggle(isOn: $showHidden) {
                 Label("Show hidden", systemImage: "eye")
             }

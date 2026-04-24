@@ -56,8 +56,7 @@ struct MenuBarPopoverView: View {
             Text("Agent Jobs")
                 .font(DesignTokens.Typography.heading)
             Spacer()
-            AutoRefreshIndicator(lastRefresh: registry.lastRefresh,
-                                 intervalSeconds: registry.refreshIntervalSeconds)
+            AutoRefreshIndicator()
             HoverableIconButton(systemImage: "arrow.clockwise", help: "Refresh now") {
                 Task { await registry.refresh() }
             }
