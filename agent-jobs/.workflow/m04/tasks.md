@@ -120,7 +120,7 @@
 - **Acceptance:** AC-V-01, V-02, V-03, V-04, V-05. Reuses M02 `ScreenshotHarness` + `scripts/visual-diff.sh` at 2 % threshold. Refreshing-state baseline captured with `accessibilityReduceMotion = true` to suppress pulse-phase jitter. Selection-persistence test runs 10 refreshes against an identical-output stub registry with row #3 selected; all post-refresh frames must match the pre-refresh baseline.
 - **Estimated diff size:** M (~240 LOC + 7 PNGs)
 
-## T08 — Static-grep guards + remove obsolete `startAutoRefresh()` references
+## T08 — Static-grep guards + remove obsolete `startAutoRefresh()` references [DONE]
 
 - **Files (modify):**
   - Whichever file currently hosts `StaticGrepRogueRefsTests` (extend with M04 patterns), or create `Tests/AgentJobsCoreTests/StaticGrepRogueRefsTests.swift` if absent (~120 LOC)
