@@ -37,7 +37,7 @@
   line / missing port.
 - **Estimated diff size:** S
 
-## T03 — `LiveProcessNaming` (`inferAgent` + `friendlyName`) + tests
+## T03 — `LiveProcessNaming` (`inferAgent` + `friendlyName`) + tests [DONE]
 - **Files (create):**
   - `Sources/AgentJobsCore/Discovery/Providers/LiveProcessNaming.swift`
   - `Tests/AgentJobsCoreTests/LiveProcessNamingTests.swift`
