@@ -28,15 +28,15 @@ Existing Swift work at `macapp/AgentJobsMac/`:
 
 | ID | Theme | Status | Acceptance summary |
 |---|---|---|---|
-| M00 | Bootstrap workflow | IN PROGRESS | this file + .claude/ + .workflow/ created |
+| M00 | Bootstrap workflow | DONE | this file + .claude/ + .workflow/ created |
 | M01 | Discovery audit + gap fill | DONE | Adds `LsofProcessProvider` + `ClaudeScheduledTasksProvider`; wires both into default registry; launchd `createdAt` provenance fixed; +56 new tests; no UI changes |
-| M01.5 | Claude session-JSONL cron parser | PENDING | Streams `~/.claude/projects/**/*.jsonl`, reconstructs CronCreate/Delete net set, dedups against `scheduled_tasks.json` (parity with TS `scanSessionCronTasks`) |
-| M02 | (was: live process scanner) — folded into M01 | DROPPED | Moved into M01 as part of "all 4 data sources" goal |
-| M03 | Detail panel UI | PENDING | Click row → detail view with command/PID/port/history |
-| M04 | Actions (stop/hide) | PENDING | Stop sends SIGTERM/launchctl unload; hide persists; both with undo |
-| M05 | Auto-refresh + fs.watch | PENDING | jobs.json change → UI updates within 500ms |
-| M06 | Hook migration to Swift | PENDING | Native Swift PostToolUse handler; Node CLI no longer required |
-| M07 | Settings window | PENDING | Preferences UI; persists to UserDefaults |
+| M01.5 | Claude session-JSONL cron parser | DONE | Streams `~/.claude/projects/**/*.jsonl`, reconstructs CronCreate/Delete net set, dedups against `scheduled_tasks.json` (parity with TS `scanSessionCronTasks`); +34 tests |
+| M02 | Functional UI baseline | PENDING | **Bundles old M02+M03**: main list shows all 5 sources with summary header (counts by source/status), per-row detail panel (command/PID/port/schedule/history). First milestone with visual ACs (XCUITest + screenshots). Tester must launch the app. |
+| M03 | Actions (stop/hide/refresh) | PENDING | Stop sends SIGTERM/launchctl unload; hide persists to JSON; manual refresh; all with confirmation |
+| M04 | Auto-refresh + fs.watch | PENDING | jobs.json change → UI updates within 500ms; lsof rescan every 10s |
+| M05 | Hook migration to Swift | PENDING | Native Swift PostToolUse handler; Node CLI no longer required |
+| M06 | Settings window | PENDING | Preferences UI; persists to UserDefaults |
+| M07 | Agent + Subagent inspector page | PENDING | **NEW major feature** — second top-level page; shows agent activity (Claude Code, Cursor, Copilot, OpenClaw), per-agent process tree, recent commands, sub-agent invocations |
 | M08 | Packaging + auto-launch | PENDING | Notarized .dmg; LaunchAgent auto-start |
 | M09 | History + analytics | PENDING | 7-day run history per service; agent attribution chart |
 | M10 | v1.0 polish + ship | PENDING | All P0 issues closed; release notes; **switch to Phase B continuous mode** |
