@@ -87,8 +87,8 @@ public struct LsofProcessProvider: ServiceProvider {
             for pid in pids {
                 group.addTask {
                     await semaphore.wait()
-                    defer { Task { await semaphore.signal() } }
                     let cmd = await Self.runPs(pid: pid, override: psRunner)
+                    await semaphore.signal()
                     return (pid, cmd)
                 }
             }
