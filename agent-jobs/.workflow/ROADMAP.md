@@ -29,7 +29,7 @@ Existing Swift work at `macapp/AgentJobsMac/`:
 | ID | Theme | Status | Acceptance summary |
 |---|---|---|---|
 | M00 | Bootstrap workflow | IN PROGRESS | this file + .claude/ + .workflow/ created |
-| M01 | Discovery audit + gap fill | IN PROGRESS | Adds `LsofProcessProvider` + `ClaudeScheduledTasksProvider`; wires both into default registry; launchd `createdAt` provenance fixed; ≥12 new tests; no UI changes |
+| M01 | Discovery audit + gap fill | DONE | Adds `LsofProcessProvider` + `ClaudeScheduledTasksProvider`; wires both into default registry; launchd `createdAt` provenance fixed; +56 new tests; no UI changes |
 | M01.5 | Claude session-JSONL cron parser | PENDING | Streams `~/.claude/projects/**/*.jsonl`, reconstructs CronCreate/Delete net set, dedups against `scheduled_tasks.json` (parity with TS `scanSessionCronTasks`) |
 | M02 | (was: live process scanner) — folded into M01 | DROPPED | Moved into M01 as part of "all 4 data sources" goal |
 | M03 | Detail panel UI | PENDING | Click row → detail view with command/PID/port/history |
