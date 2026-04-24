@@ -6,6 +6,8 @@ struct DashboardView: View {
     @State private var selection: Service.ID?
     @State private var categoryFilter: ServiceSource.Category? = nil
     @State private var bucketFilter: ServiceSource.Bucket? = nil
+    @State private var showHidden: Bool = false
+    @State private var pendingStop: Service? = nil
 
     /// Optional initial selection — used by visual baseline tests
     /// (AC-V-05) to deterministically pick a row before screenshot capture.
@@ -22,15 +24,48 @@ struct DashboardView: View {
                 Divider()
                 serviceTable
             }
+            .toolbar { dashboardToolbar }
         } detail: {
             if let id = selection,
                let svc = registry.services.first(where: { $0.id == id }) {
-                ServiceInspector(service: svc)
+                ServiceInspector(
+                    service: svc,
+                    isHidden: registry.hiddenIds.contains(svc.id),
+                    errorMessage: registry.errorByServiceId[svc.id],
+                    onStop: { pendingStop = $0 },
+                    onHide: { svc in Task { await registry.hide(svc.id) } },
+                    onUnhide: { svc in Task { await registry.unhide(svc.id) } }
+                )
             } else {
                 ContentUnavailableView("Select a service",
                                        systemImage: "sidebar.right",
                                        description: Text("Pick something from the list to inspect."))
             }
+        }
+        .stopConfirmation(pending: $pendingStop) { svc in
+            Task { await registry.stop(svc) }
+        }
+    }
+
+    @ToolbarContentBuilder
+    private var dashboardToolbar: some ToolbarContent {
+        ToolbarItemGroup(placement: .primaryAction) {
+            Toggle(isOn: $showHidden) {
+                Label("Show hidden", systemImage: "eye")
+            }
+            .toggleStyle(.button)
+            .help("Show services you have hidden")
+            Button {
+                Task { await registry.refreshNow() }
+            } label: {
+                if registry.isRefreshing {
+                    ProgressView().controlSize(.small)
+                } else {
+                    Image(systemName: "arrow.clockwise")
+                }
+            }
+            .disabled(registry.isRefreshing)
+            .help("Refresh discovery")
         }
     }
 
@@ -68,23 +103,43 @@ struct DashboardView: View {
     }
 
     private var filteredServices: [Service] {
-        DashboardView.filter(registry.services, category: categoryFilter, bucket: bucketFilter)
+        DashboardView.filter(
+            registry.services,
+            category: categoryFilter,
+            bucket: bucketFilter,
+            hiddenIds: registry.hiddenIds,
+            showHidden: showHidden
+        )
     }
 
     /// Pure filter function — both filters AND-ed; nil disables that
     /// constraint. Extracted as `static` so unit tests can exercise the
     /// matrix without spinning up SwiftUI / NavigationSplitView.
+    /// 3-arg overload preserves M02 callers.
     static func filter(_ services: [Service],
                        category: ServiceSource.Category?,
                        bucket: ServiceSource.Bucket?) -> [Service] {
+        filter(services, category: category, bucket: bucket, hiddenIds: [], showHidden: true)
+    }
+
+    static func filter(_ services: [Service],
+                       category: ServiceSource.Category?,
+                       bucket: ServiceSource.Bucket?,
+                       hiddenIds: Set<String>,
+                       showHidden: Bool) -> [Service] {
         services.filter { svc in
-            (category == nil || svc.source.category == category) &&
-            (bucket   == nil || svc.source.bucket   == bucket)
+            let categoryOK = category == nil || svc.source.category == category
+            let bucketOK   = bucket == nil   || svc.source.bucket   == bucket
+            let hiddenOK   = showHidden || !hiddenIds.contains(svc.id)
+            return categoryOK && bucketOK && hiddenOK
         }
     }
 
     private var emptyTitle: String {
         if registry.services.isEmpty { return "No services discovered yet" }
+        if !registry.hiddenIds.isEmpty && !showHidden && allVisibleHidden {
+            return "All services hidden"
+        }
         if let cat = categoryFilter, let bkt = bucketFilter {
             return "No \(cat.displayName) services in \(bkt.displayName)"
         }
@@ -93,13 +148,24 @@ struct DashboardView: View {
         return "No services discovered yet"
     }
 
+    private var allVisibleHidden: Bool {
+        !registry.services.isEmpty
+            && registry.services.allSatisfy { registry.hiddenIds.contains($0.id) }
+    }
+
     private var emptySymbol: String {
-        bucketFilter?.sfSymbol ?? categoryFilter?.sfSymbol ?? "tray"
+        if !registry.hiddenIds.isEmpty && !showHidden && allVisibleHidden {
+            return "eye.slash"
+        }
+        return bucketFilter?.sfSymbol ?? categoryFilter?.sfSymbol ?? "tray"
     }
 
     private var emptyMessage: String {
         if registry.services.isEmpty {
             return "Providers will populate this view as they discover work."
+        }
+        if !registry.hiddenIds.isEmpty && !showHidden && allVisibleHidden {
+            return "Toggle Show hidden to see them."
         }
         return "Try clearing a filter, or run something in this source."
     }
@@ -115,11 +181,14 @@ struct DashboardView: View {
             } else {
                 Table(filteredServices, selection: $selection) {
                     TableColumn("Name") { svc in
-                        HStack(spacing: DesignTokens.Spacing.xs) {
-                            Image(systemName: svc.source.category.sfSymbol)
-                                .foregroundStyle(.secondary)
-                            Text(svc.name)
-                        }
+                        ServiceRowNameCell(
+                            service: svc,
+                            isSelected: selection == svc.id,
+                            isHidden: registry.hiddenIds.contains(svc.id),
+                            onStop: { pendingStop = $0 },
+                            onHide: { svc in Task { await registry.hide(svc.id) } },
+                            onUnhide: { svc in Task { await registry.unhide(svc.id) } }
+                        )
                     }
                     TableColumn("Status") { svc in StatusBadge(status: svc.status) }
                         .width(min: 70, ideal: 90)
@@ -163,6 +232,11 @@ struct DashboardView: View {
 
 struct ServiceInspector: View {
     let service: Service
+    var isHidden: Bool = false
+    var errorMessage: String? = nil
+    var onStop: (Service) -> Void = { _ in }
+    var onHide: (Service) -> Void = { _ in }
+    var onUnhide: (Service) -> Void = { _ in }
     @State private var tab: Tab = .overview
 
     enum Tab: String, CaseIterable, Identifiable {
@@ -181,12 +255,34 @@ struct ServiceInspector: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             header
+            actionBar
+            if let msg = errorMessage {
+                ErrorBanner(message: msg, retry: {})
+                    .padding(.horizontal, DesignTokens.Spacing.l)
+                    .padding(.bottom, DesignTokens.Spacing.s)
+            }
             TabChipRow(selection: $tab)
                 .padding(.horizontal, DesignTokens.Spacing.l)
                 .padding(.bottom, DesignTokens.Spacing.s)
             Divider()
             ScrollView { content.padding(DesignTokens.Spacing.l) }
         }
+    }
+
+    private var actionBar: some View {
+        HStack {
+            Spacer()
+            RowActionStack(
+                service: service,
+                isHidden: isHidden,
+                style: .withLabels,
+                onStop: { onStop(service) },
+                onHide: { onHide(service) },
+                onUnhide: { onUnhide(service) }
+            )
+        }
+        .padding(.horizontal, DesignTokens.Spacing.l)
+        .padding(.bottom, DesignTokens.Spacing.s)
     }
 
     private var header: some View {

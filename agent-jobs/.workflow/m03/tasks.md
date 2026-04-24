@@ -108,7 +108,7 @@ Conventions:
 - Maps to AC: scaffolding for **AC-F-05**, **AC-F-13**, AC-V-01..V-04.
 - Estimated diff: **L**
 
-## T07 — Wire dashboard toolbar + Inspector action bar + filter on hidden
+## T07 — Wire dashboard toolbar + Inspector action bar + filter on hidden [DONE]
 - Files:
   - **modify** `Sources/AgentJobsMac/Features/Dashboard/DashboardView.swift`:
     - Replace inline Name column content with `ServiceRowNameCell`.
