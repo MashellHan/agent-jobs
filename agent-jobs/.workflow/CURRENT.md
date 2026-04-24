@@ -2,9 +2,9 @@
 milestone: M01
 phase: TESTING
 cycle: 1
-owner: null
-lock_acquired_at: null
-lock_expires_at: null
+owner: tester
+lock_acquired_at: 2026-04-23T13:00:00Z
+lock_expires_at: 2026-04-23T14:00:00Z
 last_transition: 2026-04-23T12:45:00Z
 last_actor: reviewer
 ---
