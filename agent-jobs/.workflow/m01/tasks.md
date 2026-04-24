@@ -58,7 +58,7 @@
   cancellation of half the waiters does not stall the rest.
 - **Estimated diff size:** S
 
-## T05 — `LsofProcessProvider` + tests
+## T05 — `LsofProcessProvider` + tests [DONE]
 - **Files (create):**
   - `Sources/AgentJobsCore/Discovery/Providers/LsofProcessProvider.swift`
   - `Tests/AgentJobsCoreTests/LsofProcessProviderTests.swift`
