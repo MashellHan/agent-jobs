@@ -1,20 +1,20 @@
 ---
 milestone: M02
-phase: SPECCING
+phase: ARCHITECTING
 cycle: 1
 owner: null
 lock_acquired_at: null
 lock_expires_at: null
-last_transition: 2026-04-24T01:35:00Z
-last_actor: human
+last_transition: 2026-04-24T01:45:00Z
+last_actor: pm
 ---
 
 # Current Workflow State
 
 **Milestone:** M02 — Functional UI baseline
-**Phase:** SPECCING
+**Phase:** ARCHITECTING
 **Cycle:** 1
-**Owner:** none — pm pick up
+**Owner:** none — architect pick up
 
 ## Phase History (workflow-wide)
 - M01 SHIPPED 2026-04-24T00:30:00Z (37/37 ACs PASS, pushed)
@@ -28,4 +28,4 @@ last_actor: human
 - Tester WILL launch the app via `swift run` and verify with screenshot regression
 
 ## Next
-- pm: short competitive scan (Stats, SwiftBar, Bartender for menu-bar UX patterns), then spec
+- architect: read .workflow/m02/{spec,acceptance,competitive-analysis}.md; produce architecture.md + tasks.md. Resolve PM's open questions: (1) screenshot capture mechanism, (2) ServiceSource bucket accessor, (3) odiff vs alternatives.
