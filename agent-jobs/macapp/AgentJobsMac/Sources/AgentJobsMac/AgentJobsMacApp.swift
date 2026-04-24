@@ -1,8 +1,15 @@
 import SwiftUI
+import AppKit
 import AgentJobsCore
 
 @main
 struct AgentJobsMacApp: App {
+    // AC-Q-04: SPM executables don't ship an Info.plist, so we can't set
+    // LSUIElement=true in plist. The canonical workaround is an
+    // NSApplicationDelegate that calls setActivationPolicy(.accessory) in
+    // applicationWillFinishLaunching — runs before the menu bar is built,
+    // suppresses the Dock icon, leaves MenuBarExtra free to claim its slot.
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var registry = ServiceRegistryViewModel()
 
     var body: some Scene {
@@ -22,6 +29,15 @@ struct AgentJobsMacApp: App {
                 .frame(minWidth: 900, minHeight: 560)
                 .task { await registry.refresh() }
         }
+    }
+}
+
+/// Pure AppKit delegate. Sole responsibility: set the activation policy to
+/// `.accessory` so the app behaves like a true menu-bar utility (no Dock
+/// icon, no Cmd-Tab entry). AC-Q-04.
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        NSApp.setActivationPolicy(.accessory)
     }
 }
 
