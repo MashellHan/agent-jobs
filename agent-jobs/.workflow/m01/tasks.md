@@ -201,3 +201,30 @@
 Every functional, performance, and quality AC is addressable. The
 visual AC is empty by design and verified by diff. The two smoke ACs are
 Tester-only and require no implementation work.
+
+---
+
+## Cycle 2 — Test backfill (added after tester FAIL on AC-Q-03)
+
+## T-test-01 — Real-FS coverage for ClaudeScheduledTasksProvider [DONE]
+- **Files (modify):** `Tests/AgentJobsCoreTests/ClaudeScheduledTasksProviderTests.swift`
+- **Reason:** AC-Q-03 — line coverage for `ClaudeScheduledTasksProvider.swift`
+  was 69.18% in cycle 1 because every test injected the `loader:` seam,
+  leaving the production `Self.readWithTimeout` path (lines 110-125) and
+  the non-timeout I/O catch branch (lines 54-57) un-exercised.
+- **Acceptance:** add three tests that drive `discover()` against a real
+  temp file (no `loader` override): valid JSON path, empty file path,
+  unreadable path (directory) hitting the I/O catch branch. Coverage of
+  `ClaudeScheduledTasksProvider.swift` ≥ 80%.
+- **Result:** coverage 69.18% → 98.63%.
+
+## T-test-02 — Fixture-based smoke for AC-Q-09 [DONE]
+- **Files (modify):** `Tests/AgentJobsCoreTests/ClaudeScheduledTasksProviderTests.swift`
+- **Reason:** AC-Q-09 was SKIP'd by the tester because the dev machine
+  has no `~/.claude/scheduled_tasks.json`. Make the smoke runnable
+  anywhere by staging a fixture under a temp HOME-like dir and routing a
+  registry through it.
+- **Acceptance:** new `ClaudeScheduledTasksProviderSmokeTests` suite
+  builds a `ServiceRegistry` whose claude provider points at a copied
+  fixture, calls `discoverAllDetailed()`, asserts services > 0 and
+  `allFailed == false`.

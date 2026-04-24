@@ -127,45 +127,105 @@ struct ClaudeScheduledTasksProviderDiscoverTests {
 
     @Test("hung loader (timeout) → throws ProviderError.timeout")
     func hungLoaderTimesOut() async {
+        // Loader throws .timeout immediately so the test is fast and the
+        // provider's `catch ProviderError.timeout` branch is exercised.
         let p = ClaudeScheduledTasksProvider(
-            tasksPath: URL(fileURLWithPath: "/tmp/fake.json"),
-            loader: { _, seconds in
-                // Simulate the production timeout race directly.
-                try await withThrowingTaskGroup(of: Data.self) { group in
-                    group.addTask {
-                        // Pretend to read forever.
-                        try await Task.sleep(for: .seconds(60))
-                        return Data()
-                    }
-                    group.addTask {
-                        try await Task.sleep(for: .seconds(seconds))
-                        throw ProviderError.timeout
-                    }
-                    guard let first = try await group.next() else {
-                        throw ProviderError.ioError("no result")
-                    }
-                    group.cancelAll()
-                    return first
-                }
-            }
-        )
-        // Override timeout via shorter loader path? The loader receives the
-        // configured timeout (5s). We don't want a 5s test, so plumb a
-        // sub-loader that throws .timeout immediately.
-        let pFast = ClaudeScheduledTasksProvider(
             tasksPath: URL(fileURLWithPath: "/tmp/fake.json"),
             loader: { _, _ in throw ProviderError.timeout }
         )
         do {
-            _ = try await pFast.discover()
+            _ = try await p.discover()
             Issue.record("expected throw")
         } catch ProviderError.timeout {
             // ok
         } catch {
             Issue.record("expected .timeout, got \(error)")
         }
-        // The first provider is unused but its construction validates the
-        // timeout-shaped seam compiles.
-        _ = p
+    }
+
+    // MARK: - Real-FS coverage (T-test-01) — exercises production
+    // `Self.readWithTimeout` (no `loader` injection) and the non-timeout
+    // I/O catch branch. Drives the previously-uncovered lines 46-49 +
+    // 110-125 in `ClaudeScheduledTasksProvider.swift` so AC-Q-03 holds.
+
+    @Test("real-FS: valid JSON on disk → parsed via readWithTimeout (no loader override)")
+    func realDiskValidJsonGoesThroughReadWithTimeout() async throws {
+        let tmp = FileManager.default.temporaryDirectory
+            .appendingPathComponent("agentjobs-claude-tasks-\(UUID().uuidString).json")
+        let raw = try FixtureLoader.data("scheduled_tasks.valid", ext: "json")
+        try raw.write(to: tmp)
+        defer { try? FileManager.default.removeItem(at: tmp) }
+
+        // No `loader:` argument → production path takes
+        // `Self.readWithTimeout(url:seconds:)`.
+        let p = ClaudeScheduledTasksProvider(tasksPath: tmp)
+        let services = try await p.discover()
+        #expect(services.count == 2)
+        #expect(services.allSatisfy { $0.id.hasPrefix("claude.scheduled-tasks:") })
+    }
+
+    @Test("real-FS: empty file on disk → [] via readWithTimeout")
+    func realDiskEmptyFileGoesThroughReadWithTimeout() async throws {
+        let tmp = FileManager.default.temporaryDirectory
+            .appendingPathComponent("agentjobs-claude-tasks-empty-\(UUID().uuidString).json")
+        try Data().write(to: tmp)
+        defer { try? FileManager.default.removeItem(at: tmp) }
+
+        let p = ClaudeScheduledTasksProvider(tasksPath: tmp)
+        let services = try await p.discover()
+        #expect(services.isEmpty)
+    }
+
+    @Test("real-FS: tasksPath points at a directory → I/O catch branch returns []")
+    func realDiskUnreadablePathHitsIoCatchBranch() async throws {
+        // Pointing at a directory makes `Data(contentsOf:)` throw a
+        // non-timeout I/O error, which the provider's generic `catch`
+        // branch (lines 54-58) must swallow as `[]`.
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("agentjobs-claude-dir-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        // `fileExists(atPath:)` is true for the directory, so the
+        // `missing-file` short-circuit (line 37-39) is bypassed and
+        // execution reaches `readWithTimeout`, which then throws an
+        // I/O error that the catch-all converts to [].
+        let p = ClaudeScheduledTasksProvider(tasksPath: dir)
+        let services = try await p.discover()
+        #expect(services.isEmpty)
+    }
+}
+
+// MARK: - T-test-02 — fixture-based smoke for AC-Q-09 (defaultRegistry()
+// can't easily be redirected, so we wire up an equivalent registry whose
+// providers point at deterministic fixture paths under a temp HOME-like
+// directory and assert the full `discoverAll()` path produces services).
+
+@Suite("ClaudeScheduledTasksProvider.smoke (AC-Q-09 fixture parity)")
+struct ClaudeScheduledTasksProviderSmokeTests {
+
+    @Test("registry with fixture-backed claude provider yields services via discoverAll()")
+    func registrySmokeFromFixture() async throws {
+        // Stage a fake "$HOME/.claude" dir under a temp HOME-like directory.
+        let fakeHome = FileManager.default.temporaryDirectory
+            .appendingPathComponent("agentjobs-fake-home-\(UUID().uuidString)")
+        let claudeDir = fakeHome.appendingPathComponent(".claude")
+        try FileManager.default.createDirectory(at: claudeDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: fakeHome) }
+
+        let tasksPath = claudeDir.appendingPathComponent("scheduled_tasks.json")
+        let raw = try FixtureLoader.data("scheduled_tasks.valid", ext: "json")
+        try raw.write(to: tasksPath)
+
+        let registry = ServiceRegistry(providers: [
+            ClaudeScheduledTasksProvider(tasksPath: tasksPath)
+        ])
+        let result = await registry.discoverAllDetailed()
+        #expect(result.totalCount == 1)
+        #expect(result.succeededCount == 1)
+        #expect(result.allFailed == false)
+        // Two entries in the fixture → two services discovered end-to-end.
+        #expect(result.services.count == 2)
+        #expect(result.services.contains { $0.owner == .agent(.claude) })
     }
 }
