@@ -4,6 +4,38 @@ All notable changes to the Mac app live here. Format: Keep a Changelog.
 
 ## [Unreleased]
 
+### Added — M03 (Actions: stop / hide / refresh)
+- `Sources/AgentJobsCore/Actions/StopExecutor.swift` — `StopExecutor`
+  protocol, `StopError`, `RealStopExecutor` (kill / launchctl unload via
+  `Shell`), `FakeStopExecutor` (test recorder). Six refusal predicates
+  centralised in `RealStopExecutor.refusalReason` and consumed by
+  `Service.canStop` for UI pre-disable + by the executor at action time.
+- `Sources/AgentJobsCore/Persistence/HiddenStore.swift` — actor-isolated
+  durable store for hidden ids at `~/.agent-jobs/hidden.json`. Atomic
+  write via temp + `replaceItemAt`. Tolerant of corrupt/version-mismatch
+  files (logs + recovers to empty).
+- `Sources/AgentJobsMac/Features/Dashboard/RowActionStack.swift` — shared
+  Stop / Hide affordance used by row hover + inspector action bar.
+- `Sources/AgentJobsMac/Features/Dashboard/ServiceRowNameCell.swift` —
+  per-row name cell with `@State isHovered`, reveals `RowActionStack` on
+  hover OR selection (keyboard discoverability).
+- `Sources/AgentJobsMac/Features/Dashboard/StopConfirmationDialog.swift`
+  — `.confirmationDialog` modifier driven by a `Binding<Service?>`.
+- `ServiceRegistryViewModel` (in `AgentJobsMacApp.swift`): `hiddenIds`,
+  `errorByServiceId`, `isRefreshing`, `optimisticallyStopped`, methods
+  `stop / hide / unhide / refreshNow`. Optimistic-flip overlay + Q4 race
+  guard on `refresh()`.
+- Dashboard toolbar gains `[Show hidden Toggle] [Refresh button]` with
+  spinner during in-flight refresh. Inspector grows an action bar above
+  the tab chip row plus an inline error banner.
+- Visual baselines (M03 AC-V-01..V-05): `row-hover-actions-light`,
+  `show-hidden-on-light`, `show-hidden-off-light`, `stop-confirm-dialog-light`,
+  `inspector-stop-enabled-light`, `inspector-stop-disabled-light`,
+  `refresh-spinner-light`.
+- AC-Q-05 isolation tests: static-grep self-test (allow-listed files
+  only) + env-detection regression test for the `RealStopExecutor` init
+  guard.
+
 ### Added
 - (M01) `Sources/AgentJobsCore/Discovery/Providers/LsofProcessProvider.swift` —
   parses `lsof -i -P -n -sTCP:LISTEN`, dedupes on PID, throttles per-PID

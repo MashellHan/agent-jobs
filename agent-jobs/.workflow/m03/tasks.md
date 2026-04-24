@@ -192,7 +192,7 @@ Conventions:
 - Maps to AC: **AC-V-01..V-05**.
 - Estimated diff: **L**
 
-## T10 — Quality gate sweep + acceptance cross-check
+## T10 — Quality gate sweep + acceptance cross-check [DONE]
 - Files:
   - **modify** `macapp/AgentJobsMac/CHANGELOG.md` (+ M03 entry, ~20 LOC)
   - **modify** `macapp/AgentJobsMac/README.md` if any user-visible
