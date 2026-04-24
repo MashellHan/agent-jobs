@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 import AgentJobsCore
 
 /// The menubar popover. Aggregates the discovery view model into a compact
@@ -113,6 +114,10 @@ struct MenuBarPopoverView: View {
         HStack {
             Button("Open Dashboard") {
                 openWindow(id: "dashboard")
+                // AC-F-10: with setActivationPolicy(.accessory) the new
+                // Window scene won't auto-focus. Force activation so the
+                // dashboard becomes key + visible immediately.
+                NSApp.activate(ignoringOtherApps: true)
             }
             .keyboardShortcut("d", modifiers: .command)
             Spacer()

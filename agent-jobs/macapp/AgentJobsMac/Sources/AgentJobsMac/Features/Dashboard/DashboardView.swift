@@ -5,12 +5,23 @@ struct DashboardView: View {
     @Environment(ServiceRegistryViewModel.self) private var registry
     @State private var selection: Service.ID?
     @State private var categoryFilter: ServiceSource.Category? = nil
+    @State private var bucketFilter: ServiceSource.Bucket? = nil
+
+    /// Optional initial selection — used by visual baseline tests
+    /// (AC-V-05) to deterministically pick a row before screenshot capture.
+    init(initialSelection: Service.ID? = nil) {
+        _selection = State(initialValue: initialSelection)
+    }
 
     var body: some View {
         NavigationSplitView {
             sidebar
         } content: {
-            serviceTable
+            VStack(spacing: 0) {
+                SourceBucketStrip(services: registry.services, selection: $bucketFilter)
+                Divider()
+                serviceTable
+            }
         } detail: {
             if let id = selection,
                let svc = registry.services.first(where: { $0.id == id }) {
@@ -57,19 +68,49 @@ struct DashboardView: View {
     }
 
     private var filteredServices: [Service] {
-        guard let cat = categoryFilter else { return registry.services }
-        return registry.services.filter { $0.source.category == cat }
+        DashboardView.filter(registry.services, category: categoryFilter, bucket: bucketFilter)
+    }
+
+    /// Pure filter function — both filters AND-ed; nil disables that
+    /// constraint. Extracted as `static` so unit tests can exercise the
+    /// matrix without spinning up SwiftUI / NavigationSplitView.
+    static func filter(_ services: [Service],
+                       category: ServiceSource.Category?,
+                       bucket: ServiceSource.Bucket?) -> [Service] {
+        services.filter { svc in
+            (category == nil || svc.source.category == category) &&
+            (bucket   == nil || svc.source.bucket   == bucket)
+        }
+    }
+
+    private var emptyTitle: String {
+        if registry.services.isEmpty { return "No services discovered yet" }
+        if let cat = categoryFilter, let bkt = bucketFilter {
+            return "No \(cat.displayName) services in \(bkt.displayName)"
+        }
+        if let cat = categoryFilter { return "No \(cat.displayName) services" }
+        if let bkt = bucketFilter   { return "No \(bkt.displayName) services" }
+        return "No services discovered yet"
+    }
+
+    private var emptySymbol: String {
+        bucketFilter?.sfSymbol ?? categoryFilter?.sfSymbol ?? "tray"
+    }
+
+    private var emptyMessage: String {
+        if registry.services.isEmpty {
+            return "Providers will populate this view as they discover work."
+        }
+        return "Try clearing a filter, or run something in this source."
     }
 
     private var serviceTable: some View {
         Group {
             if filteredServices.isEmpty {
                 ContentUnavailableView(
-                    categoryFilter == nil ? "No services discovered yet" : "No \(categoryFilter!.displayName) services",
-                    systemImage: categoryFilter?.sfSymbol ?? "tray",
-                    description: Text(categoryFilter == nil
-                                      ? "Providers will populate this view as they discover work."
-                                      : "Try clearing the filter, or run something in this category.")
+                    emptyTitle,
+                    systemImage: emptySymbol,
+                    description: Text(emptyMessage)
                 )
             } else {
                 Table(filteredServices, selection: $selection) {
