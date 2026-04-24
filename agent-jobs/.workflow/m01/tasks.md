@@ -146,7 +146,7 @@
   an env flag; locally they enforce.
 - **Estimated diff size:** S
 
-## T11 — Final sweep: warnings, no-Process check, doc lines
+## T11 — Final sweep: warnings, no-Process check, doc lines [DONE]
 - **Files (modify):** any file flagged by `swift build -warnings-as-errors`
   or by the `grep 'Process()' Sources/AgentJobsCore/Discovery/Providers/`
   check (expected: none); add header doc comments on the two new providers

@@ -6,6 +6,9 @@ import Foundation
 ///
 /// Cancellation-safe: a cancelled waiter resumes immediately and does not
 /// hold a permit, so other waiters keep making progress.
+///
+/// Introduced in M01 (Discovery audit + gap fill); reusable across any
+/// future provider that needs a bounded `async` fan-out.
 actor AsyncSemaphore {
 
     private var available: Int
