@@ -1,20 +1,20 @@
 ---
 milestone: M01
-phase: TESTING
-cycle: 1
-owner: tester
-lock_acquired_at: 2026-04-23T13:00:00Z
-lock_expires_at: 2026-04-23T14:00:00Z
-last_transition: 2026-04-23T12:45:00Z
-last_actor: reviewer
+phase: IMPLEMENTING
+cycle: 2
+owner: null
+lock_acquired_at: null
+lock_expires_at: null
+last_transition: 2026-04-23T13:15:00Z
+last_actor: tester
 ---
 
 # Current Workflow State
 
 **Milestone:** M01 — Discovery audit + gap fill
-**Phase:** TESTING
-**Cycle:** 1
-**Owner:** none — tester agent should pick this up
+**Phase:** IMPLEMENTING
+**Cycle:** 2 (next REVIEWING/TESTING cycle will be 002)
+**Owner:** none — implementer agent should pick this up
 
 ## Phase History (this milestone)
 - 2026-04-23T18:55:00Z BOOTSTRAPPING → SPECCING (human via /milestone-start)
@@ -26,8 +26,9 @@ last_actor: reviewer
 - 2026-04-23T12:30:00Z IMPLEMENTING → REVIEWING (implementer finished all 11 tasks, impl-cycle-001.md written, 106 tests passing)
 - 2026-04-23T12:35:00Z reviewer acquired REVIEWING lock
 - 2026-04-23T12:45:00Z REVIEWING → TESTING (reviewer cycle 001 PASS — score 92/100, 0 CRITICAL, 0 HIGH, all ACs covered)
+- 2026-04-23T13:00:00Z tester acquired TESTING lock
+- 2026-04-23T13:15:00Z TESTING → IMPLEMENTING (tester cycle 001 FAIL — AC-Q-03 coverage gap on ClaudeScheduledTasksProvider: 69.18% < 80%; all other ACs PASS or justified-SKIP)
 
 ## Next Allowed Transitions
-From TESTING:
-- → ACCEPTED (tester PASS)
-- → IMPLEMENTING (tester found issues, cycle 2)
+From IMPLEMENTING:
+- → REVIEWING (implementer addresses AC-Q-03 coverage gap, cycle 002)
