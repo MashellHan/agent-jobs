@@ -1,20 +1,20 @@
 ---
 milestone: M01
-phase: TESTING
+phase: ACCEPTED
 cycle: 2
-owner: tester
-lock_acquired_at: 2026-04-23T14:00:00Z
-lock_expires_at: 2026-04-23T14:30:00Z
-last_transition: 2026-04-23T13:50:00Z
-last_actor: reviewer
+owner: null
+lock_acquired_at: null
+lock_expires_at: null
+last_transition: 2026-04-23T14:10:00Z
+last_actor: tester
 ---
 
 # Current Workflow State
 
 **Milestone:** M01 — Discovery audit + gap fill
-**Phase:** TESTING
-**Cycle:** 2 (test-cycle-002 about to be written)
-**Owner:** none — tester agent should pick this up
+**Phase:** ACCEPTED
+**Cycle:** 2 (tester cycle-002 PASS — 37 / 37 ACs)
+**Owner:** none — ready for `/ship`
 
 ## Phase History (this milestone)
 - 2026-04-23T18:55:00Z BOOTSTRAPPING → SPECCING (human via /milestone-start)
@@ -32,8 +32,10 @@ last_actor: reviewer
 - 2026-04-23T13:40:00Z IMPLEMENTING → REVIEWING (implementer cycle 2 complete — AC-Q-03 fixed 69.18% → 98.63%, 3 reviewer MEDIUMs addressed, 111 tests pass)
 - 2026-04-23T13:45:00Z reviewer acquired REVIEWING lock cycle 2
 - 2026-04-23T13:50:00Z REVIEWING → TESTING (reviewer cycle 002 PASS — score 97/100, 0 CRITICAL/HIGH/MEDIUM, all 3 cycle-1 MEDIUMs fixed, AC-Q-03 coverage gap closed)
+- 2026-04-23T14:00:00Z tester acquired TESTING lock cycle 2
+- 2026-04-23T14:10:00Z TESTING → ACCEPTED (tester cycle 002 PASS — 37 / 37 ACs, AC-Q-03 98.63%, AC-Q-09 fixture smoke green, 111/111 tests)
 
 ## Next Allowed Transitions
-From TESTING:
-- → ACCEPTED (tester cycle 002 PASS — all ACs satisfied)
-- → IMPLEMENTING (tester cycle 002 finds gaps, cycle 3)
+From ACCEPTED:
+- → `/ship` (human or autonomous): pushes accumulated commits, then RETROSPECTIVE
+- → RETROSPECTIVE (retrospective agent runs after ship)
