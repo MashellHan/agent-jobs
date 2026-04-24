@@ -5,7 +5,7 @@
 
 ---
 
-## T01 — Add `ServiceSource.Bucket` accessor
+## T01 — Add `ServiceSource.Bucket` accessor [DONE]
 
 - **Files:**
   - modify `macapp/AgentJobsMac/Sources/AgentJobsCore/Domain/ServiceSource.swift`
@@ -15,7 +15,7 @@
 - **Detail:** Add `enum Bucket: String, CaseIterable { registered, claudeScheduled, claudeSession, launchd, liveProcess }` with `displayName` + `sfSymbol`. Add `var bucket: Bucket` to `ServiceSource`. Test enumerates every existing `ServiceSource` case (use exhaustive switch in test) and asserts the mapping. Test asserts `Bucket.allCases` order matches the spec's chip order exactly.
 - **Estimated diff size:** S (~50 LOC)
 
-## T02 — Stub registry + frozen-date `Service.fixtures()`
+## T02 — Stub registry + frozen-date `Service.fixtures()` [DONE]
 
 - **Files:**
   - create `macapp/AgentJobsMac/Sources/AgentJobsCore/Testing/StubServiceRegistry.swift`
@@ -25,7 +25,7 @@
 - **Detail:** Wrap in `#if DEBUG`. Define `FixtureProvider: ServiceProvider`, `ServiceRegistry.fixtureRegistry()` (5 services, one per bucket), `.emptyRegistry()`, `.failingRegistry()`. Provide `Service.fixtures(frozenAt:)` returning exactly 5 deterministic `Service` values: agentJobsJson registered task, claudeScheduledTask(durable: true), claudeLoop(sessionId: "demo"), launchdUser daemon, process(matched: "npm run dev") with metrics. All `Date` values derived from the frozen reference. Test asserts `fixtures()` is deterministic across two calls and exactly covers all 5 buckets.
 - **Estimated diff size:** M (~140 LOC)
 
-## T03 — `setActivationPolicy(.accessory)` (LSUIElement equivalent)
+## T03 — `setActivationPolicy(.accessory)` (LSUIElement equivalent) [DONE]
 
 - **Files:**
   - modify `macapp/AgentJobsMac/Sources/AgentJobsMac/AgentJobsMacApp.swift`
@@ -35,7 +35,7 @@
 - **Detail:** Add `@NSApplicationDelegateAdaptor(AppDelegate.self)` plus a private `final class AppDelegate: NSObject, NSApplicationDelegate` that calls `NSApp.setActivationPolicy(.accessory)` in `applicationWillFinishLaunching(_:)`. Also `NSApp.activate(ignoringOtherApps: true)` right after `openWindow(id: "dashboard")` in the popover footer button (modify `MenuBarPopoverView.footer` — but that's covered in T05; do the activate-after-open in T05). Test in this task: spawn `Process` with `.build/debug/AgentJobsMac`, sleep 3s, assert process still running, then enumerate `CGWindowListCopyWindowInfo` and assert at least one window owned by `AgentJobsMac` exists at `kCGStatusWindowLevel`. Kill subprocess in tearDown.
 - **Estimated diff size:** S (~70 LOC, mostly the test)
 
-## T04 — `SourceBucketChip` + `SourceBucketStrip` views
+## T04 — `SourceBucketChip` + `SourceBucketStrip` views [DONE]
 
 - **Files:**
   - create `macapp/AgentJobsMac/Sources/AgentJobsMac/Features/Dashboard/SourceBucketChip.swift`
@@ -45,7 +45,7 @@
 - **Detail:** `SourceBucketChip` = capsule with SF Symbol + displayName + count. Active state uses `Color.accentColor.opacity(0.2)` background; zero-count uses `.foregroundStyle(.tertiary)`. `SourceBucketStrip` takes `services: [Service]` and `selection: Binding<ServiceSource.Bucket?>`. Renders `ForEach(ServiceSource.Bucket.allCases)` + a trailing "total: N" label (not a button). Click toggles `selection` (set to bucket if different, nil if same). No tests at this layer — covered by T05.
 - **Estimated diff size:** S (~110 LOC)
 
-## T05 — Wire `SourceBucketStrip` into `DashboardView`; add bucket filter; activate-after-open
+## T05 — Wire `SourceBucketStrip` into `DashboardView`; add bucket filter; activate-after-open [DONE]
 
 - **Files:**
   - modify `macapp/AgentJobsMac/Sources/AgentJobsMac/Features/Dashboard/DashboardView.swift`
@@ -56,7 +56,7 @@
 - **Detail:** Add `@State private var bucketFilter: ServiceSource.Bucket?`. Inject `SourceBucketStrip(services: registry.services, selection: $bucketFilter)` above the existing `serviceTable` in the `content:` slot — wrap both in a `VStack(spacing: 0)`. Update `filteredServices` to AND both filters. Test (`DashboardFilterTests`) constructs `ServiceRegistryViewModel(registry: .fixtureRegistry())`, awaits `refresh()`, then exercises a small struct that mirrors the filter logic (extract `static func filter(_ services: [Service], category: Category?, bucket: Bucket?) -> [Service]` to make it pure-testable). Assert: nil/nil → 5, registered/nil → 1, nil/launchd → 1, claude/claudeScheduled → 1, etc.
 - **Estimated diff size:** M (~150 LOC including test)
 
-## T06 — Inspector enrichment: Provenance group, PID-only-when-set
+## T06 — Inspector enrichment: Provenance group, PID-only-when-set [DONE]
 
 - **Files:**
   - modify `macapp/AgentJobsMac/Sources/AgentJobsMac/Features/Dashboard/DashboardView.swift` (only `ServiceInspector` section)
@@ -65,7 +65,7 @@
 - **Detail:** Add a third `GridRow` in `overviewContent` for Provenance: file path / scheduled-task id (derive from `service.logsPath` for now since no scheduled-task-id field exists; spec says "render '—'" for missing fields), `createdAt` (formatted), origin agent + sessionId. Verify the existing `if let pid = service.pid` guard is correct (it already is — confirm and add a code comment citing AC-F-08). No new test needed — visual ACs in T08 will cover it.
 - **Estimated diff size:** S (~60 LOC)
 
-## T07 — Screenshot harness (in-process `NSHostingView` capture)
+## T07 — Screenshot harness (in-process `NSHostingView` capture) [DONE]
 
 - **Files:**
   - create `macapp/AgentJobsMac/Tests/AgentJobsCoreTests/Visual/ScreenshotHarness.swift`
@@ -76,7 +76,7 @@
 - **Detail:** `@MainActor enum ScreenshotHarness` with `capture<V: View>(_ view: V, size: CGSize, scale: CGFloat = 1.0, appearance: NSAppearance.Name) throws -> Data`. Implementation: `NSHostingView(rootView: view.environment(\.colorScheme, ...))`, set `frame`, set `appearance = NSAppearance(named: appearance)`, call `layoutSubtreeIfNeeded`, spin runloop 50ms, `bitmapImageRepForCachingDisplay(in: bounds)`, `cacheDisplay(in:to:)`, return PNG via `representation(using: .png)`. Self-test: capture a 100×100 `Color.red.frame(...)` view, assert PNG > 0 bytes and decoded image's center pixel is red. `scripts/visual-diff.sh` per architecture doc — wraps `compare -fuzz 2%` and exits non-zero if pixel-diff ratio ≥ threshold (default 0.02, env override).
 - **Estimated diff size:** M (~130 LOC across 3 files)
 
-## T08 — Visual baseline tests (AC-V-01..05)
+## T08 — Visual baseline tests (AC-V-01..05) [DONE]
 
 - **Files:**
   - create `macapp/AgentJobsMac/Tests/AgentJobsCoreTests/Visual/VisualBaselineTests.swift`
@@ -86,7 +86,7 @@
 - **Detail:** Five `XCTestCase` methods. Each: build a `ServiceRegistryViewModel(registry: .fixtureRegistry())` (or `.emptyRegistry()` / `.failingRegistry()`), `await viewModel.refresh()`, instantiate the view (`MenuBarPopoverView().environment(viewModel).frame(width: 360)` or `DashboardView().environment(viewModel).frame(width: 1200, height: 700)`), capture via harness, compare with baseline via `scripts/visual-diff.sh` (use `Process` to run it). On missing baseline, copy capture → baseline + log `[BASELINE_RECORDED]` and pass. AC-V-05 additionally sets `selection` to the first fixture's id before capture (use a small `@Bindable` test wrapper, or pre-set via a `previewSelection` parameter on `DashboardView` — see T05 for adding the optional init param).
 - **Estimated diff size:** M (~150 LOC)
 
-## T09 — Process-launch test (AC-V-06 menu-bar icon screenshot, AC-P-01 perf, AC-P-03 leak check)
+## T09 — Process-launch test (AC-V-06 menu-bar icon screenshot, AC-P-01 perf, AC-P-03 leak check) [DONE]
 
 - **Files:**
   - create `macapp/AgentJobsMac/Tests/AgentJobsCoreTests/Visual/MenuBarIconVisualTest.swift`
