@@ -101,7 +101,7 @@ public struct LaunchdUserProvider: ServiceProvider {
                 command: enrichment.command ?? "",
                 schedule: schedule,
                 status: status,
-                createdAt: nil, // launchctl doesn't expose load time (M-006)
+                createdAt: enrichment.mtime, // M01: real plist mtime when available
                 pid: pid,
                 owner: .user,
                 history: [],

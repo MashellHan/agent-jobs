@@ -70,4 +70,42 @@ struct LaunchdUserProviderTests {
         let result = try await provider.discover()
         #expect(result.count == 3)
     }
+
+    // MARK: - createdAt provenance (M01 T08)
+
+    @Test("Service.createdAt == enrichment.mtime when plist is found")
+    func createdAtPopulatedFromMtime() {
+        let xml = """
+        <plist version="1.0"><dict>
+          <key>Program</key><string>/usr/local/bin/x</string>
+        </dict></plist>
+        """
+        let mtime = Date(timeIntervalSince1970: 1_705_000_000)
+        let reader = LaunchdPlistReader(
+            loader: { label in label == "com.example.t8" ? Data(xml.utf8) : nil },
+            mtimeLoader: { label in label == "com.example.t8" ? mtime : nil }
+        )
+        let raw = """
+        PID	Status	Label
+        -	0	com.example.t8
+        """
+        let services = LaunchdUserProvider.parse(raw, enrichWith: reader)
+        #expect(services.count == 1)
+        #expect(services[0].createdAt == mtime)
+    }
+
+    @Test("Service.createdAt remains nil when no plist found")
+    func createdAtNilWhenPlistMissing() {
+        let reader = LaunchdPlistReader(
+            loader: { _ in nil },
+            mtimeLoader: { _ in nil }
+        )
+        let raw = """
+        PID	Status	Label
+        -	0	com.example.no.plist
+        """
+        let services = LaunchdUserProvider.parse(raw, enrichWith: reader)
+        #expect(services.count == 1)
+        #expect(services[0].createdAt == nil)
+    }
 }

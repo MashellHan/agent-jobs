@@ -27,43 +27,74 @@ public struct LaunchdPlistReader: Sendable {
         /// Whether the job has any schedule trigger. Used by the provider
         /// to flip `kind` from `.daemon` → `.scheduled` when appropriate.
         public let isScheduled: Bool
-        public init(command: String?, schedule: Schedule?, isScheduled: Bool) {
+        /// Modification time of the plist file on disk, when available.
+        /// Surfaced as `Service.createdAt` to give the UI a real timestamp
+        /// instead of a synthetic `Date()` (M01 / spec L4).
+        public let mtime: Date?
+        public init(command: String?, schedule: Schedule?, isScheduled: Bool, mtime: Date? = nil) {
             self.command = command
             self.schedule = schedule
             self.isScheduled = isScheduled
+            self.mtime = mtime
         }
-        public static let empty = Enrichment(command: nil, schedule: nil, isScheduled: false)
+        public static let empty = Enrichment(command: nil, schedule: nil, isScheduled: false, mtime: nil)
     }
 
     /// Optional injection seam for tests. When `nil`, the real filesystem is
     /// scanned. The closure receives the label and returns plist bytes — or
     /// `nil` if not found (caller treats as "no enrichment").
     public typealias Loader = @Sendable (_ label: String) -> Data?
+    /// Optional secondary seam for the on-disk modification timestamp. When
+    /// `nil`, defaults to a closure that returns `nil` for every label.
+    /// The production filesystem loader provides a real mtime via the
+    /// internal `defaultFilesystemLoader` path.
+    public typealias MtimeLoader = @Sendable (_ label: String) -> Date?
     private let loader: Loader
+    private let mtimeLoader: MtimeLoader
 
     public init(loader: Loader? = nil) {
         if let loader {
             self.loader = loader
+            self.mtimeLoader = { _ in nil }
         } else {
-            self.loader = Self.defaultFilesystemLoader()
+            let fs = Self.defaultFilesystemLoaders()
+            self.loader = fs.data
+            self.mtimeLoader = fs.mtime
         }
+    }
+
+    /// Additive overload that supplies an explicit mtime loader without
+    /// changing the existing single-arg `init(loader:)` callers. Tests use
+    /// this to pin both data and mtime for a label.
+    public init(loader: @escaping Loader, mtimeLoader: @escaping MtimeLoader) {
+        self.loader = loader
+        self.mtimeLoader = mtimeLoader
     }
 
     public func enrich(label: String) -> Enrichment {
         guard let data = loader(label) else { return .empty }
-        return Self.parse(data)
+        let parsed = Self.parse(data)
+        return Enrichment(
+            command: parsed.command,
+            schedule: parsed.schedule,
+            isScheduled: parsed.isScheduled,
+            mtime: mtimeLoader(label)
+        )
     }
 
     // MARK: - Filesystem loader
 
-    private static func defaultFilesystemLoader() -> Loader {
-        let fm = FileManager.default
-        let home = fm.homeDirectoryForCurrentUser
+    /// Build a (data, mtime) pair of loaders that share the same candidate
+    /// directories. Production callers want the mtime to come from the
+    /// same URL that yielded the data — bundling them avoids walking the
+    /// filesystem twice.
+    private static func defaultFilesystemLoaders() -> (data: Loader, mtime: MtimeLoader) {
+        let home = FileManager.default.homeDirectoryForCurrentUser
         let candidates: [URL] = [
             home.appendingPathComponent("Library/LaunchAgents"),
             URL(fileURLWithPath: "/Library/LaunchAgents")
         ]
-        return { label in
+        let dataLoader: Loader = { label in
             for dir in candidates {
                 let url = dir.appendingPathComponent("\(label).plist")
                 if let data = try? Data(contentsOf: url) {
@@ -72,6 +103,18 @@ public struct LaunchdPlistReader: Sendable {
             }
             return nil
         }
+        let mtimeLoader: MtimeLoader = { label in
+            let fm = FileManager.default
+            for dir in candidates {
+                let url = dir.appendingPathComponent("\(label).plist")
+                if let attrs = try? fm.attributesOfItem(atPath: url.path),
+                   let date = attrs[.modificationDate] as? Date {
+                    return date
+                }
+            }
+            return nil
+        }
+        return (dataLoader, mtimeLoader)
     }
 
     // MARK: - Parsing

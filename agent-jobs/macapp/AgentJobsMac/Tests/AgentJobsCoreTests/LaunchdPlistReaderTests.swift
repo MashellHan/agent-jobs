@@ -187,6 +187,40 @@ struct LaunchdPlistReaderTests {
         #expect(services[0].schedule == .interval(seconds: 60))
         #expect(services[0].kind == .scheduled)
     }
+
+    // MARK: - mtime enrichment (M01 T08)
+
+    @Test("mtime loader supplies Enrichment.mtime when plist is found")
+    func mtimePresent() {
+        let xml = """
+        <plist version="1.0"><dict>
+          <key>Program</key><string>/usr/local/bin/x</string>
+        </dict></plist>
+        """
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        let reader = LaunchdPlistReader(
+            loader: { label in label == "com.example.x" ? Data(xml.utf8) : nil },
+            mtimeLoader: { label in label == "com.example.x" ? now : nil }
+        )
+        let e = reader.enrich(label: "com.example.x")
+        #expect(e.mtime == now)
+        #expect(e.command == "/usr/local/bin/x")
+    }
+
+    @Test("mtime loader returns nil → Enrichment.mtime is nil")
+    func mtimeAbsent() {
+        let xml = """
+        <plist version="1.0"><dict>
+          <key>Program</key><string>/usr/local/bin/x</string>
+        </dict></plist>
+        """
+        let reader = LaunchdPlistReader(
+            loader: { label in label == "com.example.x" ? Data(xml.utf8) : nil },
+            mtimeLoader: { _ in nil }
+        )
+        let e = reader.enrich(label: "com.example.x")
+        #expect(e.mtime == nil)
+    }
 }
 
 /// Tests the new calendar humanization in `Schedule.humanDescription`

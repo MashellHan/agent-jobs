@@ -105,7 +105,7 @@
   `command = prompt`. Hung-loader test asserts `.timeout`.
 - **Estimated diff size:** M
 
-## T08 — `LaunchdPlistReader.mtime` + `LaunchdUserProvider.createdAt`
+## T08 — `LaunchdPlistReader.mtime` + `LaunchdUserProvider.createdAt` [DONE]
 - **Files (modify):**
   - `Sources/AgentJobsCore/Discovery/Providers/LaunchdPlistReader.swift`
     — add `mtime` to `Enrichment` (default `nil` initializer arg);
