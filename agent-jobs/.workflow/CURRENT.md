@@ -1,18 +1,18 @@
 ---
 milestone: M07
-phase: IMPLEMENTING
+phase: REVIEWING
 cycle: 1
 owner: null
 lock_acquired_at: null
 lock_expires_at: null
-last_transition: 2026-04-27T09:25:00Z
-last_actor: architect
+last_transition: 2026-04-27T11:30:00Z
+last_actor: implementer
 ---
 
 # Current Workflow State
 
 **Milestone:** M07 — Visual Identity
-**Phase:** IMPLEMENTING
+**Phase:** REVIEWING
 **Cycle:** 1
 **Owner:** (unlocked)
 
@@ -37,6 +37,7 @@ last_actor: architect
 - M06 SHIPPED 2026-04-27T01:00:00Z (workflow-coordinator) — first ENFORCING ui-critic milestone; cycle-1 REJECT 20/30 → cycle-2 PASS 27/30; 8 tickets closed; 0 new tickets; T-019/T-020 P2 carry-forward to M07.
 - M07 SPECCING cycle-1 complete 2026-04-27T08:22:49Z (pm) — spec/acceptance/competitive-analysis written; T-001 P0 sequenced as gating task #1 (custom `agent-jobs.icns` + 16pt menubar template + count-badge variant); T-019 + T-020 P2 carry-forward folded in; **density modes deferred to M14** to keep M07 focused (documented cut); E003 baked into AC verification language (luma probes must be holistic, ≥8-point sample, named regions); ui-critic threshold held at 24/30; new capture-all scenarios for icon variants (idle / count-1 / count-N / count-0 dimmed) + token swatches added to scenario list (10 → 14).
 - M07 ARCHITECTING cycle-1 complete 2026-04-27T09:25:00Z (architect) — `m07/architecture.md` + `m07/tasks.md` written; 5 ordered tasks, T-001 gating as Task 1; asset catalog placed in `Sources/AgentJobsMacApp/Resources/Assets.xcassets/` (AppIcon.appiconset + MenuBarIcon.imageset, raw PNG path chosen over `.symbolset` for SPM compat); 9 color sets duplicated into `Sources/AgentJobsCore/Resources/Assets.xcassets/` so `Bundle.module` resolves from non-app targets; `scripts/build-icns.sh` regenerates assets from committed SVG sources via `rsvg-convert` + `iconutil`; `DesignTokens.SemanticColor`/`SourceColor` added additively (existing `StatusColor` deprecated-typealiased — no breaking renames); `Typography.display` + `Spacing.{sm,md,lg}` aliases added to existing namespaces; T-020 resolved as **option (b) sidebar header heightens** (40pt) — no toolbar hoist; capture-all renumber 10→14 with 4 new icon scenarios + 1 swatch (`HarnessScenes.menuBarIconOnly` + `tokensSwatch`); WL-D resolved as **option B (document impl schema in DESIGN.md)** — no sidecar field renames; WL-A renames `forceAppearance` → `forceDarkAppearance` + adds dark-only precondition; WL-B short-circuits PNG/sidecar writes when bytes match prior; WL-C deletes `MenuBarPopoverView.{activeServices,upcomingServices,section(...)}` + entire `ServiceRowCompact.swift`; WL-E replaces wallpaper-sampling test with deterministic asset-catalog + offscreen-render check; ≥13 new tests planned (target 332→345+); placeholder SVG acceptable in cycle 1 if final glyph design lags (real glyph in cycle 2 is the expected REJECT-recovery path).
+- M07 IMPLEMENTING cycle-1 complete 2026-04-27T11:30:00Z (implementer) — all 5 tasks landed in 6 commits (Task 3 split into wiring + older-milestone baseline regen, matching M06 cycle-1 precedent); tests **332 → 358 (+26)**; T-001 ships placeholder monoline-stack SVG glyph (3 rounded rectangles + dot) per architecture §7 cycle-1 authorization; `MenuBarLabel` swaps to `IdentityImage.menuBarTemplate()` with `BadgeOverlay` extracted; `DesignTokens.SemanticColor` aliased to legacy `Color(.system*)` so M02-M06 baselines stay byte-stable; `SemanticColor` adopted in StatusBadge + MenuBarRowViews + SourceBucketChip + MenuBarLabel (>=3 visible-surface files, AC-F-08 adoption clause); T-019 pins `nameColumnMinWidth = 210` (30% of 700pt list pane); T-020 sidebar header band heightens to 40pt via `header:` closure with `.frame(minHeight:)` (architect option (b)); 6 older-milestone baselines regenerated (M02 dashboard, M03 row-hover/show-hidden-off, M04 dashboard-selection-preserved/toolbar-with-indicator); capture-all renumbered to 14 scenarios (5 new: 01/11/12/13 menubar-icon variants + 14 tokens-swatches; old 10 popover-with-failure dropped); WL-A renames `forceAppearance` → `forceDarkAppearance` with dark-only precondition; WL-B short-circuits writes when bytes match (verified 0 captured/14 unchanged on rerun); WL-C deletes `ServiceRowCompact.swift` + `MenuBarPopoverView.{activeServices,upcomingServices,section(...)}`; WL-D appends canonical-schema sentence to `.workflow/DESIGN.md`; WL-E deterministic asset-catalog dark-render luma probe added in Task 1. Implementer self-check: 15/15 functional ACs PASS; visual ACs (AC-V-01..04 + AC-D-01..03) deferred to tester + ui-critic. **`.workflow/m07/screenshots/baseline/` left empty per architecture §6 risk #5** — tester regens wholesale at end of TESTING.
 
 ## Next
-- implementer picks up M07 IMPLEMENTING. Read `.workflow/m07/architecture.md` + `tasks.md`. Five tasks, ordered, T-001 is gating. Land in 5 commits with `swift build && swift test` checkpoint between each. **Do NOT regenerate `.workflow/m07/screenshots/baseline/` mid-cycle** — tester regens once at end of TESTING. If the SVG glyph designer hasn't delivered, ship a placeholder (single black filled circle) per architecture §7 — cycle-2 lands the real glyph after expected ui-critic REJECT on AC-D-01.
+- reviewer picks up M07 REVIEWING. Read `.workflow/m07/impl-cycle-001.md` first; cross-check the 15 functional ACs the implementer self-attested PASS, plus build/test green (`cd macapp/AgentJobsMac && swift build && swift test` should report 358 tests). Architectural deviations to confirm: (a) `SemanticColor` aliased to `Color(.system*)` rather than asset-catalog colorsets (byte-stability rationale in commit c32b094); (b) `StatusColor` not yet `@available(*, deprecated)` (rationale in impl-cycle-001 §"What did NOT happen"); (c) Task 3 split into 2 commits (wiring + older-milestone baseline regen, mirroring M06 cycle-1 pattern). **Do NOT regenerate `.workflow/m07/screenshots/baseline/`** — still tester's job. If review PASS, advance to TESTING. If reviewer finds blocking issues, transition back to IMPLEMENTING cycle 2.
