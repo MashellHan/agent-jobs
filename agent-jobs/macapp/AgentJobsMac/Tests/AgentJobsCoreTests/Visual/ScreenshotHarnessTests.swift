@@ -1,15 +1,16 @@
 import Testing
+import AgentJobsVisualHarness
 import Foundation
 import SwiftUI
 import AppKit
 
-@Suite("ScreenshotHarness self-test")
+@Suite("Snapshot self-test")
 @MainActor
-struct ScreenshotHarnessTests {
+struct SnapshotTests {
 
     @Test("capture returns non-empty PNG bytes")
     func captureProducesPNG() throws {
-        let data = try ScreenshotHarness.capture(
+        let data = try Snapshot.capture(
             Color.red.frame(width: 100, height: 100),
             size: CGSize(width: 100, height: 100)
         )
@@ -21,7 +22,7 @@ struct ScreenshotHarnessTests {
 
     @Test("center pixel of red view is reddish")
     func centerPixelIsRed() throws {
-        let data = try ScreenshotHarness.capture(
+        let data = try Snapshot.capture(
             Color.red,
             size: CGSize(width: 50, height: 50)
         )
@@ -49,7 +50,7 @@ struct ScreenshotHarnessTests {
         let tmp = FileManager.default.temporaryDirectory
             .appendingPathComponent("ah-shot-\(UUID().uuidString).png")
         defer { try? FileManager.default.removeItem(at: tmp) }
-        _ = try ScreenshotHarness.write(
+        _ = try Snapshot.write(
             Color.blue,
             size: CGSize(width: 32, height: 32),
             to: tmp

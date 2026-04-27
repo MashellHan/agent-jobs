@@ -1,4 +1,5 @@
 import Testing
+import AgentJobsVisualHarness
 import Foundation
 import SwiftUI
 import AppKit
@@ -7,7 +8,7 @@ import AppKit
 
 /// AC-V-01..05 — visual baseline tests. Each test renders a deterministic
 /// view tree against a fixture registry, captures a PNG via
-/// `ScreenshotHarness`, then either records a missing baseline or compares
+/// `Snapshot`, then either records a missing baseline or compares
 /// to it via `scripts/visual-diff.sh`.
 ///
 /// Baselines live at `.workflow/m02/screenshots/baseline/<name>.png`.
@@ -267,7 +268,7 @@ struct VisualBaselineTests {
         let cyclePath = Self.cycleDir().appendingPathComponent("\(name).png")
         let baselinePath = Self.baselineDir().appendingPathComponent("\(name).png")
 
-        _ = try ScreenshotHarness.write(view, size: size, appearance: appearance, to: cyclePath)
+        _ = try Snapshot.write(view, size: size, appearance: appearance, to: cyclePath)
 
         if !FileManager.default.fileExists(atPath: baselinePath.path) {
             try FileManager.default.createDirectory(
@@ -330,7 +331,7 @@ struct VisualBaselineTests {
         let view = viewBuilder(vm)
         let cyclePath = Self.cycleDirM03().appendingPathComponent("\(name).png")
         let baselinePath = Self.baselineDirM03().appendingPathComponent("\(name).png")
-        _ = try ScreenshotHarness.write(view, size: size, appearance: .aqua, to: cyclePath)
+        _ = try Snapshot.write(view, size: size, appearance: .aqua, to: cyclePath)
         if !FileManager.default.fileExists(atPath: baselinePath.path) {
             try FileManager.default.createDirectory(
                 at: baselinePath.deletingLastPathComponent(),

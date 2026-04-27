@@ -21,7 +21,7 @@ Package surgery (T01) lands first so every subsequent task builds against the ri
 - **Acceptance:** `swift build` green for all 4 targets. Existing test suites still pass (no logic change). `swift package describe --type json` lists `AgentJobsCore`, `AgentJobsMacUI`, `AgentJobsVisualHarness` as library targets and `AgentJobsMacApp`, `CaptureAll` as executables. **Enables AC-F-01, AC-Q-01.**
 - **Estimated diff size:** M (mostly mechanical moves)
 
-## T02 — `AgentJobsVisualHarness` skeleton + lift `Snapshot` from tests
+## T02 — `AgentJobsVisualHarness` skeleton + lift `Snapshot` from tests [DONE]
 
 - **Files:**
   - `Sources/AgentJobsVisualHarness/Snapshot.swift` (lift from `Tests/.../Visual/ScreenshotHarness.swift`, rename, make public)

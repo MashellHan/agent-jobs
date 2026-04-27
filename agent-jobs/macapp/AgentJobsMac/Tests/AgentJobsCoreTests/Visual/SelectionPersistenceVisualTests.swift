@@ -1,4 +1,5 @@
 import Testing
+import AgentJobsVisualHarness
 import Foundation
 import SwiftUI
 import AppKit
@@ -46,7 +47,7 @@ struct SelectionPersistenceVisualTests {
 
         // Pre-refresh frame.
         let preCycle = cycleDir.appendingPathComponent("dashboard-selection-preserved-light.png")
-        _ = try ScreenshotHarness.write(view, size: CGSize(width: 1200, height: 700),
+        _ = try Snapshot.write(view, size: CGSize(width: 1200, height: 700),
                                          appearance: .aqua, to: preCycle)
 
         if !FileManager.default.fileExists(atPath: baselinePath.path) {
@@ -69,7 +70,7 @@ struct SelectionPersistenceVisualTests {
             #expect(vm.services.map(\.id) == ids, "id ordering changed at iter \(i)")
             let frame = cycleDir.appendingPathComponent(
                 "dashboard-selection-preserved-light-iter\(i).png")
-            _ = try ScreenshotHarness.write(view, size: CGSize(width: 1200, height: 700),
+            _ = try Snapshot.write(view, size: CGSize(width: 1200, height: 700),
                                              appearance: .aqua, to: frame)
             try Self.runVisualDiff(baseline: baselinePath, candidate: frame)
         }

@@ -1,4 +1,5 @@
 import Testing
+import AgentJobsVisualHarness
 import Foundation
 import SwiftUI
 import AppKit
@@ -92,7 +93,7 @@ struct AutoRefreshIndicatorVisualTests {
             .frame(width: 200, height: 28, alignment: .leading)
         let cyclePath = Self.cycleDir().appendingPathComponent("indicator-refreshing-light.png")
         let baselinePath = Self.baselineDir().appendingPathComponent("indicator-refreshing-light.png")
-        _ = try ScreenshotHarness.write(view, size: CGSize(width: 200, height: 28),
+        _ = try Snapshot.write(view, size: CGSize(width: 200, height: 28),
                                          appearance: .aqua, to: cyclePath)
         if !FileManager.default.fileExists(atPath: baselinePath.path) {
             try FileManager.default.createDirectory(
@@ -166,7 +167,7 @@ struct AutoRefreshIndicatorVisualTests {
         await prepare(vm)
         let cyclePath = Self.cycleDir().appendingPathComponent("\(name).png")
         let baselinePath = Self.baselineDir().appendingPathComponent("\(name).png")
-        _ = try ScreenshotHarness.write(view(vm), size: size,
+        _ = try Snapshot.write(view(vm), size: size,
                                          appearance: appearance, to: cyclePath)
         if !FileManager.default.fileExists(atPath: baselinePath.path) {
             try FileManager.default.createDirectory(

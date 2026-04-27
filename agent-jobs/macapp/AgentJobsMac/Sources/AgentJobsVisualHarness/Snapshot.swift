@@ -2,9 +2,13 @@ import Foundation
 import AppKit
 import SwiftUI
 
-/// In-process SwiftUI → PNG renderer. Used by visual baseline tests.
+/// In-process SwiftUI → PNG renderer. Layer-2 of the visual harness pillar
+/// (M05 §"DESIGN.md"). Lifted verbatim from `Tests/.../Visual/ScreenshotHarness.swift`
+/// so production capture tooling (`capture-all` CLI, ui-critic) can render
+/// the same SwiftUI views the production app composes — without depending
+/// on the test target.
 ///
-/// Strategy (per architecture §"Screenshot strategy"):
+/// Strategy:
 ///   1. Wrap the view in `NSHostingView`.
 ///   2. Force a fixed frame.
 ///   3. Set NSAppearance + colorScheme env so light/dark variants are
@@ -13,7 +17,7 @@ import SwiftUI
 ///   5. Capture via `bitmapImageRepForCachingDisplay(in:)` +
 ///      `cacheDisplay(in:to:)` and serialize as PNG.
 @MainActor
-public enum ScreenshotHarness {
+public enum Snapshot {
 
     public enum CaptureError: Error, CustomStringConvertible {
         case bitmapAllocFailed
