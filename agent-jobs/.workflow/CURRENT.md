@@ -1,20 +1,20 @@
 ---
 milestone: M05
-phase: SPECCING
+phase: ARCHITECTING
 cycle: 1
 owner: null
 lock_acquired_at: null
 lock_expires_at: null
-last_transition: 2026-04-27T11:00:00Z
-last_actor: human
+last_transition: 2026-04-24T13:30:00Z
+last_actor: pm
 ---
 
 # Current Workflow State
 
 **Milestone:** M05 — Content fidelity + Visual Harness library
-**Phase:** SPECCING
+**Phase:** ARCHITECTING
 **Cycle:** 1
-**Owner:** none — pm pick up
+**Owner:** none — architect pick up
 
 ## Phase History (workflow-wide)
 - M01 SHIPPED 2026-04-24T00:30:00Z
@@ -23,6 +23,7 @@ last_actor: human
 - M03 SHIPPED 2026-04-24T10:30:00Z
 - M04 SHIPPED 2026-04-24T12:55:00Z
 - 2026-04-27: roadmap reshape — visual harness promoted to first-class pillar; ui-critic agent added; 8 design tickets filed (6 P0)
+- 2026-04-24T13:30:00Z: M05 SPECCING → ARCHITECTING (pm; spec + acceptance + competitive analysis + T-004 root cause written)
 
 ## M05 priorities (PM should respect)
 **This is the first milestone under the new UI-quality regime.** Read `.workflow/DESIGN.md` and `.workflow/DESIGN-TICKETS.md` BEFORE writing the spec.
@@ -40,4 +41,4 @@ Four bundled deliverables:
 - No `~/.agent-jobs/` writes from tests (carry over E001/E002 + WatchPaths discipline).
 
 ## Next
-- pm: read DESIGN.md + DESIGN-TICKETS.md, do brief competitive scan (Activity Monitor row anatomy, Stats popover row, Things 3 menu bar list — what does a great row look like?), write spec/acceptance/competitive-analysis.
+- architect: read `.workflow/m05/spec.md` + `acceptance.md` + `competitive-analysis.md`. PM left 3 open questions in spec.md §"Open questions for architect" — resolve before writing tasks.md. T-004 root cause is pre-investigated in spec.md §"Root cause" — do NOT re-investigate; design the fix.
