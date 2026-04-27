@@ -45,7 +45,7 @@ Package surgery (T01) lands first so every subsequent task builds against the ri
 - **Acceptance:** AC-F-06 (table), AC-F-07 (length invariant), AC-F-08 (id stability), AC-P-01 (gated < 50µs).
 - **Estimated diff size:** M
 
-## T04 — `LiveResourceSampler` actor (closes T-006)
+## T04 — `LiveResourceSampler` actor (closes T-006) [DONE]
 
 - **Files:**
   - `Sources/AgentJobsCore/Discovery/Providers/LiveResourceSampler.swift` (new — actor + `proc_pid_taskinfo` bridge)

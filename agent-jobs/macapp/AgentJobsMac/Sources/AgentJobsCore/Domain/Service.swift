@@ -162,6 +162,19 @@ public extension Service {
             plistURL: LaunchdPlistReader.plistURL(forLabel:)
         ) == nil
     }
+
+    /// Display copy with `metrics` substituted. Used by
+    /// `LiveResourceSampler` (M05 T04) to merge sampled CPU%/RSS into a
+    /// service after `discoverAllDetailed()` returns. Identity preserved.
+    func with(metrics newMetrics: ResourceMetrics?) -> Service {
+        Service(
+            id: id, source: source, kind: kind, name: name, project: project,
+            command: command, schedule: schedule, status: status,
+            createdAt: createdAt, lastRun: lastRun, nextRun: nextRun,
+            pid: pid, metrics: newMetrics, logsPath: logsPath, owner: owner,
+            history: history, origin: origin
+        )
+    }
 }
 
 
