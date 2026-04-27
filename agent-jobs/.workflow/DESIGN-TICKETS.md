@@ -78,6 +78,21 @@
        Why: JSONL polling is ground truth but lags ~1-2s. Claude Code hooks (PreToolUse/PostToolUse/Notification/Stop) push events with <100ms latency. Research warning: SubagentStop hook drops events for parallel Task spawns (anthropics/claude-code#27755) — never use as sole source.
        Done-when: Optional Swift hook handler writes to a ring buffer SQLite; UI merges hook events with JSONL tail, dedup by uuid. Strictly additive.
 
+- [ ] T-014  P0  visual-harness  Dashboard `Table` rows + dark scheme not rendering in capture-all output
+       Source: ui-critic  Filed: 2026-04-24T18:35:00Z  Target: M06
+       Why: Critique screenshots 04/05/06/07/09 show the dashboard middle list with column headers ("Name | Status | Sched...") but no row content — populated fixture should render ≥3 rows. Dark variants (05, 08) additionally show half-white / half-dark background and a fully-blank inspector body (only "Scheduled" pill + active tab pill render). Tester noted this as a known NSTableView/NSHostingView snapshot quirk; that's fine for unit baselines but blocks the M06 ui-critic gate from honestly scoring dashboard quality.
+       Done-when: `04-dashboard-populated-light.png` shows ≥3 list rows with friendly titles + status + schedule. `05-dashboard-populated-dark.png` and `08-dashboard-inspector-dark.png` render fully in dark scheme (no white background bleed) with all inspector grid cards visible. Verified by visual diff against new committed baselines.
+
+- [ ] T-015  P1  source-bucket-strip  Strip chips collapse to vertical-stripe layout in DashboardView
+       Source: ui-critic  Filed: 2026-04-24T18:35:00Z  Target: M06
+       Why: Critique 04/06/07/09 show the source-bucket strip with each chip rendered as a narrow vertical stripe and the "total 5" label stacked one letter per line ("to / ta / l / 5"). Popover renders the same data correctly as horizontal pills ("2 running", "2 scheduled"). Likely a flex/axis or fixed-width constraint issue in the DashboardView's SourceBucketStrip embedding; not present in MenuBarViews.
+       Done-when: Strip in DashboardView renders horizontal pill chips matching the popover treatment; "total N" label reads on one line; visual baseline added.
+
+- [ ] T-016  P2  popover-row  "Retry" affordance on failed-status rows
+       Source: ui-critic  Filed: 2026-04-24T18:35:00Z  Target: M06 (alongside T-002)
+       Why: Critique 10 (failure variant) shows the failed `daily-cleanup` row with a red dot and a red "1 failed" chip up top — readable delta. But the row's trailing slot still shows "—"; user has no inline recovery path. Peers (Stats, iStat Menus) put a small inline action when a service is in error.
+       Done-when: When a Service is in `.failed` state, the popover row trailing slot exposes a "Retry" tap target (or arrow → opens dashboard row); design choice up to M06 PM.
+
 ## Closed
 
 (empty)

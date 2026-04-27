@@ -1,20 +1,20 @@
 ---
 milestone: M05
-phase: UI-CRITIC
+phase: ACCEPTED
 cycle: 1
 owner: null
 lock_acquired_at: null
 lock_expires_at: null
-last_transition: 2026-04-24T18:30:00Z
-last_actor: tester
+last_transition: 2026-04-24T18:50:00Z
+last_actor: ui-critic
 ---
 
 # Current Workflow State
 
 **Milestone:** M05 — Content fidelity + Visual Harness library
-**Phase:** UI-CRITIC
+**Phase:** ACCEPTED
 **Cycle:** 1
-**Owner:** none — ui-critic pick up
+**Owner:** none — /ship may proceed
 
 ## Phase History (workflow-wide)
 - M01 SHIPPED 2026-04-24T00:30:00Z
@@ -28,12 +28,9 @@ last_actor: tester
 - 2026-04-24T17:30:00Z: M05 IMPLEMENTING → REVIEWING (implementer; T01..T11 all DONE; swift build green; swift test 317/317 pass)
 - 2026-04-24T17:50:00Z: M05 REVIEWING → TESTING (reviewer; cycle 1 PASS, score 91/100, zero CRITICAL, all ACs covered)
 - 2026-04-24T18:30:00Z: M05 TESTING → UI-CRITIC (tester; cycle 1 PASS, 24/24 ACs PASS — H1 CHANGELOG fixed in TESTING; M1 scenario-filename drift resolved via spec-amend; AC-V-06 pre-existing flake deferred)
+- 2026-04-24T18:50:00Z: M05 UI-CRITIC → ACCEPTED (ui-critic; cycle 1 PASS-with-tickets, 22/30, 3 new tickets filed T-014 P0 / T-015 P1 / T-016 P2; M05 advisory mode per PROTOCOL.md §8)
 
 ## Next
-- ui-critic: review the 10 scenarios under `.workflow/m05/screenshots/critique/` against the per-axis rubric in `.claude/agents/ui-critic.md`. M05 ships the harness; the gate runs **advisory** in M05 (PASS/REJECT recorded but does not block ACCEPTED). M06+ enforces the gate.
-- Locked items in TESTING:
-  - H1 (CHANGELOG) — FIXED, M05 entry added.
-  - M1 (capture-all filename drift) — FIXED via spec-amend; spec.md §Deliverable 5 now records the implemented 10-scenario set as the contract.
-  - M2 (`ProviderDiagnostics` widening) — acknowledged, not blocking; flag for M06.
-  - AC-V-06 (menubar-icon visual flake) — pre-existing, deferred.
-- Test report: `.workflow/m05/test-cycle-001.md` (24/24 ACs PASS).
+- /ship: M05 ACCEPTED. Push accumulated commits per PROTOCOL.md §"Push Policy".
+- M06 picks up T-014 (P0) + T-015 (P1) + T-002 popover redesign + T-003 dashboard default size + T-008 chip dimming.
+- M05 ui-critic verdict: PASS-with-tickets 22/30 (advisory mode). Report: `.workflow/m05/ui-review.md`.
