@@ -1,0 +1,16 @@
+{
+  "appCommit" : "5b857e6",
+  "capturedAt" : "2026-04-27T09:29:53.983Z",
+  "colorScheme" : "light",
+  "datasetHash" : "fixtures.tokens.v1",
+  "kind" : "dashboard",
+  "metadata" : {
+    "colorScheme" : "light",
+    "datasetHash" : "fixtures.tokens.v1",
+    "viewportHeight" : "600",
+    "viewportWidth" : "800"
+  },
+  "osVersion" : "15.7.5",
+  "pngBasename" : "14-tokens-swatches-light.png",
+  "scenarioName" : "14-tokens-swatches-light"
+}

@@ -1,0 +1,16 @@
+{
+  "appCommit" : "5b857e6",
+  "capturedAt" : "2026-04-27T09:29:51.080Z",
+  "colorScheme" : "light",
+  "datasetHash" : "fixtures.menubar.idle",
+  "kind" : "menubar",
+  "metadata" : {
+    "colorScheme" : "light",
+    "datasetHash" : "fixtures.menubar.idle",
+    "viewportHeight" : "22",
+    "viewportWidth" : "22"
+  },
+  "osVersion" : "15.7.5",
+  "pngBasename" : "01-menubar-icon-idle-light.png",
+  "scenarioName" : "01-menubar-icon-idle-light"
+}

@@ -1,0 +1,16 @@
+{
+  "appCommit" : "5b857e6",
+  "capturedAt" : "2026-04-27T09:29:51.989Z",
+  "colorScheme" : "light",
+  "datasetHash" : "fixtures.populated.v1",
+  "kind" : "dashboard",
+  "metadata" : {
+    "colorScheme" : "light",
+    "datasetHash" : "fixtures.populated.v1",
+    "viewportHeight" : "800",
+    "viewportWidth" : "1280"
+  },
+  "osVersion" : "15.7.5",
+  "pngBasename" : "05-dashboard-populated-light.png",
+  "scenarioName" : "05-dashboard-populated-light"
+}

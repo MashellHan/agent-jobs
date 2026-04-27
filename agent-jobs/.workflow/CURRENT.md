@@ -1,19 +1,19 @@
 ---
 milestone: M07
-phase: TESTING
-cycle: 1
+phase: IMPLEMENTING
+cycle: 2
 owner: null
 lock_acquired_at: null
 lock_expires_at: null
-last_transition: 2026-04-27T12:15:00Z
-last_actor: reviewer
+last_transition: 2026-04-27T12:55:00Z
+last_actor: tester
 ---
 
 # Current Workflow State
 
 **Milestone:** M07 — Visual Identity
-**Phase:** TESTING
-**Cycle:** 1
+**Phase:** IMPLEMENTING
+**Cycle:** 2
 **Owner:** (unlocked)
 
 ## Phase History (workflow-wide)
@@ -42,3 +42,7 @@ last_actor: reviewer
 
 ## Next
 - tester picks up M07 TESTING cycle 1.
+- M07 TESTING cycle-1 complete 2026-04-27T12:55:00Z (tester) — verdict **REJECT 24/26**; functional 18/18 PASS; visual 4/6 PASS, **2 FAIL**: AC-V-01 placeholder-glyph central-8×8 luma 0.631 over white (want <0.2 — sparse 14.9%-coverage glyph in upper-left quadrant), AC-V-04 dark-scheme idle glyph captures as **fully-transparent PNG** (capture-all draws template asset directly, no NSStatusItem inversion path); both failures concentrated in T-001 icon territory — architecture §7 explicitly anticipated this as the cycle-1 → cycle-2 REJECT-recovery path. Build green, **358/358 tests pass**, capture-all 14/14 byte-stable across two reruns. **E003 holistic luma evolution honored**: 22 named-region 8×8 block-average samples across scenarios 02/05/06/09; max 0.247 ≪ 0.3 — M05/M06 P0 dark-chrome bleed condition NOT recurred (M06 cycle-2 fix fully holds). Single-pixel sample at (400, 20) on scenario 06 measured 0.784 → confirmed text-glyph hit (1.93% bright pixels in top 40 rows = text density, not chrome bleed); block averaging at same region resolves to 0.141 — exactly the false-positive class E003 evolution prevents. WL-A (rename + dark-only precondition), WL-B (byte-stable rerun), WL-C (dead code grep 0 matches), WL-D (canonical schema doc), WL-E (deterministic asset-render test) all verified. T-019 nameColumnMinWidth=210 (30.0% of 700pt list pane) verified; T-020 sidebar header heightening (option b 40pt) verified. Design ACs (AC-D-01..D-08, 8 ACs) deferred to ui-critic. Followups for ui-critic: (1) AC-D-01 Identity REJECT trigger likely fires on placeholder glyph; (2) AC-D-02 count-badge "+" sign legibility at 22pt borderline; (3) AC-D-03 token swatch type-scale specimen `caption`/`mono` readability worth a close look; (4) AC-D-08 ui-critic spot-read same regions tester probed; (5) AC-D-07 empty-popover token application doesn't regress M06 cycle-2 scaffolding. Phase advances to IMPLEMENTING cycle 2 — focus on AC-V-01 (real glyph) + AC-V-04 (dark-scenario harness wiring fix or AC re-scoping with architect).
+
+## Next
+- implementer picks up M07 IMPLEMENTING cycle 2 (real glyph for T-001 + dark-scenario template inversion fix in capture-all harness).

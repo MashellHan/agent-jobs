@@ -1,0 +1,16 @@
+{
+  "appCommit" : "5b857e6",
+  "capturedAt" : "2026-04-27T09:29:53.356Z",
+  "colorScheme" : "light",
+  "datasetHash" : "fixtures.menubar.running1",
+  "kind" : "menubar",
+  "metadata" : {
+    "colorScheme" : "light",
+    "datasetHash" : "fixtures.menubar.running1",
+    "viewportHeight" : "22",
+    "viewportWidth" : "44"
+  },
+  "osVersion" : "15.7.5",
+  "pngBasename" : "11-menubar-icon-count-1-light.png",
+  "scenarioName" : "11-menubar-icon-count-1-light"
+}

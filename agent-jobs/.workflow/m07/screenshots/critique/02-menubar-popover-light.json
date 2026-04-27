@@ -1,0 +1,16 @@
+{
+  "appCommit" : "5b857e6",
+  "capturedAt" : "2026-04-27T09:29:51.295Z",
+  "colorScheme" : "light",
+  "datasetHash" : "fixtures.populated.v1",
+  "kind" : "popover",
+  "metadata" : {
+    "colorScheme" : "light",
+    "datasetHash" : "fixtures.populated.v1",
+    "viewportHeight" : "520",
+    "viewportWidth" : "480"
+  },
+  "osVersion" : "15.7.5",
+  "pngBasename" : "02-menubar-popover-light.png",
+  "scenarioName" : "02-menubar-popover-light"
+}

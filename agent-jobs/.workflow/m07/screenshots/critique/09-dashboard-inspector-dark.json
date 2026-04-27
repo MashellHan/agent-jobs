@@ -1,0 +1,16 @@
+{
+  "appCommit" : "5b857e6",
+  "capturedAt" : "2026-04-27T09:29:53.027Z",
+  "colorScheme" : "dark",
+  "datasetHash" : "fixtures.populated.v1",
+  "kind" : "inspector",
+  "metadata" : {
+    "colorScheme" : "dark",
+    "datasetHash" : "fixtures.populated.v1",
+    "viewportHeight" : "800",
+    "viewportWidth" : "1280"
+  },
+  "osVersion" : "15.7.5",
+  "pngBasename" : "09-dashboard-inspector-dark.png",
+  "scenarioName" : "09-dashboard-inspector-dark"
+}
