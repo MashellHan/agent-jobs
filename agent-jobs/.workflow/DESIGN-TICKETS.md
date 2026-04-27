@@ -93,6 +93,26 @@
        Why: Critique 10 (failure variant) shows the failed `daily-cleanup` row with a red dot and a red "1 failed" chip up top — readable delta. But the row's trailing slot still shows "—"; user has no inline recovery path. Peers (Stats, iStat Menus) put a small inline action when a service is in error.
        Done-when: When a Service is in `.failed` state, the popover row trailing slot exposes a "Retry" tap target (or arrow → opens dashboard row); design choice up to M06 PM.
 
+- [ ] T-017  P0  visual-harness  Dark dashboard chrome + inspector header bleed light (M06 recurrence of M05 P0)
+       Source: ui-critic  Filed: 2026-04-27T22:45:00Z  Target: M06 (cycle 2 — REJECT blocker)
+       Why: Critique 05 and 08 reproduce the M05 P0 white-bleed condition in a different surface region. In 05 the sidebar pane is light grey (not dark), the top ~25pt band above the table renders fully white, and the right inspector pane is empty (no "Select a service" placeholder). In 08 the inspector pane shows ONLY the "Scheduled" status pill and the "Overview" active tab pill — the friendly title, breadcrumb, command, action row, and 8-cell metadata grid all fail to render in dark scheme. Tester's 4-corner luma sample (max 0.141 < 0.3) missed this because the bleed lives in the sidebar interior + top header band + inspector header, not at the corners. AC-D-07 explicitly names this as a rubric REJECT trigger.
+       Done-when: `05-dashboard-populated-dark.png` shows fully dark sidebar, fully dark top header band (bucket strip on dark), and a "Select a service" placeholder in dark scheme. `08-dashboard-inspector-dark.png` shows the full inspector grid (title, breadcrumb, command, Stop/Hide, all 4×2 metadata cards) on a fully-dark frame. Verified by sampling at least 3 non-corner regions (sidebar interior, top-of-list-pane band, inspector header band) and confirming luma < 0.3 in all three.
+
+- [ ] T-018  P1  empty-popover  Empty popover regressed vs. M05 — restore group-header scaffolding
+       Source: ui-critic  Filed: 2026-04-27T22:45:00Z  Target: M07
+       Why: Critique 03 renders only the EmptyHintView ("No services discovered yet.") at 480×360. Header chips show "0 running" / "0 scheduled" / "Zero KB", but the RUNNING / SCHEDULED / FAILED group-header scaffolding is absent. M05's 03 had two sections with per-section microcopy ("No services running right now." / "Nothing scheduled in the next hour.") — strictly better. Architect §3.2 specified `includeEmpty: true` to render group headers + 0-count chips; impl falls through to `EmptyHintView` instead (reviewer Finding #2; tester carried forward).
+       Done-when: Empty popover shows RUNNING(0) / SCHEDULED(0) section headers with per-section microcopy below each (Things 3 empty-inbox pattern). Popover height extends to ≥ 480pt (matches populated default). Either implement, or update spec/architecture to canonicalize the EmptyHintView path and document the deliberate departure from M05.
+
+- [ ] T-019  P2  dashboard-list  Name column too narrow at 1280pt default; "Last Run" header clipped
+       Source: ui-critic  Filed: 2026-04-27T22:45:00Z  Target: M07
+       Why: At 1280pt with sidebar 220 + inspector 360 + 5 visible columns (Status, Schedule, Created, CPU, Memory) plus Last Run, the Name column gets ~80pt and truncates every row title to 8-9 chars ("daily-cle...", "claude-t...", "claude-l...", "npm run..."). The Last Run header text is also clipped to "Last R...". Activity Monitor's Process Name column is the widest by default; ours is the narrowest.
+       Done-when: Name column claims at least 30% of the list pane's horizontal width (proportional or `min:` constraint); Last Run header reads in full at 1280pt default; lower-priority columns (Created, Last Run) are demotable / hideable behind a column-config menu.
+
+- [ ] T-020  P2  dashboard-chrome  Bucket-strip header bar does not span sidebar pane
+       Source: ui-critic  Filed: 2026-04-27T22:45:00Z  Target: M07
+       Why: In critique 04/06/07, the horizontal bucket strip (registered/claude-sched/claude-loop/launchd/live-proc/total N) starts at the list pane's left edge. The sidebar pane shows a separate "Filters" header at top that does not visually align with the strip. The strip looks orphaned above only the list pane; a visual rhythm break for a chrome element that conceptually applies to all sources.
+       Done-when: Either (a) the bucket strip extends to span the full window width (becomes a global toolbar above the split view), or (b) the sidebar's "Filters" header band is heightened to match the strip's top edge so they read as one chrome row.
+
 ## Closed
 
 (empty)

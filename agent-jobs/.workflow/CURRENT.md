@@ -1,20 +1,20 @@
 ---
 milestone: M06
-phase: UI-CRITIC
-cycle: 1
+phase: IMPLEMENTING
+cycle: 2
 owner: null
 lock_acquired_at: null
 lock_expires_at: null
-last_transition: 2026-04-27T22:30:00Z
-last_actor: tester
+last_transition: 2026-04-27T22:50:00Z
+last_actor: ui-critic
 ---
 
 # Current Workflow State
 
 **Milestone:** M06 — Information Architecture
-**Phase:** UI-CRITIC
-**Cycle:** 1
-**Owner:** none — ui-critic pick up
+**Phase:** IMPLEMENTING
+**Cycle:** 2 (after ui-critic REJECT cycle 1)
+**Owner:** none — implementer pick up
 
 ## Phase History (workflow-wide)
 - M01 SHIPPED 2026-04-24T00:30:00Z
@@ -29,26 +29,22 @@ last_actor: tester
 - M06 IMPLEMENTING cycle-1 complete 2026-04-27T21:30:00Z (implementer) — all 9 tasks landed in 8 commits; tests 317 → 332 (+15); AgentJobsMacUI.swift 504 LOC (<600); 10/10 m06 baselines fresh + 10/10 byte-stable; ProviderDiagnostics demoted to internal; implementer self-check 19/19 functional+visual ACs pass, 7 design ACs deferred to ui-critic.
 - M06 REVIEWING cycle-1 complete 2026-04-27T22:00:00Z (reviewer) — verdict PASS-with-nits 89/100; all 19 verifiable functional ACs PASS; build/tests green (332 tests); T-014 harness fix verified (rows render + dark-frame corners luma < 0.3); WL-1/2/3 honored; 4 architect deviations accepted; 7 nits flagged (dead code in MenuBarPopoverView; empty-popover skips includeEmpty:true headers; ServiceRowCompact latent dead) — none blocking; advances to TESTING.
 - M06 TESTING cycle-1 complete 2026-04-27T22:30:00Z (tester) — verdict PASS 19/19 testable ACs (7 AC-D-* deferred to ui-critic); build green, 332 tests pass, capture-all 10/10 byte-stable across two reruns, 10/10 PNGs byte-identical to committed baselines (0% pixel diff vs AC-V-01..05 1% threshold), 4-corner luma on dark scenarios (02/05/08) max 0.141 < 0.3; AC-F-15 sidecar schema delta flagged borderline (semantic intent met; field names diverge from spec wording); empty-popover scenario 03 has no group headers (reviewer Finding #2 carried forward to ui-critic); advances to UI-CRITIC.
+- M06 UI-CRITIC cycle-1 complete 2026-04-27T22:50:00Z (ui-critic) — verdict **REJECT 20/30**; AC-D-07 rubric REJECT trigger fires (white-bleed dark frame + half-rendered inspector — M05 P0 condition recurs in scenarios 05 and 08); empty-popover (03) regressed vs. M05 (Empty/Error 2/5); 4 new tickets filed (T-017 P0, T-018 P1, T-019 P2, T-020 P2); cycle 2 IMPLEMENTING required — focus on T-017 (dark dashboard chrome + inspector header). Tester's 4-corner luma sample missed the bleed because it lives in the sidebar interior + top header band + inspector header, not at the corners.
 
-## M06 priorities (architect should respect)
-**This is the first milestone with ui-critic in ENFORCING mode** (per PROTOCOL.md §UI-CRITIC). UI quality issues found in critique can REJECT the milestone back to IMPLEMENTING.
+## M06 priorities (cycle 2)
+**Cycle 2 blocker (must fix to lift REJECT):**
+- **T-017 P0  visual-harness  Dark dashboard chrome + inspector header bleed light** (NEW — opened by ui-critic cycle 1). Scenarios 05 and 08 must render fully dark across sidebar, top header band (bucket strip), inspector header, and inspector grid body. Verify by sampling 3 non-corner regions (sidebar interior, top-of-list-pane band, inspector header band) for luma < 0.3.
 
-**Tickets to close (from DESIGN-TICKETS.md):**
-- T-002 P0  Popover too cramped, list rows information-poor — ≥480pt wide; rich rows: program-friendly title primary, status pill, 1-line summary; group by status
-- T-003 P0  Dashboard default size too small — ≥1280x800 default; sidebar 220 / inspector 360 / list gets the rest
-- T-008 P1  0-count chips need explanation — hover tooltip + subtle dimming
-- T-014 P0  **Dashboard Table rows + dark scheme not rendering in capture-all** (foundational — without this fix, ui-critic enforcing mode is structurally blind to half the surface area). **Architect MUST sequence as task #1.**
-- T-015 P1  SourceBucketStrip vertical-stripe layout in DashboardView
-- T-016 P2  Failed-row Retry affordance
+**Cycle 2 nice-to-have (not REJECT-blocking):**
+- T-018 P1 empty-popover regression (defer to M07 acceptable per ticket)
+- T-019 P2 Name column truncation
+- T-020 P2 bucket-strip header alignment
 
-**Carry-forward watch-list from M05 retro (PM kept all three in scope):**
-- WL-1 Visual ↔ design AC delineation — encoded in `m06/acceptance.md` (tester for AC-F-*/AC-V-*; ui-critic for AC-D-*).
-- WL-2 `AgentJobsMacUI.swift` 530 LOC split — non-blocking AC-F-17 (split if >600 LOC after IMPL). **Architect decision: split now (Task 2) BEFORE T-002 rewrite.**
-- WL-3 `ProviderDiagnostics` public surface trim — non-blocking AC-F-18. **Architect decision: introduce internal `DiagnosticsBearing` protocol; demote actor to internal.**
+**Re-baselining requirement:**
+- After T-017 lands, the 10 m06 baselines/critique PNGs must be regenerated. Tester re-runs AC-V-* pixel-diff against new baselines; ui-critic re-scores rubric on cycle-2 critique set.
 
-**Constraints:**
-- T-014 must be the FIRST task fixed (gates ui-critic enforcement). If `capture-all` can't render dashboard rows + dark scheme honestly, every visual finding M06+ is suspect.
-- Capture-all scenarios MUST be regenerated at new sizes (popover ≥480pt, dashboard 1280x800). M05 baselines do not transfer.
+**Carry-forward (unchanged):**
+- WL-1 / WL-2 / WL-3 status from cycle 1 holds (all PASS).
 
 ## Next
-- ui-critic: score AC-D-01..07 against the 10 PNGs in `.workflow/m06/screenshots/critique/` per the 6-axis rubric in `.workflow/DESIGN.md` (PASS = total ≥ 24/30; rubric REJECT triggers per acceptance.md). See `.workflow/m06/test-cycle-001.md` "Followups for ui-critic phase" — note empty-popover scenario 03 lacks group headers; score on rendered surface, not architect intent. M06 is the first milestone with ui-critic in ENFORCING mode (REJECT → IMPLEMENTING cycle++).
+- implementer cycle 2: read `.workflow/m06/ui-review.md` + DESIGN-TICKETS T-017; reproduce 05/08 locally; trace dark-mode propagation through `DashboardView` snapshot path; ensure `preferredColorScheme(.dark)` (or NSHostingView.appearance config) reaches sidebar + top toolbar + inspector header surfaces; regenerate 10 baselines + critique PNGs; commit; transition to REVIEWING cycle 2.
