@@ -71,7 +71,7 @@ Package surgery (T01) lands first so every subsequent task builds against the ri
 - **Acceptance:** AC-F-12 (fixture parses to ≥1 service), AC-F-13 (mapping consistent), AC-F-14 (tooltip surface).
 - **Estimated diff size:** L (split possible: T05a fixture + integration test, T05b diagnostics actor — keep as one if under 150 LOC net)
 
-## T06 — `MenuBarInteraction` + `WindowInteraction` real implementations (closes T-007)
+## T06 — `MenuBarInteraction` + `WindowInteraction` real implementations (closes T-007) [DONE]
 
 - **Files:**
   - `Sources/AgentJobsVisualHarness/MenuBarInteraction.swift` (replace stub: AX locate + CGEvent click + Escape dismiss + `requiresAccessibility()` check + in-process fallback)

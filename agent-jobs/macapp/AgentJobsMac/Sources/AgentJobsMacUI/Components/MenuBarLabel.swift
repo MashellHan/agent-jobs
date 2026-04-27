@@ -22,5 +22,9 @@ struct MenuBarLabel: View {
                     .imageScale(.small)
             }
         }
+        // M05 T06: lets MenuBarInteraction find the bundle's status item
+        // via the Accessibility tree (`AXExtrasMenuBar` walk).
+        .accessibilityIdentifier("agent-jobs.menubar")
+        .accessibilityLabel("Agent Jobs menu bar status")
     }
 }

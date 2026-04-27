@@ -27,6 +27,26 @@ public struct AgentJobsAppScene: Scene {
                 .environment(registry)
                 .frame(minWidth: 900, minHeight: 560)
                 .task { await registry.startWatchers() }
+                // M05 T06: in-process visual-harness fallback. The
+                // AgentJobsVisualHarness MenuBarInteraction posts these
+                // notifications; we acknowledge so the harness's
+                // continuation resumes. Lives on the dashboard scene
+                // because Window's modifiers run on the main actor and
+                // are easy to attach without restructuring MenuBarExtra.
+                .onReceive(NotificationCenter.default.publisher(
+                    for: Notification.Name("AgentJobs.HarnessTogglePopover")
+                )) { _ in
+                    registry.popoverOpen = true
+                    NotificationCenter.default.post(
+                        name: Notification.Name("AgentJobs.HarnessPopoverDidOpen"),
+                        object: nil
+                    )
+                }
+                .onReceive(NotificationCenter.default.publisher(
+                    for: Notification.Name("AgentJobs.HarnessDismissPopover")
+                )) { _ in
+                    registry.popoverOpen = false
+                }
         }
     }
 }
