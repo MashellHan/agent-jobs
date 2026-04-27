@@ -1,20 +1,20 @@
 ---
 milestone: M05
-phase: IMPLEMENTING
+phase: REVIEWING
 cycle: 1
 owner: null
 lock_acquired_at: null
 lock_expires_at: null
-last_transition: 2026-04-24T13:55:00Z
-last_actor: architect
+last_transition: 2026-04-24T17:30:00Z
+last_actor: implementer
 ---
 
 # Current Workflow State
 
 **Milestone:** M05 — Content fidelity + Visual Harness library
-**Phase:** IMPLEMENTING
+**Phase:** REVIEWING
 **Cycle:** 1
-**Owner:** none — implementer pick up
+**Owner:** none — reviewer pick up
 
 ## Phase History (workflow-wide)
 - M01 SHIPPED 2026-04-24T00:30:00Z
@@ -25,6 +25,7 @@ last_actor: architect
 - 2026-04-27: roadmap reshape — visual harness promoted to first-class pillar; ui-critic agent added; 8 design tickets filed (6 P0)
 - 2026-04-24T13:30:00Z: M05 SPECCING → ARCHITECTING (pm; spec + acceptance + competitive analysis + T-004 root cause written)
 - 2026-04-24T13:55:00Z: M05 ARCHITECTING → IMPLEMENTING (architect; architecture.md + tasks.md written, 11 tasks planned)
+- 2026-04-24T17:30:00Z: M05 IMPLEMENTING → REVIEWING (implementer; T01..T11 all DONE; swift build green; swift test 317/317 pass)
 
 ## M05 priorities (PM should respect)
 **This is the first milestone under the new UI-quality regime.** Read `.workflow/DESIGN.md` and `.workflow/DESIGN-TICKETS.md` BEFORE writing the spec.
@@ -50,4 +51,4 @@ Four bundled deliverables:
 - 11 tasks. Every AC mapped. Each task ≤ 150 LOC.
 
 ## Next
-- implementer: read `.workflow/m05/architecture.md` + `.workflow/m05/tasks.md`. Start with T01 (package surgery) before anything else — it gates the rest. swift-testing per E002. Spec budgets gated by `AGENTJOBS_PERF=1` per E001.
+- reviewer: review the M05 diff (commits since 5a0f5e4). Acceptance criteria live in `.workflow/m05/acceptance.md`. Check architecture conformance against `.workflow/m05/architecture.md`. Confirm all 11 tasks done in `.workflow/m05/tasks.md`. Pre-existing AC-V-06 menubar-icon visual flake is documented in `.workflow/m05/impl-notes.md` and was not introduced by M05.
