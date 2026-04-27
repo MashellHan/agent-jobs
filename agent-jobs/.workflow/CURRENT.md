@@ -1,20 +1,20 @@
 ---
 milestone: M06
-phase: IMPLEMENTING
+phase: REVIEWING
 cycle: 2
 owner: null
 lock_acquired_at: null
 lock_expires_at: null
-last_transition: 2026-04-27T22:50:00Z
-last_actor: ui-critic
+last_transition: 2026-04-27T23:30:00Z
+last_actor: implementer
 ---
 
 # Current Workflow State
 
 **Milestone:** M06 — Information Architecture
-**Phase:** IMPLEMENTING
-**Cycle:** 2 (after ui-critic REJECT cycle 1)
-**Owner:** none — implementer pick up
+**Phase:** REVIEWING
+**Cycle:** 2 (after implementer cycle 2 closed T-017 P0 + T-018 P1)
+**Owner:** none — reviewer pick up
 
 ## Phase History (workflow-wide)
 - M01 SHIPPED 2026-04-24T00:30:00Z
@@ -30,21 +30,16 @@ last_actor: ui-critic
 - M06 REVIEWING cycle-1 complete 2026-04-27T22:00:00Z (reviewer) — verdict PASS-with-nits 89/100; all 19 verifiable functional ACs PASS; build/tests green (332 tests); T-014 harness fix verified (rows render + dark-frame corners luma < 0.3); WL-1/2/3 honored; 4 architect deviations accepted; 7 nits flagged (dead code in MenuBarPopoverView; empty-popover skips includeEmpty:true headers; ServiceRowCompact latent dead) — none blocking; advances to TESTING.
 - M06 TESTING cycle-1 complete 2026-04-27T22:30:00Z (tester) — verdict PASS 19/19 testable ACs (7 AC-D-* deferred to ui-critic); build green, 332 tests pass, capture-all 10/10 byte-stable across two reruns, 10/10 PNGs byte-identical to committed baselines (0% pixel diff vs AC-V-01..05 1% threshold), 4-corner luma on dark scenarios (02/05/08) max 0.141 < 0.3; AC-F-15 sidecar schema delta flagged borderline (semantic intent met; field names diverge from spec wording); empty-popover scenario 03 has no group headers (reviewer Finding #2 carried forward to ui-critic); advances to UI-CRITIC.
 - M06 UI-CRITIC cycle-1 complete 2026-04-27T22:50:00Z (ui-critic) — verdict **REJECT 20/30**; AC-D-07 rubric REJECT trigger fires (white-bleed dark frame + half-rendered inspector — M05 P0 condition recurs in scenarios 05 and 08); empty-popover (03) regressed vs. M05 (Empty/Error 2/5); 4 new tickets filed (T-017 P0, T-018 P1, T-019 P2, T-020 P2); cycle 2 IMPLEMENTING required — focus on T-017 (dark dashboard chrome + inspector header). Tester's 4-corner luma sample missed the bleed because it lives in the sidebar interior + top header band + inspector header, not at the corners.
+- M06 IMPLEMENTING cycle-2 complete 2026-04-27T23:30:00Z (implementer) — T-017 P0 + T-018 P1 closed; root cause for T-017 was NavigationSplitView per-pane NSHostingView children failing to inherit window appearance while offscreen + not key/main, fixed via 4 dark-only changes (NSApp.appearance pin, opaque resolved-against-target window bg, ordered-front offscreen, recursive forceAppearance walk + layer invalidation) + DashboardView pane `.background(paneBackground)` gated to dark via `@Environment(\.colorScheme)`; T-018 wired `PopoverGrouping.groupByStatus(includeEmpty: true)` so the empty popover renders RUNNING/SCHEDULED/FAILED scaffolding with per-group microcopy; **all 332 tests pass, M02/M03/M04 light baselines byte-stable** after restoring via `git checkout`; 10 m06 baselines + 10 critique PNGs regenerated; visual confirmation of scenarios 03, 05, 08 attached in `.workflow/m06/impl-cycle-002.md`.
 
 ## M06 priorities (cycle 2)
-**Cycle 2 blocker (must fix to lift REJECT):**
-- **T-017 P0  visual-harness  Dark dashboard chrome + inspector header bleed light** (NEW — opened by ui-critic cycle 1). Scenarios 05 and 08 must render fully dark across sidebar, top header band (bucket strip), inspector header, and inspector grid body. Verify by sampling 3 non-corner regions (sidebar interior, top-of-list-pane band, inspector header band) for luma < 0.3.
+- T-017 P0 closed — dark dashboard chrome + inspector header now render fully (verified by reading regenerated baselines 05 + 08).
+- T-018 P1 closed — empty popover restores group-header scaffolding + per-section microcopy.
+- T-019 P2, T-020 P2 — deferred to M07.
 
-**Cycle 2 nice-to-have (not REJECT-blocking):**
-- T-018 P1 empty-popover regression (defer to M07 acceptable per ticket)
-- T-019 P2 Name column truncation
-- T-020 P2 bucket-strip header alignment
-
-**Re-baselining requirement:**
-- After T-017 lands, the 10 m06 baselines/critique PNGs must be regenerated. Tester re-runs AC-V-* pixel-diff against new baselines; ui-critic re-scores rubric on cycle-2 critique set.
-
-**Carry-forward (unchanged):**
+## Carry-forward (unchanged)
 - WL-1 / WL-2 / WL-3 status from cycle 1 holds (all PASS).
 
 ## Next
-- implementer cycle 2: read `.workflow/m06/ui-review.md` + DESIGN-TICKETS T-017; reproduce 05/08 locally; trace dark-mode propagation through `DashboardView` snapshot path; ensure `preferredColorScheme(.dark)` (or NSHostingView.appearance config) reaches sidebar + top toolbar + inspector header surfaces; regenerate 10 baselines + critique PNGs; commit; transition to REVIEWING cycle 2.
+- reviewer cycle 2: read `.workflow/m06/impl-cycle-002.md` + run `swift test` + spot-check the 10 m06 baselines; then advance to TESTING cycle 2.
+

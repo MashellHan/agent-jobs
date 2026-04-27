@@ -3,6 +3,7 @@ import AgentJobsCore
 
 struct DashboardView: View {
     @Environment(ServiceRegistryViewModel.self) private var registry
+    @Environment(\.colorScheme) private var colorScheme
     @State private var selection: Service.ID?
     @State private var categoryFilter: ServiceSource.Category? = nil
     @State private var bucketFilter: ServiceSource.Bucket? = nil
@@ -33,6 +34,16 @@ struct DashboardView: View {
                 Divider()
                 serviceTable
             }
+            // T-017 (cycle 2, dark-only): explicit windowBackground fill
+            // so the content pane (top header band above the
+            // SourceBucketStrip + spacer area below the Table) paints
+            // with the correct appearance. Without this, the
+            // offscreen-capture path for dark mode leaves the band light
+            // because NavigationSplitView's pane wrapper has no opaque
+            // backing. Light mode keeps NavigationSplitView's default
+            // pane background to remain byte-stable against M02–M04
+            // visual baselines.
+            .background(paneBackground)
             .navigationSplitViewColumnWidth(
                 min: DashboardWindowConfig.listMinWidth,
                 ideal: 700
@@ -56,6 +67,12 @@ struct DashboardView: View {
                                            description: Text("Pick something from the list to inspect."))
                 }
             }
+            // T-017 (cycle 2, dark-only): same rationale as the content
+            // pane — the inspector pane otherwise paints white in dark
+            // capture, hiding white-on-white SwiftUI text rendered with
+            // .primary. Light path keeps the system default.
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(paneBackground)
             .navigationSplitViewColumnWidth(
                 min: 280,
                 ideal: DashboardWindowConfig.inspectorWidth,
@@ -65,6 +82,16 @@ struct DashboardView: View {
         .stopConfirmation(pending: $pendingStop) { svc in
             Task { await registry.stop(svc) }
         }
+    }
+
+    /// T-017 (cycle 2): pane background. Returns an opaque
+    /// `windowBackgroundColor` ONLY in dark mode so the offscreen-capture
+    /// path renders dark chrome correctly across content + inspector
+    /// panes. In light mode returns `Color.clear` so NavigationSplitView's
+    /// default pane background continues to apply unchanged — keeps
+    /// the M02–M04 light visual baselines byte-stable.
+    private var paneBackground: Color {
+        colorScheme == .dark ? Color(NSColor.windowBackgroundColor) : Color.clear
     }
 
     @ToolbarContentBuilder

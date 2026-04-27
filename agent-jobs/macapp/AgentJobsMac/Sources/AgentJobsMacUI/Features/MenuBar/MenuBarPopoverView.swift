@@ -36,8 +36,22 @@ struct MenuBarPopoverView: View {
                     if registry.phase == .loading && registry.services.isEmpty {
                         loadingSkeleton
                     } else if registry.services.isEmpty {
-                        EmptyHintView(message: "No services discovered yet.")
-                            .padding(.horizontal, DesignTokens.Spacing.m)
+                        // T-018 (cycle 2): per architecture §3.2, the empty
+                        // popover renders RUNNING / SCHEDULED / FAILED
+                        // group-header scaffolding with per-section
+                        // microcopy — strictly better than the M05
+                        // single-line EmptyHintView and matches the
+                        // populated layout's information architecture so
+                        // the popover doesn't visually collapse to a
+                        // different shape when the service set drops to
+                        // zero.
+                        ForEach(emptyGroupedServices, id: \.group.id) { entry in
+                            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
+                                PopoverGroupHeader(group: entry.group, count: 0)
+                                EmptyHintView(message: emptyMicrocopy(for: entry.group))
+                                    .padding(.horizontal, DesignTokens.Spacing.m)
+                            }
+                        }
                     } else {
                         ForEach(groupedServices, id: \.group.id) { entry in
                             VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
@@ -85,6 +99,27 @@ struct MenuBarPopoverView: View {
         // matches the M05 prefix(8) ceiling on the prior section view.
         PopoverGrouping.groupByStatus(registry.services).map { entry in
             (entry.group, Array(entry.services.prefix(8)))
+        }
+    }
+
+    /// T-018 (cycle 2): empty-popover path. Architect §3.2 requires
+    /// `includeEmpty: true` so the RUNNING / SCHEDULED / FAILED group
+    /// headers render with 0 counts. We drop `.other` because there is
+    /// no actionable microcopy for it in the empty state.
+    private var emptyGroupedServices: [(group: PopoverGrouping.StatusGroup, services: [Service])] {
+        PopoverGrouping.groupByStatus([], includeEmpty: true).filter {
+            $0.group != .other
+        }
+    }
+
+    /// Per-group empty-state microcopy (Things 3 / Linear flavor). One
+    /// line, action-aware where reasonable.
+    private func emptyMicrocopy(for group: PopoverGrouping.StatusGroup) -> String {
+        switch group {
+        case .running:   return "No services running right now."
+        case .scheduled: return "Nothing scheduled in the next hour."
+        case .failed:    return "Nothing has failed recently."
+        case .other:     return "No services discovered yet."
         }
     }
 
