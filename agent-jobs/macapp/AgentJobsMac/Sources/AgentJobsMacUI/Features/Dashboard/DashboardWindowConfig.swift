@@ -20,4 +20,21 @@ public enum DashboardWindowConfig {
     /// AC-F-09: middle list cannot collapse below this. Combined with
     /// sidebar.min (180) + detail.min (280) → detail collapses at < 940pt.
     public static let listMinWidth: CGFloat   = 480
+
+    // MARK: - M07 T-019 / T-020 additions
+
+    /// T-019 / AC-F-11: Name column claims ≥ 30% of the list pane at the
+    /// 1280pt default (sidebar 220 + inspector 360 = list 700; 30% =
+    /// 210pt). Pinned here so unit tests can assert directly against the
+    /// constant without instantiating SwiftUI.
+    public static let nameColumnMinWidth: CGFloat = 210
+    /// Default ideal target for the Name column at 1280×800 — generous
+    /// enough that "claude-t…" truncation doesn't appear with the
+    /// fixture set.
+    public static let nameColumnIdealWidth: CGFloat = 280
+    /// T-020 / AC-F-12: sidebar `Filters` header band heightens to match
+    /// the bucket-strip's intrinsic top edge (architect picked option
+    /// (b): heighten the sidebar header instead of hoisting the bucket
+    /// strip to a window toolbar).
+    public static let sidebarHeaderHeight: CGFloat = 40
 }

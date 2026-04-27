@@ -19,11 +19,19 @@ public extension DesignTokens {
 
     /// Status semantic colors. Names per AC-F-08 (`status<Status>`,
     /// flat under one namespace).
+    /// Status semantic colors. Names per AC-F-08 (`status<Status>`,
+    /// flat under one namespace).
+    ///
+    /// **Byte-stability note:** these intentionally alias the same
+    /// `Color(.system*)` values used by `StatusColor` (legacy enum) so
+    /// the M02-M06 pixel-diff baselines remain valid after Task-3 wiring
+    /// migrates call sites from `StatusColor.*` to `SemanticColor.*`.
+    /// Architecture §6 risk #5: do not regen older baselines mid-cycle.
     enum SemanticColor {
-        public static let statusRunning   = Color(.sRGB, red: 0.20, green: 0.78, blue: 0.35, opacity: 1.0)
-        public static let statusScheduled = Color(.sRGB, red: 0.00, green: 0.48, blue: 1.00, opacity: 1.0)
-        public static let statusFailed    = Color(.sRGB, red: 1.00, green: 0.23, blue: 0.19, opacity: 1.0)
-        public static let statusIdle      = Color(.sRGB, red: 0.56, green: 0.56, blue: 0.58, opacity: 1.0)
+        public static let statusRunning   = Color(.systemGreen)
+        public static let statusScheduled = Color(.systemBlue)
+        public static let statusFailed    = Color(.systemRed)
+        public static let statusIdle      = Color(.systemGray)
     }
 
     /// Per-source bucket palette. Names per AC-F-08 (`source<Bucket>`,

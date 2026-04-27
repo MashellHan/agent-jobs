@@ -122,7 +122,7 @@ struct DashboardView: View {
 
     private var sidebar: some View {
         List(selection: $categoryFilter) {
-            Section("Filters") {
+            Section {
                 HStack {
                     Label("All", systemImage: "tray.full")
                     Spacer()
@@ -131,6 +131,13 @@ struct DashboardView: View {
                         .foregroundStyle(.secondary)
                 }
                 .tag(Optional<ServiceSource.Category>.none)
+            } header: {
+                // T-020: sidebar "Filters" header band heightens to 40pt
+                // so its top edge aligns with the bucket-strip's top edge
+                // (architect's option (b) per architecture §1.3).
+                Text("Filters")
+                    .frame(minHeight: DashboardWindowConfig.sidebarHeaderHeight,
+                           alignment: .leading)
             }
             Section("Categories") {
                 ForEach(ServiceSource.Category.allCases, id: \.self) { cat in
@@ -241,6 +248,8 @@ struct DashboardView: View {
                             onUnhide: { svc in Task { await registry.unhide(svc.id) } }
                         )
                     }
+                    .width(min: DashboardWindowConfig.nameColumnMinWidth,
+                           ideal: DashboardWindowConfig.nameColumnIdealWidth)
                     TableColumn("Status") { svc in StatusBadge(status: svc.status) }
                         .width(min: 70, ideal: 90)
                     TableColumn("Schedule") { svc in
@@ -274,6 +283,7 @@ struct DashboardView: View {
                         Text(svc.lastRun.map { $0.formatted(.relative(presentation: .named)) } ?? "—")
                             .foregroundStyle(.secondary)
                     }
+                    .width(min: 100, ideal: 120)
                 }
                 .tableStyle(.inset(alternatesRowBackgrounds: true))
             }

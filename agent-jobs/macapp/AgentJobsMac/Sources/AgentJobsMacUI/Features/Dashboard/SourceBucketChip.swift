@@ -37,7 +37,7 @@ struct SourceBucketChip: View {
                 if errorMessage != nil {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .imageScale(.small)
-                        .foregroundStyle(DesignTokens.StatusColor.failed)
+                        .foregroundStyle(DesignTokens.SemanticColor.statusFailed)
                         .accessibilityHidden(true)
                 }
             }
@@ -80,21 +80,34 @@ struct SourceBucketChip: View {
     }
 
     private var background: Color {
-        if isSelected { return Color.accentColor.opacity(0.20) }
-        if isHovered  { return Color.primary.opacity(0.06) }
+        if isSelected { return bucketTint.opacity(0.20) }
+        if isHovered  { return bucketTint.opacity(0.10) }
         return Color.primary.opacity(0.03)
     }
 
     private var foreground: Color {
-        if isSelected { return Color.accentColor }
+        if isSelected { return bucketTint }
         if count == 0 { return .secondary }
         return .primary
     }
 
     private var iconStyle: Color {
-        if isSelected { return Color.accentColor }
+        if isSelected { return bucketTint }
         if count == 0 { return .secondary }
         return .secondary
+    }
+
+    /// M07 T-T01: per-bucket source tint pulled from
+    /// `DesignTokens.SourceColor` — replaces the M06 accentColor-only
+    /// selection styling with a bucket-coded palette.
+    private var bucketTint: Color {
+        switch bucket {
+        case .registered:      return DesignTokens.SourceColor.registered
+        case .claudeScheduled: return DesignTokens.SourceColor.claudeSched
+        case .claudeSession:   return DesignTokens.SourceColor.claudeLoop
+        case .launchd:         return DesignTokens.SourceColor.launchd
+        case .liveProcess:     return DesignTokens.SourceColor.liveProc
+        }
     }
 }
 

@@ -36,12 +36,12 @@ struct StatusBadge: View {
     }
     private var color: Color {
         switch status {
-        case .running:   return DesignTokens.StatusColor.running
-        case .scheduled: return DesignTokens.StatusColor.scheduled
-        case .failed:    return DesignTokens.StatusColor.failed
+        case .running:   return DesignTokens.SemanticColor.statusRunning
+        case .scheduled: return DesignTokens.SemanticColor.statusScheduled
+        case .failed:    return DesignTokens.SemanticColor.statusFailed
         case .paused:    return DesignTokens.StatusColor.paused
         case .done:      return DesignTokens.StatusColor.done
-        case .idle:      return DesignTokens.StatusColor.idle
+        case .idle:      return DesignTokens.SemanticColor.statusIdle
         default:         return DesignTokens.StatusColor.unknown
         }
     }

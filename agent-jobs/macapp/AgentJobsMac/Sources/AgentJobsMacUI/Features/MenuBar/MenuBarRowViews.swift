@@ -47,7 +47,7 @@ struct MenuBarRichRow: View {
             statusPill
             VStack(alignment: .leading, spacing: 1) {
                 Text(formatted.title)
-                    .font(.system(.body, weight: .medium))
+                    .font(DesignTokens.Typography.body.weight(.medium))
                     .lineLimit(1)
                 Text(formatted.summary)
                     .font(DesignTokens.Typography.monoSmall)
@@ -92,9 +92,9 @@ struct MenuBarRichRow: View {
 
     private var statusColor: Color {
         switch service.status {
-        case .running:   return DesignTokens.StatusColor.running
-        case .scheduled: return DesignTokens.StatusColor.scheduled
-        case .failed:    return DesignTokens.StatusColor.failed
+        case .running:   return DesignTokens.SemanticColor.statusRunning
+        case .scheduled: return DesignTokens.SemanticColor.statusScheduled
+        case .failed:    return DesignTokens.SemanticColor.statusFailed
         case .paused:    return DesignTokens.StatusColor.paused
         case .done:      return DesignTokens.StatusColor.done
         default:         return DesignTokens.StatusColor.unknown
