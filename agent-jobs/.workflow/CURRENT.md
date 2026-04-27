@@ -1,20 +1,20 @@
 ---
 milestone: M06
-phase: IMPLEMENTING
+phase: REVIEWING
 cycle: 1
-owner: implementer
-lock_acquired_at: 2026-04-27T06:22:00Z
-lock_expires_at: 2026-04-27T07:22:00Z
-last_transition: 2026-04-27T20:15:00Z
-last_actor: architect
+owner: null
+lock_acquired_at: null
+lock_expires_at: null
+last_transition: 2026-04-27T21:30:00Z
+last_actor: implementer
 ---
 
 # Current Workflow State
 
 **Milestone:** M06 — Information Architecture
-**Phase:** IMPLEMENTING
+**Phase:** REVIEWING
 **Cycle:** 1
-**Owner:** none — implementer pick up
+**Owner:** none — reviewer pick up
 
 ## Phase History (workflow-wide)
 - M01 SHIPPED 2026-04-24T00:30:00Z
@@ -26,6 +26,7 @@ last_actor: architect
 - M05 RETRO complete (zero new evolutions; E001/E002 settled; 3 watch-list items)
 - M06 SPECCING complete 2026-04-27T19:45:00Z (pm) — spec/acceptance/competitive-analysis written; T-014 sequenced as gating task #1
 - M06 ARCHITECTING complete 2026-04-27T20:15:00Z (architect) — architecture.md + tasks.md written; T-014 is task #1; WL-2 pre-committed to split before T-002 rewrite; WL-3 demotes `ProviderDiagnostics` to internal via new `DiagnosticsBearing` protocol; popover grouping lives in view layer (pure `PopoverGrouping` helper), not view model.
+- M06 IMPLEMENTING cycle-1 complete 2026-04-27T21:30:00Z (implementer) — all 9 tasks landed in 8 commits; tests 317 → 332 (+15); AgentJobsMacUI.swift 504 LOC (<600); 10/10 m06 baselines fresh + 10/10 byte-stable; ProviderDiagnostics demoted to internal; implementer self-check 19/19 functional+visual ACs pass, 7 design ACs deferred to ui-critic.
 
 ## M06 priorities (architect should respect)
 **This is the first milestone with ui-critic in ENFORCING mode** (per PROTOCOL.md §UI-CRITIC). UI quality issues found in critique can REJECT the milestone back to IMPLEMENTING.
@@ -48,4 +49,4 @@ last_actor: architect
 - Capture-all scenarios MUST be regenerated at new sizes (popover ≥480pt, dashboard 1280x800). M05 baselines do not transfer.
 
 ## Next
-- implementer: read `m06/architecture.md` + `m06/tasks.md`. Execute tasks 1-9 in order. T-014 (Task 1) is BLOCKING — verify renderer fix produces non-blank dashboard tables and full dark frames before proceeding to any other task. Commit per task. After Task 9, set `phase: REVIEWING`, `owner: null`, append phase-history line.
+- reviewer: code-review the M06 IMPL cycle-1 commit range. Confirm each task commit honors its scope; flag any architecture deviation. See `.workflow/m06/impl-cycle-001.md` for tasks completed, deviations, and AC self-check. After review either advance to TESTING (if pass) or send back to IMPLEMENTING with findings.
