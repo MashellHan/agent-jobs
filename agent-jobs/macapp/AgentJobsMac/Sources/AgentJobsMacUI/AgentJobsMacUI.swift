@@ -490,6 +490,41 @@ public enum HarnessScenes {
                 .frame(width: size.width, height: size.height)
         )
     }
+
+    /// M07 / Task-4: drives the new icon-only scenarios (01/11/12/13).
+    /// `idle` ≡ `MenuBarSummary.empty`; `running(n)` synthesises a
+    /// summary with `running = n` and zeros elsewhere so the badge
+    /// branch under test (no badge / 1..9 / "9+") is the sole variable.
+    public enum IconState: Sendable, Hashable {
+        case idle
+        case running(Int)
+    }
+
+    /// Renders `MenuBarLabel` framed at the macOS status-item bounding
+    /// box (22×22). Architecture §3.2.
+    public static func menuBarIconOnly(state: IconState) -> AnyView {
+        let summary: MenuBarSummary
+        switch state {
+        case .idle:
+            summary = .empty
+        case .running(let n):
+            summary = MenuBarSummary(running: n, scheduled: 0, failed: 0, totalMemoryBytes: 0)
+        }
+        return AnyView(
+            MenuBarLabel(state: summary)
+                .frame(width: 22, height: 22)
+                .padding(0)
+        )
+    }
+
+    /// Renders the M07 token specimen — color swatches, type-scale,
+    /// spacing ruler. Architecture §3.2 / scenario 14.
+    public static func tokensSwatch(size: CGSize = CGSize(width: 800, height: 600)) -> AnyView {
+        AnyView(
+            TokensSwatchView()
+                .frame(width: size.width, height: size.height)
+        )
+    }
 }
 
 @MainActor
