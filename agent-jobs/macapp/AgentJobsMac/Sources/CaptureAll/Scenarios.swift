@@ -29,7 +29,7 @@ enum Scenarios {
             name: "01-menubar-popover-light",
             kind: .popover,
             appearance: .aqua,
-            size: CGSize(width: 360, height: 520),
+            size: CGSize(width: 480, height: 520),
             datasetTag: "fixtures.populated.v1",
             buildViewModel: { populatedViewModel() },
             buildView: { vm in HarnessScenes.menuBarPopover(viewModel: vm) }
@@ -39,7 +39,7 @@ enum Scenarios {
             name: "02-menubar-popover-dark",
             kind: .popover,
             appearance: .darkAqua,
-            size: CGSize(width: 360, height: 520),
+            size: CGSize(width: 480, height: 520),
             datasetTag: "fixtures.populated.v1",
             buildViewModel: { populatedViewModel() },
             buildView: { vm in HarnessScenes.menuBarPopover(viewModel: vm) }
@@ -49,7 +49,7 @@ enum Scenarios {
             name: "03-menubar-popover-empty-light",
             kind: .popover,
             appearance: .aqua,
-            size: CGSize(width: 360, height: 360),
+            size: CGSize(width: 480, height: 360),
             datasetTag: "fixtures.empty.v1",
             buildViewModel: { emptyViewModel() },
             buildView: { vm in HarnessScenes.menuBarPopover(viewModel: vm) }
@@ -130,7 +130,7 @@ enum Scenarios {
             name: "10-menubar-popover-with-failure-light",
             kind: .popover,
             appearance: .aqua,
-            size: CGSize(width: 360, height: 520),
+            size: CGSize(width: 480, height: 520),
             datasetTag: "fixtures.with-failure.v1",
             buildViewModel: { populatedViewModelWithFailure() },
             buildView: { vm in HarnessScenes.menuBarPopover(viewModel: vm) }

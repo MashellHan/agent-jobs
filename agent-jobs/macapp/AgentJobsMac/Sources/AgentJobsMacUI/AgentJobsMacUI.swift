@@ -15,7 +15,6 @@ public struct AgentJobsAppScene: Scene {
         MenuBarExtra {
             MenuBarPopoverView()
                 .environment(registry)
-                .frame(width: 360)
                 .task { await registry.startWatchers() }
         } label: {
             MenuBarLabel(state: registry.summary)
@@ -468,8 +467,13 @@ public struct MenuBarSummary: Sendable, Hashable {
 
 @MainActor
 public enum HarnessScenes {
+    /// Default popover width. Mirrors `MenuBarPopoverView.popoverWidth`
+    /// (kept literal here because the inner type is internal and SPM
+    /// forbids referencing internal symbols from a public default arg).
+    public static let defaultPopoverWidth: CGFloat = 480
+
     public static func menuBarPopover(viewModel: ServiceRegistryViewModel,
-                                      width: CGFloat = 360) -> AnyView {
+                                      width: CGFloat = HarnessScenes.defaultPopoverWidth) -> AnyView {
         AnyView(
             MenuBarPopoverView()
                 .environment(viewModel)

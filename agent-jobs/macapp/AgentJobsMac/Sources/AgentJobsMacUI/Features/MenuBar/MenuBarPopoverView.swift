@@ -2,20 +2,24 @@ import SwiftUI
 import AppKit
 import AgentJobsCore
 
-/// The menubar popover. Aggregates the discovery view model into a compact
+/// The menubar popover. Aggregates the discovery view model into a 480pt
 /// layout: header → summary strip → optional error banner →
-/// scrollable section list (Active Now, Scheduled Soon) → footer.
+/// scrollable status-grouped list → footer.
 ///
-/// Reusable atoms (`SummaryChip`, `MemoryBadge`, `HoverableIconButton`,
-/// `ErrorBanner`, `ServiceRowCompact`, `EmptyHintView`, `SkeletonRow`,
-/// `MenuBarLabel`) live in `Sources/AgentJobsMacUI/Components/` so this
-/// file only owns the popover composition.
-///
-/// M06 / WL-2: split out of `MenuBarViews.swift` to clear room for the
-/// rich-row + grouping rewrite without bloating any one file past 600 LOC.
+/// M06 / T-002: width raised 360 → 480 (own its own .frame so the harness
+/// and production stay in sync); rows are now `MenuBarRichRow` (status
+/// pill + title + summary + conditional trailing slot); list is grouped
+/// by status via `PopoverGrouping`.
+/// M06 / T-016: failed rows expose `RetryAffordance` (calls
+/// `registry.refresh()` — global refresh is the M06 retry semantic per
+/// architecture §3.6).
 struct MenuBarPopoverView: View {
     @Environment(ServiceRegistryViewModel.self) private var registry
     @Environment(\.openWindow) private var openWindow
+
+    /// AC-F-04: ≥ 480. Owned here so the popover width is the same in
+    /// production (`MenuBarExtra` content) and the visual harness.
+    static let popoverWidth: CGFloat = 480
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -29,16 +33,32 @@ struct MenuBarPopoverView: View {
             Divider()
             ScrollView {
                 VStack(alignment: .leading, spacing: DesignTokens.Spacing.l) {
-                    section(title: "Active Now", services: activeServices,
-                            emptyMessage: "No services running right now.")
-                    section(title: "Scheduled Soon", services: upcomingServices,
-                            emptyMessage: "Nothing scheduled in the next hour.")
+                    if registry.phase == .loading && registry.services.isEmpty {
+                        loadingSkeleton
+                    } else if registry.services.isEmpty {
+                        EmptyHintView(message: "No services discovered yet.")
+                            .padding(.horizontal, DesignTokens.Spacing.m)
+                    } else {
+                        ForEach(groupedServices, id: \.group.id) { entry in
+                            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
+                                PopoverGroupHeader(group: entry.group, count: entry.services.count)
+                                ForEach(entry.services) { svc in
+                                    MenuBarRichRow(
+                                        service: svc,
+                                        onRetry: retryClosure(for: svc)
+                                    )
+                                    .padding(.horizontal, DesignTokens.Spacing.s)
+                                }
+                            }
+                        }
+                    }
                 }
                 .padding(.vertical, DesignTokens.Spacing.s)
             }
             Divider()
             footer
         }
+        .frame(width: Self.popoverWidth)
         // design-003 Top-3 #1 (D-popover-material): blends popover with the
         // desktop wallpaper instead of rendering against the OS default flat
         // background — matches Raycast / Things and adapts to dark mode for
@@ -50,6 +70,30 @@ struct MenuBarPopoverView: View {
             registry.popoverOpen = true
         }
         .onDisappear { registry.popoverOpen = false }
+    }
+
+    /// AC-F-12 / T-016: only `.failed` rows surface a Retry closure. M06
+    /// retry semantic is "trigger a global refresh" (per architecture §3.6
+    /// — per-service retry is out of scope).
+    private func retryClosure(for svc: Service) -> ((Service) -> Void)? {
+        guard svc.status == .failed else { return nil }
+        return { _ in Task { await registry.refresh() } }
+    }
+
+    private var groupedServices: [(group: PopoverGrouping.StatusGroup, services: [Service])] {
+        // Cap each group to 8 to keep the popover scrollable but bounded —
+        // matches the M05 prefix(8) ceiling on the prior section view.
+        PopoverGrouping.groupByStatus(registry.services).map { entry in
+            (entry.group, Array(entry.services.prefix(8)))
+        }
+    }
+
+    private var loadingSkeleton: some View {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
+            ForEach(0..<3, id: \.self) { _ in
+                SkeletonRow().padding(.horizontal, DesignTokens.Spacing.s)
+            }
+        }
     }
 
     private var header: some View {
