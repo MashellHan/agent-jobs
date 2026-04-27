@@ -30,6 +30,7 @@ struct SourceBucketChip: View {
                     .foregroundStyle(iconStyle)
                 Text(bucket.displayName)
                     .font(DesignTokens.Typography.caption)
+                    .fixedSize()
                 Text("\(count)")
                     .font(DesignTokens.Typography.monoSmall)
                     .foregroundStyle(.secondary)
@@ -40,12 +41,14 @@ struct SourceBucketChip: View {
                         .accessibilityHidden(true)
                 }
             }
+            .fixedSize(horizontal: true, vertical: false)
             .padding(.horizontal, DesignTokens.Spacing.s)
             .padding(.vertical, DesignTokens.Spacing.xs)
             .background(background, in: Capsule())
             .foregroundStyle(foreground)
         }
         .buttonStyle(.plain)
+        .opacity(zeroStateOpacity)
         .onHover { isHovered = $0 }
         .animation(.easeOut(duration: 0.12), value: isSelected)
         .animation(.easeOut(duration: 0.12), value: isHovered)
@@ -54,10 +57,22 @@ struct SourceBucketChip: View {
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
+    /// AC-F-11: 0-count chip is dimmed (≤ 0.6) so the user reads
+    /// "nothing here" before they read the chip text.
+    private var zeroStateOpacity: Double {
+        (count == 0 && !isSelected) ? 0.55 : 1.0
+    }
+
     private var helpText: String {
-        let base = isSelected
-            ? "Showing only \(bucket.displayName). Click to clear filter."
-            : "Filter to \(bucket.displayName) services."
+        let base: String
+        if count == 0 {
+            // T-008: surface the "why is this 0" explanation.
+            base = bucket.emptyExplanation
+        } else if isSelected {
+            base = "Showing only \(bucket.displayName). Click to clear filter."
+        } else {
+            base = "Filter to \(bucket.displayName) services."
+        }
         if let err = errorMessage, !err.isEmpty {
             return "\(err)\n\n\(base)"
         }
@@ -80,5 +95,27 @@ struct SourceBucketChip: View {
         if isSelected { return Color.accentColor }
         if count == 0 { return .secondary }
         return .secondary
+    }
+}
+
+// MARK: - T-008 zero-state explanations
+
+private extension ServiceSource.Bucket {
+    /// Tooltip body shown when the chip's count is 0 — explains where the
+    /// provider looks so the user knows whether the empty state is
+    /// configurable or expected. T-008 / AC-F-11.
+    var emptyExplanation: String {
+        switch self {
+        case .registered:
+            return "No registered services in agent-jobs.json."
+        case .claudeScheduled:
+            return "No claude-loop crons in ~/.claude/projects/."
+        case .claudeSession:
+            return "No active Claude sessions found."
+        case .launchd:
+            return "No matching launchd user agents."
+        case .liveProcess:
+            return "No live processes match the discovery filter."
+        }
     }
 }

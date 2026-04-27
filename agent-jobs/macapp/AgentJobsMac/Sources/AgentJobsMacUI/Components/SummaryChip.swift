@@ -10,8 +10,9 @@ struct SummaryChip: View {
     var body: some View {
         HStack(spacing: DesignTokens.Spacing.xs) {
             Image(systemName: icon).foregroundStyle(color).imageScale(.small)
-            Text(label).font(DesignTokens.Typography.caption)
+            Text(label).font(DesignTokens.Typography.caption).fixedSize()
         }
+        .fixedSize(horizontal: true, vertical: false)
         .padding(.horizontal, DesignTokens.Spacing.s)
         .padding(.vertical, DesignTokens.Spacing.xxs)
         .background(color.opacity(0.12), in: Capsule())

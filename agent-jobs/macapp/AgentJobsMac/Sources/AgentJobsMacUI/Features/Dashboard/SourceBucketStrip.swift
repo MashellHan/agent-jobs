@@ -15,19 +15,28 @@ struct SourceBucketStrip: View {
     var errorByBucket: [ServiceSource.Bucket: String] = [:]
 
     var body: some View {
-        HStack(spacing: DesignTokens.Spacing.xs) {
-            ForEach(ServiceSource.Bucket.allCases, id: \.self) { bucket in
-                SourceBucketChip(
-                    bucket: bucket,
-                    count: count(for: bucket),
-                    isSelected: selection == bucket,
-                    errorMessage: errorByBucket[bucket]
-                ) {
-                    selection = (selection == bucket) ? nil : bucket
+        // T-015: wrap chips in horizontal ScrollView so the harness/narrow
+        // widths can't squeeze chips into a vertical stripe. Total label
+        // pinned outside the scroll region so it stays one-line readable.
+        HStack(spacing: DesignTokens.Spacing.s) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: DesignTokens.Spacing.xs) {
+                    ForEach(ServiceSource.Bucket.allCases, id: \.self) { bucket in
+                        SourceBucketChip(
+                            bucket: bucket,
+                            count: count(for: bucket),
+                            isSelected: selection == bucket,
+                            errorMessage: errorByBucket[bucket]
+                        ) {
+                            selection = (selection == bucket) ? nil : bucket
+                        }
+                    }
                 }
+                .fixedSize(horizontal: true, vertical: false)
+                .padding(.vertical, 1) // Give Capsule shadows room without clipping
             }
-            Spacer(minLength: DesignTokens.Spacing.s)
             totalLabel
+                .fixedSize(horizontal: true, vertical: false)
         }
         .padding(.horizontal, DesignTokens.Spacing.m)
         .padding(.vertical, DesignTokens.Spacing.s)
