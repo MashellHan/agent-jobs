@@ -118,7 +118,7 @@ Package surgery (T01) lands first so every subsequent task builds against the ri
 - **Acceptance:** AC-V-01 (popover baselines show friendly titles within 1%), AC-V-02 (CPU%/RSS populated), AC-V-04 (inspector header), AC-F-11 (refresh tick merges metrics), AC-F-14 (tooltip).
 - **Estimated diff size:** M
 
-## T10 — `scripts/ui-critic-smoke.sh` + ui-critic plumbing checks
+## T10 — `scripts/ui-critic-smoke.sh` + ui-critic plumbing checks [DONE]
 
 - **Files:**
   - `scripts/ui-critic-smoke.sh` (new — runs `cd macapp/AgentJobsMac && swift run capture-all --out .workflow/m05/screenshots/critique/`; asserts 20 files; exits 0/1)
