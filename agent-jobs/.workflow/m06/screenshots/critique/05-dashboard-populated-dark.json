@@ -1,0 +1,16 @@
+{
+  "appCommit" : "4998988",
+  "capturedAt" : "2026-04-27T06:46:20.848Z",
+  "colorScheme" : "dark",
+  "datasetHash" : "fixtures.populated.v1",
+  "kind" : "dashboard",
+  "metadata" : {
+    "colorScheme" : "dark",
+    "datasetHash" : "fixtures.populated.v1",
+    "viewportHeight" : "800",
+    "viewportWidth" : "1280"
+  },
+  "osVersion" : "15.7.5",
+  "pngBasename" : "05-dashboard-populated-dark.png",
+  "scenarioName" : "05-dashboard-populated-dark"
+}

@@ -1,0 +1,16 @@
+{
+  "appCommit" : "4998988",
+  "capturedAt" : "2026-04-27T06:46:21.658Z",
+  "colorScheme" : "light",
+  "datasetHash" : "fixtures.populated.v1",
+  "kind" : "dashboard",
+  "metadata" : {
+    "colorScheme" : "light",
+    "datasetHash" : "fixtures.populated.v1",
+    "viewportHeight" : "700",
+    "viewportWidth" : "1024"
+  },
+  "osVersion" : "15.7.5",
+  "pngBasename" : "09-dashboard-narrow-light.png",
+  "scenarioName" : "09-dashboard-narrow-light"
+}
