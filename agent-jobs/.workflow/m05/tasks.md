@@ -127,7 +127,7 @@ Package surgery (T01) lands first so every subsequent task builds against the ri
 - **Acceptance:** AC-UC-01 (smoke runs the documented command, exits 0, all 10 PNGs present), AC-UC-02 (each `.json` parses, scenarioName matches `01-…` prefix, colorScheme valid).
 - **Estimated diff size:** S
 
-## T11 — `PROTOCOL.md`: add UI-CRITIC phase to state machine
+## T11 — `PROTOCOL.md`: add UI-CRITIC phase to state machine [DONE]
 
 - **Files:**
   - `.workflow/PROTOCOL.md` (edit — add `UI-CRITIC` between `TESTING` and `ACCEPTED` in the diagram; add row to "Agent ↔ Phase Mapping" table; add ui-critic lock TTL note: 60 min)

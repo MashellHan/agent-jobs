@@ -5,21 +5,23 @@
 ## Phase State Machine
 
 ```
-SPECCING ─▶ ARCHITECTING ─▶ IMPLEMENTING ─▶ REVIEWING ─▶ TESTING ─▶ ACCEPTED
-   │             │               ▲              │            │          │
-   │             │               └──────────────┘            │          │
-   │             │            (review found issues)          │          │
-   │             │                                            │          │
-   │             │                                            ▼          │
-   │             └────────── (arch needs revision) ─── back to ARCH       │
-   │                                                                      │
-   └────── (PM milestone change) ────────────────────────────────────────▶│
-                                                                          ▼
-                                                              RETROSPECTIVE
-                                                                          │
-                                                                          ▼
-                                                                NEXT MILESTONE
-                                                                  (or PAUSED)
+SPECCING ─▶ ARCHITECTING ─▶ IMPLEMENTING ─▶ REVIEWING ─▶ TESTING ─▶ UI-CRITIC ─▶ ACCEPTED
+   │             │               ▲              │            │           │            │
+   │             │               └──────────────┘            │           │            │
+   │             │            (review found issues)          │           │            │
+   │             │                                            │           │            │
+   │             │                                            ▼           ▼            │
+   │             └────────── (arch needs revision) ─── back to ARCH       │            │
+   │                                          (test or critic REJECT)     │            │
+   │                                          ──▶ IMPLEMENTING (cycle++) ◀┘            │
+   │                                                                                    │
+   └────── (PM milestone change) ──────────────────────────────────────────────────────▶│
+                                                                                        ▼
+                                                                              RETROSPECTIVE
+                                                                                        │
+                                                                                        ▼
+                                                                              NEXT MILESTONE
+                                                                                (or PAUSED)
 ```
 
 ## Agent ↔ Phase Mapping
@@ -31,6 +33,7 @@ SPECCING ─▶ ARCHITECTING ─▶ IMPLEMENTING ─▶ REVIEWING ─▶ TESTING
 | IMPLEMENTING | `implementer` | tasks, prior review feedback | code + `m{N}/impl-cycle-NNN.md` |
 | REVIEWING | `reviewer` | diff since milestone start, architecture, tasks | `m{N}/review-cycle-NNN.md` |
 | TESTING | `tester` | acceptance criteria, built app | `m{N}/test-cycle-NNN.md` + screenshots/baselines |
+| UI-CRITIC | `ui-critic` | `m{N}/screenshots/critique/` (PNG + JSON sidecars produced by `capture-all`), spec.md UX requirements | `m{N}/ui-review.md` (PASS / REJECT + per-scenario notes); on REJECT, sets `phase: IMPLEMENTING` + cycle++ |
 | ACCEPTED | (none — `/ship` command) | all of m{N} | `m{N}/RELEASED.md`, ROADMAP update |
 | RETROSPECTIVE | `retrospective` | all of m{N} artifacts | `m{N}/retro.md`, `EVOLUTION.md` proposals |
 
@@ -42,7 +45,8 @@ SPECCING ─▶ ARCHITECTING ─▶ IMPLEMENTING ─▶ REVIEWING ─▶ TESTING
 4. **Phase transitions are atomic.** Owner agent's last action is to update CURRENT.md frontmatter (phase + owner=null + lock cleared) in the same tool call as its final artifact write where possible.
 5. **Cycle counter increments on re-entry.** REVIEWING cycle 002 means second time entering REVIEW for this milestone (because IMPL had to redo).
 6. **Agents do NOT modify other agents' artifacts.** Reviewer doesn't edit code. Implementer doesn't edit reviews.
-7. **Tester is a hard gate.** Implementer cannot self-declare TESTING done. Only `tester` can transition TESTING → ACCEPTED.
+7. **Tester is a hard gate.** Implementer cannot self-declare TESTING done. Only `tester` can transition TESTING → UI-CRITIC.
+8. **UI-CRITIC lock TTL is 60 min** (vs 30 min default) — visual review of 10 scenarios takes longer than other phases. M05 ships the harness; the gate runs **advisory** in M05 (PASS/REJECT recorded but does not block ACCEPTED). M06+ enforces the gate (REJECT → IMPLEMENTING with cycle++, per `.workflow/DESIGN.md`).
 
 ## Lock Format (CURRENT.md frontmatter)
 
