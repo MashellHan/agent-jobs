@@ -140,14 +140,14 @@ public enum Snapshot {
         // backgroundColor override would mask SF symbol icon tints in
         // .aqua sidebar rows.
         if isDark {
-            Self.forceAppearance(NSAppearance(named: appearance), on: host)
+            Self.forceDarkAppearance(NSAppearance(named: appearance), on: host)
             host.layoutSubtreeIfNeeded()
             // Third settle pass: let any redraws triggered by the appearance
             // override flush to the layer backing before we cache-display.
             RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.05))
             host.layoutSubtreeIfNeeded()
             // cacheDisplay reuses any cached layer backings. After our
-            // forceAppearance walk those backings still hold the
+            // forceDarkAppearance walk those backings still hold the
             // pre-darkening pixels, so the rendered PNG keeps the light
             // sidebar/inspector chrome. Invalidate every layer so
             // cacheDisplay forces a fresh draw at the new appearance.
@@ -232,7 +232,18 @@ public enum Snapshot {
     /// painting in light material under `.darkAqua`. Pinning each view's
     /// `appearance` directly is the deterministic fix that avoids
     /// activating an offscreen window.
-    private static func forceAppearance(_ appearance: NSAppearance?, on view: NSView) {
+    ///
+    /// **WL-A (M07):** renamed from `forceAppearance` to make the dark-only
+    /// contract explicit at every call site. The precondition traps any
+    /// future caller that hands in a non-dark appearance — the helper's
+    /// scroll/table backgroundColor re-stamping (line ~256) would mask SF
+    /// Symbol icon tints in `.aqua` sidebar rows and break light-mode
+    /// pixel-diff baselines.
+    internal static func forceDarkAppearance(_ appearance: NSAppearance?, on view: NSView) {
+        precondition(
+            appearance?.name == .darkAqua,
+            "forceDarkAppearance must be called with .darkAqua (got \(appearance?.name.rawValue ?? "nil"))"
+        )
         view.appearance = appearance
         if let vfx = view as? NSVisualEffectView {
             // Re-assigning the material kicks the layer to rebuild against
@@ -262,7 +273,7 @@ public enum Snapshot {
         view.needsDisplay = true
         view.needsLayout = true
         for sub in view.subviews {
-            forceAppearance(appearance, on: sub)
+            forceDarkAppearance(appearance, on: sub)
         }
     }
 }

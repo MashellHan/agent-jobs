@@ -81,6 +81,8 @@ swift run capture-all --out .workflow/m{N}/screenshots/critique/
 
 Each `.json` carries: timestamp, app version, OS version, scheme, scenario name, dataset hash. ui-critic uses the metadata to score consistently.
 
+> **Canonical sidecar schema (M07 WL-D):** the impl-side field names are authoritative — `scenarioName`, `appCommit`, `colorScheme`, `viewportWidth`/`viewportHeight`. Earlier proposal-only short forms (`scenario`, `commit`, `scheme`, `width`, `height`) are NOT adopted; do not introduce them in tooling or tests.
+
 ## Layer 3 — `ui-critic` agent
 
 New agent at `.claude/agents/ui-critic.md`. Trigger points:

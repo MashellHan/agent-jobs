@@ -163,40 +163,6 @@ struct MenuBarPopoverView: View {
         .padding(.vertical, DesignTokens.Spacing.s)
     }
 
-    private var activeServices: [Service] {
-        registry.services.filter { $0.status == .running }.prefix(8).map { $0 }
-    }
-
-    private var upcomingServices: [Service] {
-        registry.services
-            .filter { $0.nextRun != nil && $0.status != .running }
-            .sorted { ($0.nextRun ?? .distantFuture) < ($1.nextRun ?? .distantFuture) }
-            .prefix(8).map { $0 }
-    }
-
-    @ViewBuilder
-    private func section(title: String, services: [Service], emptyMessage: String) -> some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-            Text(title)
-                .font(DesignTokens.Typography.caption)
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, DesignTokens.Spacing.m)
-            if registry.phase == .loading && services.isEmpty {
-                ForEach(0..<3, id: \.self) { _ in
-                    SkeletonRow().padding(.horizontal, DesignTokens.Spacing.s)
-                }
-            } else if services.isEmpty {
-                EmptyHintView(message: emptyMessage)
-                    .padding(.horizontal, DesignTokens.Spacing.m)
-            } else {
-                ForEach(services) { svc in
-                    ServiceRowCompact(service: svc)
-                        .padding(.horizontal, DesignTokens.Spacing.s)
-                }
-            }
-        }
-    }
-
     private var footer: some View {
         HStack {
             Button("Open Dashboard") {

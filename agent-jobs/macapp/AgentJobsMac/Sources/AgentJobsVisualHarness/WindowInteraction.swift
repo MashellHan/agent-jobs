@@ -70,8 +70,8 @@ public enum WindowInteraction {
     /// so click-by-row is reserved for future critique scenarios.
     @MainActor
     public static func clickRow(at index: Int) {
-        // Reserved for a follow-up task that targets specific
-        // ServiceRowCompact instances by accessibility identifier.
+        // Reserved for a follow-up task that targets specific row views
+        // (e.g. MenuBarRichRow) by accessibility identifier.
         _ = index
     }
 }

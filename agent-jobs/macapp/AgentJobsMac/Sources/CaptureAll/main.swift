@@ -63,17 +63,32 @@ func runCaptureAll() -> Int32 {
 
     let started = Date()
     var written = 0
+    var unchanged = 0
     for scenario in Scenarios.all {
         do {
             let viewModel = scenario.buildViewModel()
             let view = scenario.buildView(viewModel)
             let png = outDir.appendingPathComponent("\(scenario.name).png")
             let json = outDir.appendingPathComponent("\(scenario.name).json")
-            _ = try Snapshot.write(
+            // WL-B (M07): capture into memory first; if the existing PNG
+            // on disk is byte-identical, skip both the PNG and the
+            // sidecar write so the file mtime stays stable across
+            // back-to-back runs (AC-F-14: byte-stable rerun).
+            let data = try Snapshot.capture(
                 view, size: scenario.size,
-                appearance: scenario.appearance,
-                to: png
+                appearance: scenario.appearance
             )
+            let existing = (try? Data(contentsOf: png))
+            if existing == data {
+                unchanged += 1
+                print("unchanged: \(scenario.name)")
+                continue
+            }
+            try FileManager.default.createDirectory(
+                at: png.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+            try data.write(to: png)
             let critique = Critique(
                 name: scenario.name,
                 kind: scenario.kind,
@@ -94,7 +109,7 @@ func runCaptureAll() -> Int32 {
         }
     }
     let elapsed = Date().timeIntervalSince(started)
-    print("done: \(written) scenario(s) in \(String(format: "%.2f", elapsed))s → \(outDir.path)")
+    print("done: \(written) captured, \(unchanged) unchanged in \(String(format: "%.2f", elapsed))s → \(outDir.path)")
     return 0
 }
 
