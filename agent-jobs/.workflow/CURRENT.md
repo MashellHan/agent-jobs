@@ -1,20 +1,20 @@
 ---
 milestone: M05
-phase: ARCHITECTING
+phase: IMPLEMENTING
 cycle: 1
 owner: null
 lock_acquired_at: null
 lock_expires_at: null
-last_transition: 2026-04-24T13:30:00Z
-last_actor: pm
+last_transition: 2026-04-24T13:55:00Z
+last_actor: architect
 ---
 
 # Current Workflow State
 
 **Milestone:** M05 — Content fidelity + Visual Harness library
-**Phase:** ARCHITECTING
+**Phase:** IMPLEMENTING
 **Cycle:** 1
-**Owner:** none — architect pick up
+**Owner:** none — implementer pick up
 
 ## Phase History (workflow-wide)
 - M01 SHIPPED 2026-04-24T00:30:00Z
@@ -24,6 +24,7 @@ last_actor: pm
 - M04 SHIPPED 2026-04-24T12:55:00Z
 - 2026-04-27: roadmap reshape — visual harness promoted to first-class pillar; ui-critic agent added; 8 design tickets filed (6 P0)
 - 2026-04-24T13:30:00Z: M05 SPECCING → ARCHITECTING (pm; spec + acceptance + competitive analysis + T-004 root cause written)
+- 2026-04-24T13:55:00Z: M05 ARCHITECTING → IMPLEMENTING (architect; architecture.md + tasks.md written, 11 tasks planned)
 
 ## M05 priorities (PM should respect)
 **This is the first milestone under the new UI-quality regime.** Read `.workflow/DESIGN.md` and `.workflow/DESIGN-TICKETS.md` BEFORE writing the spec.
@@ -40,5 +41,13 @@ Four bundled deliverables:
 - `LiveResourceSampler` must NOT block the main thread; use background task + actor.
 - No `~/.agent-jobs/` writes from tests (carry over E001/E002 + WatchPaths discipline).
 
+## Architecture summary (architect → implementer handoff)
+
+- **Package surgery is T01 and lands first.** `AgentJobsMac` executable splits into `AgentJobsMacUI` (library) + `AgentJobsMacApp` (thin executable). Two new targets: `AgentJobsVisualHarness` (library) + `CaptureAll` (executable). Test imports update from `AgentJobsMac` → `AgentJobsMacUI`.
+- **PM Q1 resolved:** keep 5 buckets; collapse placeholder mappings to `fatalError` so the model is honest. AC-F-13 enforces.
+- **PM Q2 resolved:** `capture-all` is a separate executable target.
+- **PM Q3 resolved:** sampler invoked inside the existing refresh tick; visibility-pause inherited transitively (no new subscription).
+- 11 tasks. Every AC mapped. Each task ≤ 150 LOC.
+
 ## Next
-- architect: read `.workflow/m05/spec.md` + `acceptance.md` + `competitive-analysis.md`. PM left 3 open questions in spec.md §"Open questions for architect" — resolve before writing tasks.md. T-004 root cause is pre-investigated in spec.md §"Root cause" — do NOT re-investigate; design the fix.
+- implementer: read `.workflow/m05/architecture.md` + `.workflow/m05/tasks.md`. Start with T01 (package surgery) before anything else — it gates the rest. swift-testing per E002. Spec budgets gated by `AGENTJOBS_PERF=1` per E001.
