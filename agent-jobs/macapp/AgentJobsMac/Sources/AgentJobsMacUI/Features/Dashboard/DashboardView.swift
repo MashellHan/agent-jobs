@@ -20,7 +20,11 @@ struct DashboardView: View {
             sidebar
         } content: {
             VStack(spacing: 0) {
-                SourceBucketStrip(services: registry.services, selection: $bucketFilter)
+                SourceBucketStrip(
+                    services: registry.services,
+                    selection: $bucketFilter,
+                    errorByBucket: registry.errorByBucket
+                )
                 Divider()
                 serviceTable
             }
@@ -290,13 +294,18 @@ struct ServiceInspector: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+        let formatted = ServiceFormatter.format(service)
+        return VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
             HStack {
                 Image(systemName: service.source.category.sfSymbol)
-                Text(service.name).font(DesignTokens.Typography.title)
+                Text(formatted.title).font(DesignTokens.Typography.title)
                 Spacer()
                 StatusBadge(status: service.status)
             }
+            Text(formatted.summary)
+                .font(DesignTokens.Typography.monoSmall)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
             // design-003 Top-3 #2 / D-M3: quiet provenance subtitle so users
             // immediately see WHERE the service comes from and which project
             // owns it. Both fields are already in the Service model — just

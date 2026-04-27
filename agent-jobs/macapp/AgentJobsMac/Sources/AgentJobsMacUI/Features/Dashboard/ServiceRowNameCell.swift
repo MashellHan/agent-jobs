@@ -15,11 +15,19 @@ struct ServiceRowNameCell: View {
 
     @State private var isHovered = false
 
+    private var formatted: FormattedService { ServiceFormatter.format(service) }
+
     var body: some View {
         HStack(spacing: DesignTokens.Spacing.xs) {
             Image(systemName: service.source.category.sfSymbol)
                 .foregroundStyle(.secondary)
-            Text(service.name)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(formatted.title)
+                Text(formatted.summary)
+                    .font(DesignTokens.Typography.monoSmall)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
             Spacer(minLength: DesignTokens.Spacing.s)
             if showActions {
                 RowActionStack(

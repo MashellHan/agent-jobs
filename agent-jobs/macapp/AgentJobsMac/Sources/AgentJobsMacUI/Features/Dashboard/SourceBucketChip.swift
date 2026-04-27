@@ -13,6 +13,11 @@ struct SourceBucketChip: View {
     let bucket: ServiceSource.Bucket
     let count: Int
     let isSelected: Bool
+    /// AC-F-14 / M05 T09: short per-bucket error string surfaced from
+    /// `ServiceRegistryViewModel.errorByBucket`. When non-nil, the chip
+    /// shows a small warning glyph and prepends the message to its
+    /// help-tooltip text. `nil` ≡ "OK".
+    var errorMessage: String? = nil
     let action: () -> Void
 
     @State private var isHovered = false
@@ -28,6 +33,12 @@ struct SourceBucketChip: View {
                 Text("\(count)")
                     .font(DesignTokens.Typography.monoSmall)
                     .foregroundStyle(.secondary)
+                if errorMessage != nil {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .imageScale(.small)
+                        .foregroundStyle(DesignTokens.StatusColor.failed)
+                        .accessibilityHidden(true)
+                }
             }
             .padding(.horizontal, DesignTokens.Spacing.s)
             .padding(.vertical, DesignTokens.Spacing.xs)
@@ -44,9 +55,13 @@ struct SourceBucketChip: View {
     }
 
     private var helpText: String {
-        isSelected
+        let base = isSelected
             ? "Showing only \(bucket.displayName). Click to clear filter."
             : "Filter to \(bucket.displayName) services."
+        if let err = errorMessage, !err.isEmpty {
+            return "\(err)\n\n\(base)"
+        }
+        return base
     }
 
     private var background: Color {

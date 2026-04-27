@@ -2,19 +2,24 @@ import SwiftUI
 import AgentJobsCore
 
 /// Single-row dense representation of a Service used inside the menubar
-/// popover sections. Hover-highlights, shows a status dot + name + schedule
-/// + (cpu, memory) cluster.
+/// popover sections. Hover-highlights, shows a status dot + friendly title +
+/// 1-line summary + (cpu, memory) cluster.
+///
+/// M05 T09: title + secondary text now flow through `ServiceFormatter` so
+/// the user sees "iMessage" / "every 15m" instead of the raw
+/// `application.com.apple.MobileSMS.115xxx` label.
 struct ServiceRowCompact: View {
     let service: Service
     @State private var isHovered = false
+    private var formatted: FormattedService { ServiceFormatter.format(service) }
     var body: some View {
         HStack(spacing: DesignTokens.Spacing.s) {
             statusDot
             VStack(alignment: .leading, spacing: 1) {
-                Text(service.name)
+                Text(formatted.title)
                     .font(.system(.body, weight: .medium))
                     .lineLimit(1)
-                Text(service.schedule.humanDescription)
+                Text(formatted.summary)
                     .font(DesignTokens.Typography.monoSmall)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -32,7 +37,7 @@ struct ServiceRowCompact: View {
         .onHover { isHovered = $0 }
         .animation(.easeOut(duration: 0.12), value: isHovered)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(service.name), \(service.status.rawValue), \(service.schedule.humanDescription)")
+        .accessibilityLabel("\(formatted.title), \(service.status.rawValue), \(formatted.summary)")
     }
 
     private var statusDot: some View {

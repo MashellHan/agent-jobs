@@ -104,7 +104,7 @@ Package surgery (T01) lands first so every subsequent task builds against the ri
 - **Acceptance:** AC-F-02 (10 PNG + 10 JSON pairs), AC-V-03 (directory present, files non-empty + valid PNG magic), AC-P-03 (gated < 30 s).
 - **Estimated diff size:** L (≤150 LOC if scenario table is data-driven)
 
-## T09 — Wire `ServiceFormatter` + `LiveResourceSampler` into views; regenerate baselines
+## T09 — Wire `ServiceFormatter` + `LiveResourceSampler` into views; regenerate baselines [DONE]
 
 - **Files:**
   - `Sources/AgentJobsMacUI/AgentJobsMacUI.swift` (instantiate `LiveResourceSampler`; call `sampleAll` after `discoverAllDetailed`; expose `errorByBucket: [Bucket: String]`)

@@ -86,6 +86,9 @@ public final class ServiceRegistryViewModel {
     /// red state (AC-F-09). Non-nil iff the last refresh `allFailed` OR
     /// a watcher install raised an error.
     private(set) var lastRefreshError: String? = nil
+    /// M05 T09 / AC-F-14: per-bucket short error message (one line) shown
+    /// in the SourceBucketChip tooltip. Empty string ≡ "OK".
+    public private(set) var errorByBucket: [ServiceSource.Bucket: String] = [:]
     /// Toggled by MenuBarPopoverView .task / .onDisappear. Read by the
     /// AppKitVisibilityProvider closure to compute the pause predicate.
     var popoverOpen: Bool = false
@@ -94,6 +97,7 @@ public final class ServiceRegistryViewModel {
     private let stopExecutor: any StopExecutor
     private let hiddenStore: HiddenStore?
     private let watchPaths: WatchPaths
+    private let resourceSampler: LiveResourceSampler?
     private var errorClearTasks: [Service.ID: Task<Void, Never>] = [:]
 
     // M04 watcher infrastructure
@@ -107,9 +111,11 @@ public final class ServiceRegistryViewModel {
     public init(registry: ServiceRegistry = .defaultRegistry(),
          stopExecutor: (any StopExecutor)? = nil,
          hiddenStore: HiddenStore? = nil,
-         watchPaths: WatchPaths = .production) {
+         watchPaths: WatchPaths = .production,
+         resourceSampler: LiveResourceSampler? = LiveResourceSampler()) {
         self.registry = registry
         self.watchPaths = watchPaths
+        self.resourceSampler = resourceSampler
         // Avoid constructing RealStopExecutor under AGENTJOBS_TEST=1 — that
         // guard's whole purpose is to catch test wiring that forgot to inject
         // a fake. Production callers pass nil and get the real one.
@@ -145,9 +151,24 @@ public final class ServiceRegistryViewModel {
         let result = await registry.discoverAllDetailed()
         var sorted = result.services.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         sorted = applyOptimisticOverlay(sorted, refreshStartedAt: refreshStartedAt)
+        // M05 T09 / AC-F-11: merge live CPU% + RSS samples in. The
+        // sampler is opt-in (`nil` skips the sampling tick — used by
+        // tests that don't want to invoke proc_pidinfo).
+        if let sampler = resourceSampler {
+            let metrics = await sampler.sampleAll(sorted)
+            sorted = sorted.map { svc in
+                if let m = metrics[svc.id] {
+                    return svc.with(metrics: m)
+                }
+                return svc
+            }
+        }
         services = sorted
         summary = MenuBarSummary.from(services: services)
         lastRefresh = Date()
+        // M05 T09 / AC-F-14: collapse per-provider health into a per-bucket
+        // error string so SourceBucketChip tooltips can read it.
+        errorByBucket = Self.collapseHealth(result.health)
         if result.allFailed {
             phase = .error("All providers failed to respond")
             lastRefreshError = "All providers failed to respond"
@@ -156,6 +177,32 @@ public final class ServiceRegistryViewModel {
             lastRefreshError = nil
         }
         isRefreshing = false
+    }
+
+    /// Map ProviderHealth entries onto the bucket the provider feeds.
+    /// Pure helper so tests can pin the rule.
+    static func collapseHealth(_ health: [ProviderHealth]) -> [ServiceSource.Bucket: String] {
+        var out: [ServiceSource.Bucket: String] = [:]
+        for h in health {
+            guard let bucket = bucket(forProviderId: h.providerId) else { continue }
+            if let err = h.lastError {
+                out[bucket] = String(describing: err)
+            } else if !h.perFileFailures.isEmpty {
+                out[bucket] = "\(h.perFileFailures.count) source file(s) failed to parse"
+            }
+        }
+        return out
+    }
+
+    static func bucket(forProviderId id: String) -> ServiceSource.Bucket? {
+        switch id {
+        case AgentJobsJsonProvider.providerId:           return .registered
+        case ClaudeScheduledTasksProvider.providerId:    return .claudeScheduled
+        case ClaudeSessionCronProvider.providerId:       return .claudeSession
+        case LaunchdUserProvider.providerId:             return .launchd
+        case LsofProcessProvider.providerId:             return .liveProcess
+        default: return nil
+        }
     }
 
     /// Q4 race guard: any service whose flip timestamp is newer than the

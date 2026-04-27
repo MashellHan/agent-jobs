@@ -10,6 +10,9 @@ import AgentJobsCore
 struct SourceBucketStrip: View {
     let services: [Service]
     @Binding var selection: ServiceSource.Bucket?
+    /// AC-F-14: per-bucket short error string (registry-collapsed). Empty
+    /// dictionary ≡ no errors — chips render without the warning glyph.
+    var errorByBucket: [ServiceSource.Bucket: String] = [:]
 
     var body: some View {
         HStack(spacing: DesignTokens.Spacing.xs) {
@@ -17,7 +20,8 @@ struct SourceBucketStrip: View {
                 SourceBucketChip(
                     bucket: bucket,
                     count: count(for: bucket),
-                    isSelected: selection == bucket
+                    isSelected: selection == bucket,
+                    errorMessage: errorByBucket[bucket]
                 ) {
                     selection = (selection == bucket) ? nil : bucket
                 }
