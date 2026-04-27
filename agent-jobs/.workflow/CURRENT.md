@@ -1,20 +1,20 @@
 ---
 milestone: M06
-phase: TESTING
+phase: UI-CRITIC
 cycle: 1
 owner: null
 lock_acquired_at: null
 lock_expires_at: null
-last_transition: 2026-04-27T22:00:00Z
-last_actor: reviewer
+last_transition: 2026-04-27T22:30:00Z
+last_actor: tester
 ---
 
 # Current Workflow State
 
 **Milestone:** M06 — Information Architecture
-**Phase:** TESTING
+**Phase:** UI-CRITIC
 **Cycle:** 1
-**Owner:** none — tester pick up
+**Owner:** none — ui-critic pick up
 
 ## Phase History (workflow-wide)
 - M01 SHIPPED 2026-04-24T00:30:00Z
@@ -28,6 +28,7 @@ last_actor: reviewer
 - M06 ARCHITECTING complete 2026-04-27T20:15:00Z (architect) — architecture.md + tasks.md written; T-014 is task #1; WL-2 pre-committed to split before T-002 rewrite; WL-3 demotes `ProviderDiagnostics` to internal via new `DiagnosticsBearing` protocol; popover grouping lives in view layer (pure `PopoverGrouping` helper), not view model.
 - M06 IMPLEMENTING cycle-1 complete 2026-04-27T21:30:00Z (implementer) — all 9 tasks landed in 8 commits; tests 317 → 332 (+15); AgentJobsMacUI.swift 504 LOC (<600); 10/10 m06 baselines fresh + 10/10 byte-stable; ProviderDiagnostics demoted to internal; implementer self-check 19/19 functional+visual ACs pass, 7 design ACs deferred to ui-critic.
 - M06 REVIEWING cycle-1 complete 2026-04-27T22:00:00Z (reviewer) — verdict PASS-with-nits 89/100; all 19 verifiable functional ACs PASS; build/tests green (332 tests); T-014 harness fix verified (rows render + dark-frame corners luma < 0.3); WL-1/2/3 honored; 4 architect deviations accepted; 7 nits flagged (dead code in MenuBarPopoverView; empty-popover skips includeEmpty:true headers; ServiceRowCompact latent dead) — none blocking; advances to TESTING.
+- M06 TESTING cycle-1 complete 2026-04-27T22:30:00Z (tester) — verdict PASS 19/19 testable ACs (7 AC-D-* deferred to ui-critic); build green, 332 tests pass, capture-all 10/10 byte-stable across two reruns, 10/10 PNGs byte-identical to committed baselines (0% pixel diff vs AC-V-01..05 1% threshold), 4-corner luma on dark scenarios (02/05/08) max 0.141 < 0.3; AC-F-15 sidecar schema delta flagged borderline (semantic intent met; field names diverge from spec wording); empty-popover scenario 03 has no group headers (reviewer Finding #2 carried forward to ui-critic); advances to UI-CRITIC.
 
 ## M06 priorities (architect should respect)
 **This is the first milestone with ui-critic in ENFORCING mode** (per PROTOCOL.md §UI-CRITIC). UI quality issues found in critique can REJECT the milestone back to IMPLEMENTING.
@@ -50,4 +51,4 @@ last_actor: reviewer
 - Capture-all scenarios MUST be regenerated at new sizes (popover ≥480pt, dashboard 1280x800). M05 baselines do not transfer.
 
 ## Next
-- tester: pixel-diff visual baselines (AC-V-01..05); run AC-F-03 launch smoke + AC-F-19 byte-stability rerun; verify JSON sidecar field-name semantics vs `acceptance.md` AC-F-15. See `.workflow/m06/review-cycle-001.md` for findings + followups. After test PASS, transition to UI-CRITIC.
+- ui-critic: score AC-D-01..07 against the 10 PNGs in `.workflow/m06/screenshots/critique/` per the 6-axis rubric in `.workflow/DESIGN.md` (PASS = total ≥ 24/30; rubric REJECT triggers per acceptance.md). See `.workflow/m06/test-cycle-001.md` "Followups for ui-critic phase" — note empty-popover scenario 03 lacks group headers; score on rendered surface, not architect intent. M06 is the first milestone with ui-critic in ENFORCING mode (REJECT → IMPLEMENTING cycle++).
