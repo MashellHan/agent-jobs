@@ -79,4 +79,22 @@ See `.workflow/m03/retrospective.md` for full analysis.
 
 ---
 
+## M05 retro outcome — 2026-04-24
+
+**Trigger:** M05 retrospective (first multi-deliverable milestone + first ui-critic milestone; first-try PASS across all 4 gates — IMPL=1 REVIEW=1 TEST=1 UI-CRITIC=1; reviewer 91/100, tester 24/24, ui-critic 22/30 advisory PASS-with-tickets; +51 tests; ~2h41m wall).
+
+**No new evolutions proposed.** Per `retrospective.md` anti-patterns rule (≥ 2 occurrences OR clear root cause), nothing in M05 cleared the bar:
+
+- Tester treated empty Dashboard `Table` body in critique PNGs as "harness/NSTableView quirk" and PASSed AC-V-02 because unit baselines were green. UI-critic correctly upgraded to P0 (T-014). 1st occurrence; the new gate caught it (working as designed). Watch-list for M06.
+- Implementer reshaped Deliverable 5 scenario list during T08 without flagging in impl-notes (reviewer M1 caught via filename grep; resolved by spec-amend in TESTING). 1st occurrence. Watch-list for M06.
+- `ProviderDiagnostics` shipped as public actor where architecture.md described `ProviderHealth` as the surface (reviewer M2). 1st occurrence; M06 cleanup. Watch-list.
+
+**E001 + E002 remain ACCEPTED with zero drift in M05.** Both have now held for two milestones beyond their proposing retro (M03, M04, M05). All perf ACs shipped strict-budget-gated behind `AGENTJOBS_PERF=1`; all +51 new tests use swift-testing. Both graduate to settled practice — no further measurement scheduled.
+
+**ui-critic agent first-run note:** advisory verdict was sharp (3 well-prioritized tickets, no double-filing, peer-product comparisons grounded). M05 was a content-fidelity milestone, so the input PNGs had visible improvements baked in — the real test is M06 enforcing-mode against an already-improved baseline. Wait for M06 signal before evolving the agent.
+
+See `.workflow/m05/retrospective.md` for full analysis.
+
+---
+
 (Future entries appended here)
