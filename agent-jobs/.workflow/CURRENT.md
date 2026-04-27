@@ -2,9 +2,9 @@
 milestone: M06
 phase: IMPLEMENTING
 cycle: 1
-owner: null
-lock_acquired_at: null
-lock_expires_at: null
+owner: implementer
+lock_acquired_at: 2026-04-27T06:22:00Z
+lock_expires_at: 2026-04-27T07:22:00Z
 last_transition: 2026-04-27T20:15:00Z
 last_actor: architect
 ---

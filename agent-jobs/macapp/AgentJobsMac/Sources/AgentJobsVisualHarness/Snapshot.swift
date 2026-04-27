@@ -31,12 +31,33 @@ public enum Snapshot {
     }
 
     /// Capture the rendered view as PNG `Data`.
+    ///
+    /// T-014 fix: host the `NSHostingView` inside an offscreen `NSWindow` so that
+    /// (a) `NSTableView` (which `SwiftUI.Table` lowers to) realizes its rows
+    /// in response to a real window context, and (b) SwiftUI's
+    /// background materials inherit `NSWindow.effectiveAppearance` so dark
+    /// scheme paints across the entire frame (no white bleed).
     public static func capture<V: View>(
         _ view: V,
         size: CGSize,
         appearance: NSAppearance.Name = .aqua
     ) throws -> Data {
         let colorScheme: ColorScheme = (appearance == .darkAqua) ? .dark : .light
+
+        // Offscreen borderless window so AppKit promotes our hosting view
+        // into a real window context (NSTableView row realization +
+        // material/background appearance propagation).
+        let window = NSWindow(
+            contentRect: CGRect(origin: .zero, size: size),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        window.appearance = NSAppearance(named: appearance)
+        window.isReleasedWhenClosed = false
+        window.isOpaque = true
+        window.hasShadow = false
+
         let host = NSHostingView(
             rootView: view
                 .environment(\.colorScheme, colorScheme)
@@ -44,8 +65,15 @@ public enum Snapshot {
         )
         host.appearance = NSAppearance(named: appearance)
         host.frame = CGRect(origin: .zero, size: size)
+        window.contentView = host
         host.layoutSubtreeIfNeeded()
-        // Allow async SwiftUI layout work to settle.
+
+        // First settle pass: commit initial layout.
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.05))
+        host.layoutSubtreeIfNeeded()
+        // Second settle pass: allow NSTableView's delayed row realization
+        // (and any deferred SwiftUI material redraws) to complete before we
+        // cache-display the bitmap.
         RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.05))
         host.layoutSubtreeIfNeeded()
 
