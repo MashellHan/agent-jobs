@@ -1,20 +1,20 @@
 ---
 milestone: M06
-phase: ARCHITECTING
+phase: IMPLEMENTING
 cycle: 1
 owner: null
 lock_acquired_at: null
 lock_expires_at: null
-last_transition: 2026-04-27T19:45:00Z
-last_actor: pm
+last_transition: 2026-04-27T20:15:00Z
+last_actor: architect
 ---
 
 # Current Workflow State
 
 **Milestone:** M06 — Information Architecture
-**Phase:** ARCHITECTING
+**Phase:** IMPLEMENTING
 **Cycle:** 1
-**Owner:** none — architect pick up
+**Owner:** none — implementer pick up
 
 ## Phase History (workflow-wide)
 - M01 SHIPPED 2026-04-24T00:30:00Z
@@ -25,6 +25,7 @@ last_actor: pm
 - M05 SHIPPED 2026-04-27T19:00:00Z (first multi-deliverable + first ui-critic milestone)
 - M05 RETRO complete (zero new evolutions; E001/E002 settled; 3 watch-list items)
 - M06 SPECCING complete 2026-04-27T19:45:00Z (pm) — spec/acceptance/competitive-analysis written; T-014 sequenced as gating task #1
+- M06 ARCHITECTING complete 2026-04-27T20:15:00Z (architect) — architecture.md + tasks.md written; T-014 is task #1; WL-2 pre-committed to split before T-002 rewrite; WL-3 demotes `ProviderDiagnostics` to internal via new `DiagnosticsBearing` protocol; popover grouping lives in view layer (pure `PopoverGrouping` helper), not view model.
 
 ## M06 priorities (architect should respect)
 **This is the first milestone with ui-critic in ENFORCING mode** (per PROTOCOL.md §UI-CRITIC). UI quality issues found in critique can REJECT the milestone back to IMPLEMENTING.
@@ -39,12 +40,12 @@ last_actor: pm
 
 **Carry-forward watch-list from M05 retro (PM kept all three in scope):**
 - WL-1 Visual ↔ design AC delineation — encoded in `m06/acceptance.md` (tester for AC-F-*/AC-V-*; ui-critic for AC-D-*).
-- WL-2 `AgentJobsMacUI.swift` 530 LOC split — non-blocking AC-F-17 (split if >600 LOC after IMPL).
-- WL-3 `ProviderDiagnostics` public surface trim — non-blocking AC-F-18.
+- WL-2 `AgentJobsMacUI.swift` 530 LOC split — non-blocking AC-F-17 (split if >600 LOC after IMPL). **Architect decision: split now (Task 2) BEFORE T-002 rewrite.**
+- WL-3 `ProviderDiagnostics` public surface trim — non-blocking AC-F-18. **Architect decision: introduce internal `DiagnosticsBearing` protocol; demote actor to internal.**
 
 **Constraints:**
 - T-014 must be the FIRST task fixed (gates ui-critic enforcement). If `capture-all` can't render dashboard rows + dark scheme honestly, every visual finding M06+ is suspect.
 - Capture-all scenarios MUST be regenerated at new sizes (popover ≥480pt, dashboard 1280x800). M05 baselines do not transfer.
 
 ## Next
-- architect: read `m06/spec.md` + `m06/acceptance.md` + `m06/competitive-analysis.md`. Produce `m06/architecture.md` + `m06/tasks.md`. Sequence T-014 as task #1. Decide on WL-2 split now (recommend yes if T-002 + T-008 push UI file past 600 LOC). Plan how `MenuBarPopoverView` grouped-by-status data flow works (consider whether grouping happens in `ServiceRegistry` view-model or in the view layer).
+- implementer: read `m06/architecture.md` + `m06/tasks.md`. Execute tasks 1-9 in order. T-014 (Task 1) is BLOCKING — verify renderer fix produces non-blank dashboard tables and full dark frames before proceeding to any other task. Commit per task. After Task 9, set `phase: REVIEWING`, `owner: null`, append phase-history line.
