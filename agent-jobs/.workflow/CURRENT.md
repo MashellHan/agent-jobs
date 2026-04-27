@@ -1,20 +1,20 @@
 ---
 milestone: M07
-phase: ARCHITECTING
+phase: IMPLEMENTING
 cycle: 1
 owner: null
 lock_acquired_at: null
 lock_expires_at: null
-last_transition: 2026-04-27T08:22:49Z
-last_actor: pm
+last_transition: 2026-04-27T09:25:00Z
+last_actor: architect
 ---
 
 # Current Workflow State
 
 **Milestone:** M07 — Visual Identity
-**Phase:** SPECCING
+**Phase:** IMPLEMENTING
 **Cycle:** 1
-**Owner:** pm
+**Owner:** (unlocked)
 
 ## Phase History (workflow-wide)
 - M01 SHIPPED 2026-04-24T00:30:00Z
@@ -36,6 +36,7 @@ last_actor: pm
 - M06 TESTING cycle-2 complete 2026-04-28T00:10:00Z (tester) — verdict **PASS 19/19 testable ACs**; build green, 332 tests pass on clean run, capture-all 10/10 byte-stable across two reruns, 10/10 PNGs byte-identical to committed cycle-2 baselines (0% pixel diff); dark-frame luma sampling **expanded to 30 points across scenarios 02/05/08** — max luma 0.221 ≪ 0.3 threshold; advances to UI-CRITIC cycle 2.
 - M06 SHIPPED 2026-04-27T01:00:00Z (workflow-coordinator) — first ENFORCING ui-critic milestone; cycle-1 REJECT 20/30 → cycle-2 PASS 27/30; 8 tickets closed; 0 new tickets; T-019/T-020 P2 carry-forward to M07.
 - M07 SPECCING cycle-1 complete 2026-04-27T08:22:49Z (pm) — spec/acceptance/competitive-analysis written; T-001 P0 sequenced as gating task #1 (custom `agent-jobs.icns` + 16pt menubar template + count-badge variant); T-019 + T-020 P2 carry-forward folded in; **density modes deferred to M14** to keep M07 focused (documented cut); E003 baked into AC verification language (luma probes must be holistic, ≥8-point sample, named regions); ui-critic threshold held at 24/30; new capture-all scenarios for icon variants (idle / count-1 / count-N / count-0 dimmed) + token swatches added to scenario list (10 → 14).
+- M07 ARCHITECTING cycle-1 complete 2026-04-27T09:25:00Z (architect) — `m07/architecture.md` + `m07/tasks.md` written; 5 ordered tasks, T-001 gating as Task 1; asset catalog placed in `Sources/AgentJobsMacApp/Resources/Assets.xcassets/` (AppIcon.appiconset + MenuBarIcon.imageset, raw PNG path chosen over `.symbolset` for SPM compat); 9 color sets duplicated into `Sources/AgentJobsCore/Resources/Assets.xcassets/` so `Bundle.module` resolves from non-app targets; `scripts/build-icns.sh` regenerates assets from committed SVG sources via `rsvg-convert` + `iconutil`; `DesignTokens.SemanticColor`/`SourceColor` added additively (existing `StatusColor` deprecated-typealiased — no breaking renames); `Typography.display` + `Spacing.{sm,md,lg}` aliases added to existing namespaces; T-020 resolved as **option (b) sidebar header heightens** (40pt) — no toolbar hoist; capture-all renumber 10→14 with 4 new icon scenarios + 1 swatch (`HarnessScenes.menuBarIconOnly` + `tokensSwatch`); WL-D resolved as **option B (document impl schema in DESIGN.md)** — no sidecar field renames; WL-A renames `forceAppearance` → `forceDarkAppearance` + adds dark-only precondition; WL-B short-circuits PNG/sidecar writes when bytes match prior; WL-C deletes `MenuBarPopoverView.{activeServices,upcomingServices,section(...)}` + entire `ServiceRowCompact.swift`; WL-E replaces wallpaper-sampling test with deterministic asset-catalog + offscreen-render check; ≥13 new tests planned (target 332→345+); placeholder SVG acceptable in cycle 1 if final glyph design lags (real glyph in cycle 2 is the expected REJECT-recovery path).
 
 ## Next
-- architect picks up M07 ARCHITECTING. Read `.workflow/m07/spec.md` + `acceptance.md` + `competitive-analysis.md`. Sequence T-001 (icon pipeline + asset catalog wiring) as task #1 since AC-V-* baselines depend on it; tokens (T-T01..T03) and T-019/T-020 layout work can land in parallel. Watch-list from M06 retro to be addressed where in-scope: rename `Snapshot.forceAppearance` → `forceDarkAppearance` (or add internal dark assert); JSON sidecar timestamp churn (skip rewrite when PNG byte-stable); dead helpers in `MenuBarPopoverView` + latent `ServiceRowCompact.swift` cleanup; AC-F-15 sidecar schema spec-impl alignment (rename impl fields OR document delta in spec). NavigationSplitView dark-mode capture-path systemic risk stays on watch — no refactor in M07 (no new pane structure planned).
+- implementer picks up M07 IMPLEMENTING. Read `.workflow/m07/architecture.md` + `tasks.md`. Five tasks, ordered, T-001 is gating. Land in 5 commits with `swift build && swift test` checkpoint between each. **Do NOT regenerate `.workflow/m07/screenshots/baseline/` mid-cycle** — tester regens once at end of TESTING. If the SVG glyph designer hasn't delivered, ship a placeholder (single black filled circle) per architecture §7 — cycle-2 lands the real glyph after expected ui-critic REJECT on AC-D-01.
