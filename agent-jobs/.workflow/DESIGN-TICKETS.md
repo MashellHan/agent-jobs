@@ -68,6 +68,21 @@
        Why: At 1280pt with sidebar 220 + inspector 360 + 5 visible columns (Status, Schedule, Created, CPU, Memory) plus Last Run, the Name column gets ~80pt and truncates every row title to 8-9 chars ("daily-cle...", "claude-t...", "claude-l...", "npm run..."). The Last Run header text is also clipped to "Last R...". Activity Monitor's Process Name column is the widest by default; ours is the narrowest.
        Done-when: Name column claims at least 30% of the list pane's horizontal width (proportional or `min:` constraint); Last Run header reads in full at 1280pt default; lower-priority columns (Created, Last Run) are demotable / hideable behind a column-config menu.
 
+- [ ] T-T01  P1  tokens-color  Centralize status + source-bucket palette as `DesignTokens.Color`
+       Source: pm  Filed: 2026-04-27T08:22:49Z  Target: M07
+       Why: Status pills + source chips currently use scattered `Color(.systemX)` literals + ad-hoc tints. M07 visual identity needs one source of truth so the palette can be tuned once and re-applied across popover, dashboard, inspector. Also unblocks light/dark + accessibility-variant work in M14.
+       Done-when: `DesignTokens.Color` namespace exposes `statusRunning/Scheduled/Failed/Idle` + `sourceRegistered/ClaudeSched/ClaudeLoop/Launchd/LiveProc`; values resolve via asset-catalog color sets (not hardcoded RGB); adopted in popover row, dashboard chip, inspector status pill.
+
+- [ ] T-T02  P1  tokens-type  Typography scale: `display / title / body / caption / mono`
+       Source: pm  Filed: 2026-04-27T08:22:49Z  Target: M07
+       Why: Ad-hoc `.font(.system(size: 13))` calls scattered across popover + dashboard + inspector. No shared scale means future identity tweaks need an N-callsite hunt. Apple `Font.TextStyle` under our namespace gives intent-revealing callsites without losing Dynamic Type.
+       Done-when: `DesignTokens.Font` namespace with the 5 tokens; adopted in ≥3 callsites (popover row, dashboard list row, inspector header); maps to Apple `Font.TextStyle` per competitive-analysis §7.
+
+- [ ] T-T03  P2  tokens-spacing  Spacing scale: `xs/sm/md/lg/xl` (4/8/12/16/24)
+       Source: pm  Filed: 2026-04-27T08:22:49Z  Target: M07
+       Why: Inconsistent padding magic numbers across popover row internals and dashboard chrome. A 5-step scale covers every gap the M07 surfaces need; incremental adoption is fine.
+       Done-when: `DesignTokens.Spacing` exposes the 5 values; adopted in ≥2 callsites; not required to be exhaustive.
+
 - [ ] T-020  P2  dashboard-chrome  Bucket-strip header bar does not span sidebar pane
        Source: ui-critic  Filed: 2026-04-27T22:45:00Z  Target: M07
        Why: In critique 04/06/07, the horizontal bucket strip (registered/claude-sched/claude-loop/launchd/live-proc/total N) starts at the list pane's left edge. The sidebar pane shows a separate "Filters" header at top that does not visually align with the strip. The strip looks orphaned above only the list pane; a visual rhythm break for a chrome element that conceptually applies to all sources.
