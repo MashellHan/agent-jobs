@@ -1,20 +1,20 @@
 ---
 milestone: M05
-phase: REVIEWING
+phase: TESTING
 cycle: 1
 owner: null
 lock_acquired_at: null
 lock_expires_at: null
-last_transition: 2026-04-24T17:30:00Z
-last_actor: implementer
+last_transition: 2026-04-24T17:50:00Z
+last_actor: reviewer
 ---
 
 # Current Workflow State
 
 **Milestone:** M05 — Content fidelity + Visual Harness library
-**Phase:** REVIEWING
+**Phase:** TESTING
 **Cycle:** 1
-**Owner:** none — reviewer pick up
+**Owner:** none — tester pick up
 
 ## Phase History (workflow-wide)
 - M01 SHIPPED 2026-04-24T00:30:00Z
@@ -26,6 +26,7 @@ last_actor: implementer
 - 2026-04-24T13:30:00Z: M05 SPECCING → ARCHITECTING (pm; spec + acceptance + competitive analysis + T-004 root cause written)
 - 2026-04-24T13:55:00Z: M05 ARCHITECTING → IMPLEMENTING (architect; architecture.md + tasks.md written, 11 tasks planned)
 - 2026-04-24T17:30:00Z: M05 IMPLEMENTING → REVIEWING (implementer; T01..T11 all DONE; swift build green; swift test 317/317 pass)
+- 2026-04-24T17:50:00Z: M05 REVIEWING → TESTING (reviewer; cycle 1 PASS, score 91/100, zero CRITICAL, all ACs covered)
 
 ## M05 priorities (PM should respect)
 **This is the first milestone under the new UI-quality regime.** Read `.workflow/DESIGN.md` and `.workflow/DESIGN-TICKETS.md` BEFORE writing the spec.
@@ -51,4 +52,10 @@ Four bundled deliverables:
 - 11 tasks. Every AC mapped. Each task ≤ 150 LOC.
 
 ## Next
-- reviewer: review the M05 diff (commits since 5a0f5e4). Acceptance criteria live in `.workflow/m05/acceptance.md`. Check architecture conformance against `.workflow/m05/architecture.md`. Confirm all 11 tasks done in `.workflow/m05/tasks.md`. Pre-existing AC-V-06 menubar-icon visual flake is documented in `.workflow/m05/impl-notes.md` and was not introduced by M05.
+- tester: validate the 24 ACs in `.workflow/m05/acceptance.md` end-to-end. Reviewer notes:
+  - PASS at 91/100, zero CRITICAL.
+  - One HIGH (H1): CHANGELOG not updated for M05 — consider a chore commit during TESTING.
+  - One MEDIUM (M1): `capture-all` scenario filenames diverge from `spec.md §Deliverable 5` (10/10 PNG+JSON pairs are produced and sidecar contract is met, but spec scenarios `09-confirm-stop` / `10-hidden-toggle-on` are absent; output uses light/dark popover/dashboard variants instead). Tester should decide whether to amend spec/AC-F-02 or rename scenarios.
+  - One MEDIUM (M2): `ProviderDiagnostics` actor exposed publicly on providers; architect doc said `ProviderHealth` was the public surface.
+  - Pre-existing AC-V-06 menubar-icon visual flake documented in `.workflow/m05/impl-notes.md`; not a M05 regression.
+  - Full review at `.workflow/m05/review-cycle-001.md`.
