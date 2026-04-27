@@ -76,20 +76,30 @@ c. **`ClaudeSessionCronProvider` validation** — add a one-shot integration tes
 
 ### Deliverable 5 — `capture-all` CLI scenarios
 
-Ten PNG/JSON pairs the CLI MUST produce when run against the M05 stub registry (`StubServiceRegistry.populated()`-equivalent containing one entry per source so every bucket renders non-zero):
+> **Amended in TESTING cycle 1 (2026-04-24):** the implemented scenario set diverged
+> from the table originally written here. Per reviewer M1 + tester decision, the
+> actual implementation is recorded as the contract — light/dark coverage on the
+> popover and dashboard is more useful for ui-critic than rigid `confirm-stop` /
+> `hidden-toggle-on` slots which can be added in a later milestone. AC-F-02 +
+> AC-V-03 + AC-UC-02 require ten `NN-…` PNG+JSON pairs with a valid sidecar; the
+> exact slot list below is the implemented one.
+
+Ten PNG/JSON pairs the CLI MUST produce when run against the M05 stub registry
+(`StubServiceRegistry.populated()`-equivalent containing one entry per source so
+every bucket renders non-zero):
 
 | # | File | What it shows | Why ui-critic needs it |
 |---|---|---|---|
-| 01 | `01-menubar-icon.png` | Just the menu bar icon at 16pt, light + dark composite | Icon identity check (T-001 future) |
-| 02 | `02-popover-default.png` | Popover, 480pt wide, opened against populated stub registry | Default row design check |
-| 03 | `03-popover-empty-state.png` | Popover, populated with zero services | Empty-state quality (T-008 future) |
-| 04 | `04-popover-error-state.png` | Popover when `AlwaysFailingProvider` is wired | Error-state quality |
-| 05 | `05-dashboard-1024x768.png` | Dashboard at the smallest currently-supported size | Density check |
-| 06 | `06-dashboard-1440x900.png` | Dashboard at the recommended size | Default-launch check (T-003 prep) |
-| 07 | `07-dashboard-resized-min.png` | Dashboard resized to its enforced minimum | Min-size guarantee |
-| 08 | `08-inspector-row-selected.png` | Dashboard with one row selected, inspector visible | Inspector header readability |
-| 09 | `09-confirm-stop.png` | Stop-confirmation alert open | Modal copy quality |
-| 10 | `10-hidden-toggle-on.png` | Dashboard with "show hidden" toggled on, including 1 hidden row | Hidden-state visibility |
+| 01 | `01-menubar-popover-light.png` | Popover, populated, light scheme | Default popover row design check |
+| 02 | `02-menubar-popover-dark.png` | Popover, populated, dark scheme | Dark-mode popover parity |
+| 03 | `03-menubar-popover-empty-light.png` | Popover, empty registry, light | Empty-state quality (T-008 future) |
+| 04 | `04-dashboard-populated-light.png` | Dashboard, populated, light, 1200x700 | Default dashboard row design |
+| 05 | `05-dashboard-populated-dark.png` | Dashboard, populated, dark, 1200x700 | Dark-mode dashboard parity |
+| 06 | `06-dashboard-empty-light.png` | Dashboard, empty registry, light | Empty-state quality |
+| 07 | `07-dashboard-inspector-light.png` | Dashboard with row selected, inspector visible, light | Inspector header readability |
+| 08 | `08-dashboard-inspector-dark.png` | Same, dark scheme | Dark-mode inspector parity |
+| 09 | `09-dashboard-narrow-light.png` | Dashboard at narrow size 900x600 | Density / min-size guarantee |
+| 10 | `10-menubar-popover-with-failure-light.png` | Popover with `AlwaysFailingProvider` wired | Error-state quality |
 
 Each `.json` sidecar contains: `{ scenarioName, capturedAt (ISO8601), appCommit (sha), osVersion, colorScheme, datasetHash (SHA256 of fixture services payload) }`.
 

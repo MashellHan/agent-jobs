@@ -1,0 +1,16 @@
+{
+  "appCommit" : "3033e20",
+  "capturedAt" : "2026-04-27T05:52:32.097Z",
+  "colorScheme" : "light",
+  "datasetHash" : "fixtures.empty.v1",
+  "kind" : "dashboard",
+  "metadata" : {
+    "colorScheme" : "light",
+    "datasetHash" : "fixtures.empty.v1",
+    "viewportHeight" : "700",
+    "viewportWidth" : "1200"
+  },
+  "osVersion" : "15.7.5",
+  "pngBasename" : "06-dashboard-empty-light.png",
+  "scenarioName" : "06-dashboard-empty-light"
+}

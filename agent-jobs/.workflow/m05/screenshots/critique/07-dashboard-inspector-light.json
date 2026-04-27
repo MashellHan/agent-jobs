@@ -1,0 +1,16 @@
+{
+  "appCommit" : "3033e20",
+  "capturedAt" : "2026-04-27T05:52:32.274Z",
+  "colorScheme" : "light",
+  "datasetHash" : "fixtures.populated.v1",
+  "kind" : "inspector",
+  "metadata" : {
+    "colorScheme" : "light",
+    "datasetHash" : "fixtures.populated.v1",
+    "viewportHeight" : "700",
+    "viewportWidth" : "1200"
+  },
+  "osVersion" : "15.7.5",
+  "pngBasename" : "07-dashboard-inspector-light.png",
+  "scenarioName" : "07-dashboard-inspector-light"
+}
