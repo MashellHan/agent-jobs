@@ -84,7 +84,7 @@ Package surgery (T01) lands first so every subsequent task builds against the ri
 - **Acceptance:** AC-F-03 (popover opens + reachable via AX after click), AC-F-04 (resize ±1pt observable).
 - **Estimated diff size:** M
 
-## T07 — `CritiqueReport` + `DiffReport` real implementations
+## T07 — `CritiqueReport` + `DiffReport` real implementations [DONE]
 
 - **Files:**
   - `Sources/AgentJobsVisualHarness/CritiqueReport.swift` (replace stub: `Critique` struct + JSON sidecar writer)
