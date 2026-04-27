@@ -1,7 +1,7 @@
 import Testing
 import Foundation
 @testable import AgentJobsCore
-@testable import AgentJobsMac
+@testable import AgentJobsMacUI
 
 /// AC-F-07, F-08, F-09, F-10, F-11, F-12, P-01 (gated), P-04 (gated).
 /// All tests pass an explicit `WatchPaths` rooted under the temp dir,

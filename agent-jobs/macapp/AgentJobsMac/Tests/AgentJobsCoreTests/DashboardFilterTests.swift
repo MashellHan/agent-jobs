@@ -1,7 +1,7 @@
 import Testing
 import Foundation
 @testable import AgentJobsCore
-@testable import AgentJobsMac
+@testable import AgentJobsMacUI
 
 /// Exercises the static `DashboardView.filter` matrix without spinning up
 /// SwiftUI. Validates AC-F-05 / AC-F-06 (sidebar category × bucket-strip

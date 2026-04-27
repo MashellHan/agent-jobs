@@ -3,7 +3,7 @@ import Foundation
 import SwiftUI
 import AppKit
 @testable import AgentJobsCore
-@testable import AgentJobsMac
+@testable import AgentJobsMacUI
 
 /// AC-V-01..V-03 + V-05: visual baselines for AutoRefreshIndicator's three
 /// states plus its placement inside the menu-bar popover header and the

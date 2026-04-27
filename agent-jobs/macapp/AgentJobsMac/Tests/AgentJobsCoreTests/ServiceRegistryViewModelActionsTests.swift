@@ -1,7 +1,7 @@
 import Testing
 import Foundation
 @testable import AgentJobsCore
-@testable import AgentJobsMac
+@testable import AgentJobsMacUI
 
 /// AC-F-05/F-06/F-07/F-09/F-12/F-13. Drives the view model's stop / hide /
 /// unhide / refreshNow methods against a `FakeStopExecutor` + a `HiddenStore`

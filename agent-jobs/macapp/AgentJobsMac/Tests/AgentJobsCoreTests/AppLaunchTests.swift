@@ -17,20 +17,24 @@ struct AppLaunchTests {
     /// file's expected location (Tests/.../AppLaunchTests.swift) to the
     /// package root and into .build/debug.
     private static func locateBinary() -> URL? {
-        // SPM exposes the package root via env when running tests under
-        // some configurations; fall back to walking from cwd.
         let candidates: [URL] = {
             var urls: [URL] = []
             let fm = FileManager.default
             let cwd = URL(fileURLWithPath: fm.currentDirectoryPath)
-            urls.append(cwd.appendingPathComponent(".build/debug/AgentJobsMac"))
-            urls.append(cwd.appendingPathComponent("macapp/AgentJobsMac/.build/debug/AgentJobsMac"))
-            // Walk up to find a Package.swift sibling.
+            // Executable renamed AgentJobsMac → AgentJobsMacApp in M05 T01.
+            // Try the new name first, fall back to legacy for older builds.
+            let names = ["AgentJobsMacApp", "AgentJobsMac"]
+            for n in names {
+                urls.append(cwd.appendingPathComponent(".build/debug/\(n)"))
+                urls.append(cwd.appendingPathComponent("macapp/AgentJobsMac/.build/debug/\(n)"))
+            }
             var dir = cwd
             for _ in 0..<6 {
                 let pkg = dir.appendingPathComponent("Package.swift")
                 if fm.fileExists(atPath: pkg.path) {
-                    urls.append(dir.appendingPathComponent(".build/debug/AgentJobsMac"))
+                    for n in names {
+                        urls.append(dir.appendingPathComponent(".build/debug/\(n)"))
+                    }
                     break
                 }
                 dir.deleteLastPathComponent()

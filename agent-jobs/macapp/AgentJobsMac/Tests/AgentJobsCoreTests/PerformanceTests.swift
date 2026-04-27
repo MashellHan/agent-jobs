@@ -1,7 +1,7 @@
 import Testing
 import Foundation
 @testable import AgentJobsCore
-@testable import AgentJobsMac
+@testable import AgentJobsMacUI
 
 /// AC-P-01..04 — performance gates.
 ///

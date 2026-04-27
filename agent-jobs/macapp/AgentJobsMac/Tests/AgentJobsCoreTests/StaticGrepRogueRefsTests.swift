@@ -122,7 +122,7 @@ struct StaticGrepRogueRefsTests {
 
     private static func appSourceFile() -> URL {
         repoRoot().appendingPathComponent(
-            "macapp/AgentJobsMac/Sources/AgentJobsMac/AgentJobsMacApp.swift")
+            "macapp/AgentJobsMac/Sources/AgentJobsMacUI/AgentJobsMacUI.swift")
     }
 
     private static func testsRoot() -> URL {

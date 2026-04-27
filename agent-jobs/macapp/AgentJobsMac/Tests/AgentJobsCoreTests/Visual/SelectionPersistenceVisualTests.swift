@@ -3,7 +3,7 @@ import Foundation
 import SwiftUI
 import AppKit
 @testable import AgentJobsCore
-@testable import AgentJobsMac
+@testable import AgentJobsMacUI
 
 /// AC-V-04: selection persistence across refreshes.
 ///

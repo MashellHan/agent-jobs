@@ -8,7 +8,7 @@ Package surgery (T01) lands first so every subsequent task builds against the ri
 
 ---
 
-## T01 — Package.swift surgery: extract `AgentJobsMacUI` library; add `AgentJobsVisualHarness` library + `CaptureAll` executable
+## T01 — Package.swift surgery: extract `AgentJobsMacUI` library; add `AgentJobsVisualHarness` library + `CaptureAll` executable [DONE]
 
 - **Files:**
   - `macapp/AgentJobsMac/Package.swift` (edit)

@@ -15,14 +15,20 @@ struct MenuBarIconVisualTest {
     private static func locateBinary() -> URL? {
         let fm = FileManager.default
         let cwd = URL(fileURLWithPath: fm.currentDirectoryPath)
-        var candidates = [
-            cwd.appendingPathComponent(".build/debug/AgentJobsMac"),
-            cwd.appendingPathComponent("macapp/AgentJobsMac/.build/debug/AgentJobsMac"),
-        ]
+        // Executable was renamed AgentJobsMac → AgentJobsMacApp in M05 T01
+        // (package surgery). Search both names; prefer the new one.
+        let names = ["AgentJobsMacApp", "AgentJobsMac"]
+        var candidates: [URL] = []
+        for n in names {
+            candidates.append(cwd.appendingPathComponent(".build/debug/\(n)"))
+            candidates.append(cwd.appendingPathComponent("macapp/AgentJobsMac/.build/debug/\(n)"))
+        }
         var dir = cwd
         for _ in 0..<6 {
             if fm.fileExists(atPath: dir.appendingPathComponent("Package.swift").path) {
-                candidates.append(dir.appendingPathComponent(".build/debug/AgentJobsMac"))
+                for n in names {
+                    candidates.append(dir.appendingPathComponent(".build/debug/\(n)"))
+                }
                 break
             }
             dir.deleteLastPathComponent()

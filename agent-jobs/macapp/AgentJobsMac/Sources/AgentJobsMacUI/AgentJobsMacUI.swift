@@ -2,17 +2,16 @@ import SwiftUI
 import AppKit
 import AgentJobsCore
 
-@main
-struct AgentJobsMacApp: App {
-    // AC-Q-04: SPM executables don't ship an Info.plist, so we can't set
-    // LSUIElement=true in plist. The canonical workaround is an
-    // NSApplicationDelegate that calls setActivationPolicy(.accessory) in
-    // applicationWillFinishLaunching — runs before the menu bar is built,
-    // suppresses the Dock icon, leaves MenuBarExtra free to claim its slot.
-    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+/// Composed `Scene` for the Agent Jobs app. Lives in the `AgentJobsMacUI`
+/// library so the thin `AgentJobsMacApp` executable AND the headless
+/// `CaptureAll` executable can both reference UI types — SPM forbids
+/// importing an executable target (M05 T01).
+public struct AgentJobsAppScene: Scene {
     @State private var registry = ServiceRegistryViewModel()
 
-    var body: some Scene {
+    public init() {}
+
+    public var body: some Scene {
         MenuBarExtra {
             MenuBarPopoverView()
                 .environment(registry)
@@ -35,15 +34,16 @@ struct AgentJobsMacApp: App {
 /// Pure AppKit delegate. Sole responsibility: set the activation policy to
 /// `.accessory` so the app behaves like a true menu-bar utility (no Dock
 /// icon, no Cmd-Tab entry). AC-Q-04.
-final class AppDelegate: NSObject, NSApplicationDelegate {
-    func applicationWillFinishLaunching(_ notification: Notification) {
+public final class AppDelegate: NSObject, NSApplicationDelegate {
+    public override init() { super.init() }
+    public func applicationWillFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
     }
 }
 
 @Observable
 @MainActor
-final class ServiceRegistryViewModel {
+public final class ServiceRegistryViewModel {
     private(set) var services: [Service] = []
     private(set) var summary: MenuBarSummary = .empty
     private(set) var lastRefresh: Date = Date()
@@ -84,7 +84,7 @@ final class ServiceRegistryViewModel {
     private var ticker: PeriodicTicker?
     private var visibilityTask: Task<Void, Never>?
 
-    init(registry: ServiceRegistry = .defaultRegistry(),
+    public init(registry: ServiceRegistry = .defaultRegistry(),
          stopExecutor: (any StopExecutor)? = nil,
          hiddenStore: HiddenStore? = nil,
          watchPaths: WatchPaths = .production) {
