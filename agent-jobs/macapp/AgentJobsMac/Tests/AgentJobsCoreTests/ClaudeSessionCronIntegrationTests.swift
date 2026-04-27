@@ -77,4 +77,35 @@ struct ClaudeSessionCronProviderIntegrationTests {
         #expect(services.contains { $0.id.hasPrefix("claude.scheduled-tasks:") })
         #expect(services.contains { $0.id.hasPrefix("claude.session-cron:") })
     }
+
+    @Test("AC-F-12: bundled fixture-session.jsonl parses to ≥1 cron service")
+    func fixtureProducesNonZeroResult() async throws {
+        // Copy the bundled fixture project tree into a temp dir so the
+        // provider can read real on-disk mtimes (its 7-day filter checks
+        // file modification time). Bundle.module resources are read-only
+        // but their mtime is also recent (post-build), so they'd pass —
+        // but copying keeps the test independent of build cadence.
+        let fixtureURL = try FixtureLoader.url(
+            "claude-projects/-Users-fixture-acme/fixture-session", ext: "jsonl"
+        )
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("agentjobs-fixture-acme-\(UUID().uuidString)")
+        let project = root.appendingPathComponent("-Users-fixture-acme")
+        try FileManager.default.createDirectory(at: project, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let dest = project.appendingPathComponent("sess-fixture-acme-2026-04-24.jsonl")
+        try FileManager.default.copyItem(at: fixtureURL, to: dest)
+
+        let provider = ClaudeSessionCronProvider(
+            projectsRoot: root,
+            durableTasksPath: root.appendingPathComponent("scheduled_tasks.json")
+        )
+        let services = try await provider.discover()
+        #expect(services.count >= 1, "AC-F-12: fixture must yield ≥1 service, got \(services.count)")
+        #expect(services.contains { $0.id.hasPrefix("claude.session-cron:") })
+        // AC-F-14: a successful run stamps lastSuccessAt and clears errors.
+        let snap = await provider.diagnostics?.snapshot()
+        #expect(snap?.0 == nil, "lastError must be nil after clean discover")
+        #expect(snap?.1 != nil, "lastSuccessAt must be set after clean discover")
+    }
 }

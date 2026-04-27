@@ -13,6 +13,8 @@ public struct ClaudeScheduledTasksProvider: ServiceProvider {
 
     public let tasksPath: URL
     private let loader: Loader?
+    public let diagnostics: ProviderDiagnostics?
+    private let now: @Sendable () -> Date
     private let logger = Logger(subsystem: "com.agentjobs.mac", category: "ClaudeScheduledTasksProvider")
 
     /// Read-with-timeout seam for tests. When `nil`, the production path
@@ -20,7 +22,12 @@ public struct ClaudeScheduledTasksProvider: ServiceProvider {
     /// `AgentJobsJsonProvider`.
     public typealias Loader = @Sendable (_ url: URL, _ timeout: TimeInterval) async throws -> Data
 
-    public init(tasksPath: URL? = nil, loader: Loader? = nil) {
+    public init(
+        tasksPath: URL? = nil,
+        loader: Loader? = nil,
+        now: @escaping @Sendable () -> Date = { Date() },
+        diagnostics: ProviderDiagnostics? = ProviderDiagnostics()
+    ) {
         if let p = tasksPath {
             self.tasksPath = p
         } else {
@@ -28,6 +35,8 @@ public struct ClaudeScheduledTasksProvider: ServiceProvider {
                 .appendingPathComponent(".claude/scheduled_tasks.json")
         }
         self.loader = loader
+        self.now = now
+        self.diagnostics = diagnostics
     }
 
     public static let readTimeoutSeconds: TimeInterval = 5
@@ -35,6 +44,7 @@ public struct ClaudeScheduledTasksProvider: ServiceProvider {
     public func discover() async throws -> [Service] {
         // Missing file → []
         if loader == nil, !FileManager.default.fileExists(atPath: tasksPath.path) {
+            await diagnostics?.recordSuccess(at: now())
             return []
         }
 
@@ -50,14 +60,19 @@ public struct ClaudeScheduledTasksProvider: ServiceProvider {
             }
         } catch ProviderError.timeout {
             logger.error("Read timed out: \(self.tasksPath.path, privacy: .public)")
+            await diagnostics?.recordIOError("read timed out")
             throw ProviderError.timeout
         } catch {
             // Any non-timeout I/O hiccup is treated as "absent" per spec.
             logger.error("Read failed: \(error.localizedDescription, privacy: .public)")
+            await diagnostics?.recordIOError(error.localizedDescription)
             return []
         }
 
-        if data.isEmpty { return [] }
+        if data.isEmpty {
+            await diagnostics?.recordSuccess(at: now())
+            return []
+        }
 
         // Decode root as `[Entry]`. Anything else (object root, scalar root,
         // malformed bytes) → [].
@@ -66,9 +81,14 @@ public struct ClaudeScheduledTasksProvider: ServiceProvider {
             entries = try JSONDecoder().decode([Entry].self, from: data)
         } catch {
             logger.error("Malformed or non-array JSON: \(error.localizedDescription, privacy: .public)")
+            await diagnostics?.recordFileFailure(
+                tasksPath.lastPathComponent,
+                error.localizedDescription
+            )
             return []
         }
 
+        await diagnostics?.recordSuccess(at: now())
         return entries.enumerated().map { idx, entry in
             buildService(entry: entry, index: idx)
         }

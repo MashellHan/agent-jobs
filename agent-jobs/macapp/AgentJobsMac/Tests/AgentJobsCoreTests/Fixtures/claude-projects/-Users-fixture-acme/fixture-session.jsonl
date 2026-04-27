@@ -1,0 +1,2 @@
+{"timestamp":"2026-04-24T08:00:00Z","sessionId":"sess-fixture-acme-2026-04-24","cwd":"/Users/fixture/acme","message":{"content":[{"type":"tool_use","id":"tu_fix_001","name":"CronCreate","input":{"cron":"*/15 * * * *","prompt":"watch acme repo and ping me on failures","recurring":true,"durable":false}}]}}
+{"timestamp":"2026-04-24T08:00:01Z","sessionId":"sess-fixture-acme-2026-04-24","cwd":"/Users/fixture/acme","message":{"content":[{"type":"tool_result","tool_use_id":"tu_fix_001"}]},"toolUseResult":{"id":"cron_fix_acme_001","durable":false}}

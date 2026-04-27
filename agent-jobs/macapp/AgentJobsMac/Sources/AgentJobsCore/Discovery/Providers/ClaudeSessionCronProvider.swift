@@ -17,6 +17,7 @@ public struct ClaudeSessionCronProvider: ServiceProvider {
     public let durableTasksPath: URL
     private let now: @Sendable () -> Date
     private let lineReader: LineReader
+    public let diagnostics: ProviderDiagnostics?
     private let logger = Logger(
         subsystem: "com.agentjobs.mac",
         category: "ClaudeSessionCronProvider"
@@ -51,7 +52,8 @@ public struct ClaudeSessionCronProvider: ServiceProvider {
         projectsRoot: URL? = nil,
         durableTasksPath: URL? = nil,
         now: @escaping @Sendable () -> Date = { Date() },
-        lineReader: LineReader? = nil
+        lineReader: LineReader? = nil,
+        diagnostics: ProviderDiagnostics? = ProviderDiagnostics()
     ) {
         let home = FileManager.default.homeDirectoryForCurrentUser
         self.projectsRoot = projectsRoot
@@ -60,11 +62,15 @@ public struct ClaudeSessionCronProvider: ServiceProvider {
             ?? home.appendingPathComponent(".claude/scheduled_tasks.json")
         self.now = now
         self.lineReader = lineReader ?? Self.defaultLineReader
+        self.diagnostics = diagnostics
     }
 
     public func discover() async throws -> [Service] {
         let projectFiles = collectJSONLFiles()
-        if projectFiles.isEmpty { return [] }
+        if projectFiles.isEmpty {
+            await diagnostics?.recordSuccess(at: now())
+            return []
+        }
 
         let parsed = await parseAll(projectFiles)
 
@@ -89,9 +95,19 @@ public struct ClaudeSessionCronProvider: ServiceProvider {
         )
         let keptIds = Set(kept.map(\.cronJobId))
 
-        return sessionTasks
+        let result = sessionTasks
             .filter { keptIds.contains($0.task.cronJobId) }
             .map(buildService)
+        // If parseAll recorded any per-file failures, leave them on the
+        // diagnostics actor (recordFileFailure already set lastError).
+        // Otherwise stamp success so the chip tooltip can say "OK".
+        if let diagnostics {
+            let snap = await diagnostics.snapshot()
+            if snap.2.isEmpty {
+                await diagnostics.recordSuccess(at: now())
+            }
+        }
+        return result
     }
 
     // MARK: - parsing fan-out
@@ -174,6 +190,10 @@ public struct ClaudeSessionCronProvider: ServiceProvider {
                     } catch {
                         self.logger.error(
                             "parse failed for \(entry.url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)"
+                        )
+                        await self.diagnostics?.recordFileFailure(
+                            entry.url.lastPathComponent,
+                            error.localizedDescription
                         )
                         return nil
                     }

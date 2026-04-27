@@ -31,34 +31,79 @@ public actor ServiceRegistry {
         /// returned empty" (→ loaded). Resolves M-007 false-positive.
         public let succeededCount: Int
         public let totalCount: Int
+        /// Per-provider health snapshot (empty array if no provider exposes
+        /// diagnostics). Populated by `discoverAllDetailed()` and surfaced
+        /// in the source-bucket-chip tooltip. Closes T-004.
+        public let health: [ProviderHealth]
         public var allFailed: Bool { totalCount > 0 && succeededCount == 0 }
+
+        public init(
+            services: [Service],
+            succeededCount: Int,
+            totalCount: Int,
+            health: [ProviderHealth] = []
+        ) {
+            self.services = services
+            self.succeededCount = succeededCount
+            self.totalCount = totalCount
+            self.health = health
+        }
     }
 
     /// Same as `discoverAll()` but also reports how many providers succeeded.
     public func discoverAllDetailed() async -> DiscoverResult {
         let total = providers.count
-        let perProvider: [(slice: [Service], ok: Bool)] = await withTaskGroup(
-            of: (slice: [Service], ok: Bool).self,
-            returning: [(slice: [Service], ok: Bool)].self
+        let perProvider: [(slice: [Service], ok: Bool, health: ProviderHealth?)] = await withTaskGroup(
+            of: (slice: [Service], ok: Bool, health: ProviderHealth?).self,
+            returning: [(slice: [Service], ok: Bool, health: ProviderHealth?)].self
         ) { group in
             for provider in providers {
                 group.addTask { [logger] in
+                    let pid = type(of: provider).providerId
                     do {
                         let svcs = try await provider.discover()
-                        return (svcs, true)
+                        let health = await Self.snapshot(provider: provider, providerId: pid)
+                        return (svcs, true, health)
                     } catch {
-                        logger.error("provider \(type(of: provider).providerId, privacy: .public) failed: \(String(describing: error), privacy: .public)")
-                        return ([], false)
+                        logger.error("provider \(pid, privacy: .public) failed: \(String(describing: error), privacy: .public)")
+                        let fallback = ProviderHealth(
+                            providerId: pid,
+                            lastError: (error as? ProviderError) ?? .ioError(String(describing: error)),
+                            lastSuccessAt: nil,
+                            perFileFailures: [:]
+                        )
+                        let health = await Self.snapshot(provider: provider, providerId: pid) ?? fallback
+                        return ([], false, health)
                     }
                 }
             }
-            var collected: [(slice: [Service], ok: Bool)] = []
+            var collected: [(slice: [Service], ok: Bool, health: ProviderHealth?)] = []
             for await item in group { collected.append(item) }
             return collected
         }
         let services = perProvider.flatMap { $0.slice }
         let succeeded = perProvider.filter { $0.ok }.count
-        return DiscoverResult(services: services, succeededCount: succeeded, totalCount: total)
+        let health = perProvider.compactMap { $0.health }
+        return DiscoverResult(
+            services: services,
+            succeededCount: succeeded,
+            totalCount: total,
+            health: health
+        )
+    }
+
+    private static func snapshot(
+        provider: any ServiceProvider,
+        providerId: String
+    ) async -> ProviderHealth? {
+        guard let diag = provider.diagnostics else { return nil }
+        let snap = await diag.snapshot()
+        return ProviderHealth(
+            providerId: providerId,
+            lastError: snap.0,
+            lastSuccessAt: snap.1,
+            perFileFailures: snap.2
+        )
     }
 
     /// Default registry for production: ships with the providers we have today.

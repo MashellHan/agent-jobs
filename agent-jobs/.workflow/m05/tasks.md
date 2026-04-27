@@ -55,7 +55,7 @@ Package surgery (T01) lands first so every subsequent task builds against the ri
 - **Acceptance:** AC-F-09 (own pid populated), AC-F-10 (ESRCH → nil, no throw), AC-P-02 (gated 100 PIDs < 100 ms).
 - **Estimated diff size:** M
 
-## T05 — Provider diagnostics + `ClaudeSessionCronProvider` `lastError` surface (closes T-004)
+## T05 — Provider diagnostics + `ClaudeSessionCronProvider` `lastError` surface (closes T-004) [DONE]
 
 - **Files:**
   - `Sources/AgentJobsCore/Discovery/ServiceProvider.swift` (add `ProviderHealth` struct)
