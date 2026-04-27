@@ -74,28 +74,36 @@ func renderMenubarGlyph(size: Int) -> Data {
 
     g.clear(CGRect(x: 0, y: 0, width: size, height: size))
     let s = CGFloat(size) / 16.0
-    g.setFillColor(NSColor.black.cgColor)
 
     // SVG y-axis runs top-down; Quartz runs bottom-up. Flip so we author
     // in SVG-coord space and rely on AppKit to invert.
     g.translateBy(x: 0, y: CGFloat(size))
     g.scaleBy(x: 1, y: -1)
 
-    // Three rounded rectangles + one trailing dot (mirror menubar-glyph.svg).
-    let rows: [(x: CGFloat, y: CGFloat, w: CGFloat, h: CGFloat)] = [
-        (2,  3, 9,  2),
-        (2,  7, 12, 2),
-        (2, 11, 7,  2),
-    ]
-    for r in rows {
-        let path = CGPath(
-            roundedRect: CGRect(x: r.x*s, y: r.y*s, width: r.w*s, height: r.h*s),
-            cornerWidth: 1*s, cornerHeight: 1*s, transform: nil
-        )
-        g.addPath(path); g.fillPath()
-    }
-    // dot
-    g.fillEllipse(in: CGRect(x: (13-1.5)*s, y: (4-1.5)*s, width: 3*s, height: 3*s))
+    // Cycle-2 glyph (mirror menubar-glyph.svg):
+    //   - Filled rounded "tray" body 14x14 centered in 16pt canvas.
+    //   - Two 1px white slits at y=4 and y=11 split the tray into
+    //     header / body / footer rows (hints at the service stack).
+    //   - Small white "status notch" inside the body at right edge.
+    //   - A black 1.5r "running" dot overhangs the upper-right corner
+    //     (count-badge anchor).
+    g.setFillColor(NSColor.black.cgColor)
+    let body = CGPath(
+        roundedRect: CGRect(x: 1*s, y: 1*s, width: 14*s, height: 14*s),
+        cornerWidth: 2.5*s, cornerHeight: 2.5*s, transform: nil
+    )
+    g.addPath(body); g.fillPath()
+
+    // Slits + status notch are negative space — paint as clear pixels.
+    g.setBlendMode(.clear)
+    g.fill(CGRect(x: 3*s, y: 3*s, width: 10*s, height: 1*s))
+    g.fill(CGRect(x: 3*s, y: 12*s, width: 10*s, height: 1*s))
+    g.fillEllipse(in: CGRect(x: (11.5 - 1)*s, y: (8 - 1)*s, width: 2*s, height: 2*s))
+    g.setBlendMode(.normal)
+
+    // Running-indicator dot — overhangs the upper-right corner.
+    g.setFillColor(NSColor.black.cgColor)
+    g.fillEllipse(in: CGRect(x: (14 - 1.5)*s, y: (4 - 1.5)*s, width: 3*s, height: 3*s))
 
     NSGraphicsContext.restoreGraphicsState()
     return bitmap.representation(using: .png, properties: [:])!

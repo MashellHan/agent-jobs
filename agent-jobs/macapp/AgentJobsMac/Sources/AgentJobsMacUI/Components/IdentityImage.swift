@@ -64,4 +64,42 @@ public enum IdentityImage {
     public static func assetsAreInstalled() -> Bool {
         loadMenuBarNSImage() != nil && loadAppIconNSImage() != nil
     }
+
+    /// Return a non-template NSImage of the menubar glyph pre-tinted to
+    /// the requested color. Used by the offscreen capture-all harness
+    /// for the dark-scheme scenario (13) — SwiftUI's offscreen render
+    /// path does NOT auto-invert template images the way AppKit does
+    /// inside a real `NSStatusItem` button, so a pre-tinted source is
+    /// the deterministic fix that mirrors what the user sees in the
+    /// real menubar under `.darkAqua`.
+    ///
+    /// Implemented via `CGContext` rather than `NSImage.lockFocus()` so
+    /// the path is reliable inside the headless `capture-all` tool
+    /// (lockFocus needs an active graphics context that headless tools
+    /// don't always have).
+    public static func tintedMenuBarImage(color: NSColor) -> NSImage? {
+        guard let src = loadMenuBarNSImage() else { return nil }
+        // Render at @2x for a crisp 16pt result.
+        let logical = NSSize(width: 16, height: 16)
+        let pixelW = 32, pixelH = 32
+        let space = CGColorSpaceCreateDeviceRGB()
+        guard let ctx = CGContext(
+            data: nil, width: pixelW, height: pixelH,
+            bitsPerComponent: 8, bytesPerRow: pixelW * 4, space: space,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return nil }
+        // Draw the source NSImage's best representation into the CG ctx.
+        guard let cgSrc = src.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+            return nil
+        }
+        ctx.interpolationQuality = .high
+        ctx.draw(cgSrc, in: CGRect(x: 0, y: 0, width: pixelW, height: pixelH))
+        // Tint by re-filling color over the alpha channel.
+        ctx.setBlendMode(.sourceAtop)
+        ctx.setFillColor(color.cgColor)
+        ctx.fill(CGRect(x: 0, y: 0, width: pixelW, height: pixelH))
+        guard let cgOut = ctx.makeImage() else { return nil }
+        let out = NSImage(cgImage: cgOut, size: logical)
+        return out
+    }
 }

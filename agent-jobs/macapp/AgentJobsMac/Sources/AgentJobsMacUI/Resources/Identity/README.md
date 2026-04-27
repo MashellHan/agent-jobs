@@ -38,10 +38,14 @@ The script writes the PNGs into:
 …and a stand-alone `.build/agent-jobs.icns` for documented standalone
 distribution (referenced by AC-F-05).
 
-## Cycle-1 notes
+## Cycle-2 notes
 
-The committed SVGs are placeholders — a layered "stack" glyph chosen
-to be recognizable as a service/job list while we wait on the real
-icon design. Cycle-2 lands the real glyph after ui-critic feedback
-(per architecture §7). The pipeline + asset wiring + tests are real
-and don't change between cycles.
+Cycle-1 shipped a sparse 3-bar placeholder; tester REJECT 24/26 on
+AC-V-01 (central 8x8 luma 0.631 vs <0.2 spec target). Cycle-2 lands
+the real glyph: a centered, filled 14×14 rounded "tray" body with two
+1px negative-space slits (header / body / footer split) and a
+"running" badge-anchor dot overhanging the upper-right corner. The
+slits sit OUTSIDE the central 8x8 sample window so the glyph reads
+as a dense cluster at small sizes (central 8x8 luma over white ≈
+0.04, white-tinted over black ≈ 0.96 — clears AC-V-01 < 0.2 and
+AC-V-04 / AC-F-17 > 0.7 with healthy margin).

@@ -93,13 +93,13 @@ struct MenuBarIconAssetTests {
             }
         }
         let luma = sum / max(n, 1)
-        // We require measurably above-background luma, not the spec's
-        // 0.7 hard-target — the placeholder glyph leaves the central
-        // 8×8 region partly empty (clear white-line gaps between rows).
-        // The 0.7 target is the cycle-2 design target once a real glyph
-        // covers more of the central area.
-        #expect(luma > 0.05,
-                "central 8x8 should be measurably brighter than black bg (luma=\(luma))")
+        // Cycle-2: real glyph design covers the central 8x8 densely
+        // enough to clear the spec's 0.7 hard target (AC-F-17 wording).
+        // The cycle-1 placeholder relaxed this to >0.05; the cycle-2
+        // glyph SVG was tuned so the central 8x8 white-tinted-template
+        // luma over black averages ~0.95.
+        #expect(luma > 0.7,
+                "central 8x8 should be > 0.7 (white glyph on black bg, luma=\(luma))")
     }
 }
 

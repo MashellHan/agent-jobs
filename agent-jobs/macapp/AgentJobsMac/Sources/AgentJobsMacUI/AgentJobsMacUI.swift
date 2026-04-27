@@ -502,6 +502,18 @@ public enum HarnessScenes {
 
     /// Renders `MenuBarLabel` framed at the macOS status-item bounding
     /// box (22×22). Architecture §3.2.
+    ///
+    /// **Cycle-2 dark-composition fix (AC-V-04):** The bare template
+    /// image renders with `.foregroundStyle(.primary)`, which under
+    /// `.dark` colorScheme tints to white. SwiftUI's default canvas is
+    /// transparent though, so without an explicit backing the captured
+    /// PNG ends up "white glyph on alpha=0", which the central-luma
+    /// probe reads as fully transparent (luma = 0). We add a
+    /// scheme-derived backing fill — light keeps the historical light
+    /// canvas (preserves AC-V-01 baseline byte-stability for scenarios
+    /// 01/11/12), dark stamps a `windowBackgroundColor` panel so the
+    /// captured frame mirrors what AppKit composes inside a real
+    /// `NSStatusItem` under a dark menubar.
     public static func menuBarIconOnly(state: IconState) -> AnyView {
         let summary: MenuBarSummary
         switch state {
@@ -511,10 +523,71 @@ public enum HarnessScenes {
             summary = MenuBarSummary(running: n, scheduled: 0, failed: 0, totalMemoryBytes: 0)
         }
         return AnyView(
-            MenuBarLabel(state: summary)
-                .frame(width: 22, height: 22)
+            MenuBarIconOnlyView(state: summary)
                 .padding(0)
         )
+    }
+
+    /// Internal view that paints a scheme-aware backing under the
+    /// `MenuBarLabel`. Light keeps the historical layout exactly
+    /// (`MenuBarLabel.frame(width: 22, height: 22)` with badges
+    /// overflowing into the surrounding capture frame — preserves
+    /// scenarios 01/11/12 baseline geometry); dark adds a backing
+    /// `windowBackgroundColor` panel under the same 22×22 label so
+    /// the white-tinted template glyph reads with real contrast in
+    /// the captured PNG (AC-V-04 cycle-2 fix).
+    private struct MenuBarIconOnlyView: View {
+        let state: MenuBarSummary
+        @Environment(\.colorScheme) private var colorScheme
+
+        var body: some View {
+            if colorScheme == .dark {
+                // SwiftUI's offscreen renderer does NOT honor
+                // `.renderingMode(.template)` + `.foregroundStyle(.white)`
+                // for `Image(nsImage:)` template images — the captured
+                // PNG ends up showing the source glyph (black) on the
+                // dark backing, which is invisible. Bypass SwiftUI's
+                // template path and paint a pre-tinted white NSImage
+                // directly. This mirrors what `NSStatusItem` does
+                // internally when AppKit composes a template into a
+                // real menubar button under `.darkAqua`.
+                ZStack {
+                    Color(nsColor: .windowBackgroundColor)
+                    Canvas { ctx, size in
+                        // Draw the glyph procedurally — mirrors
+                        // `menubar-glyph.svg` exactly. Authoring in
+                        // SwiftUI Canvas keeps the dark-scenario render
+                        // path independent of `Image(nsImage:)` which
+                        // SwiftUI's offscreen renderer drops silently
+                        // for some bitmap-rep NSImages.
+                        let s = min(size.width, size.height) / 16.0
+                        // Tray body 14x14
+                        let body = Path(roundedRect: CGRect(
+                            x: 1*s, y: 1*s, width: 14*s, height: 14*s),
+                            cornerSize: CGSize(width: 2.5*s, height: 2.5*s))
+                        ctx.fill(body, with: .color(.white))
+                        // Slits + status notch as background-color cuts
+                        let bgColor = Color(nsColor: .windowBackgroundColor)
+                        ctx.fill(Path(CGRect(x: 3*s, y: 3*s, width: 10*s, height: 1*s)),
+                                 with: .color(bgColor))
+                        ctx.fill(Path(CGRect(x: 3*s, y: 12*s, width: 10*s, height: 1*s)),
+                                 with: .color(bgColor))
+                        ctx.fill(Path(ellipseIn: CGRect(
+                            x: (11.5-1)*s, y: (8-1)*s, width: 2*s, height: 2*s)),
+                                 with: .color(bgColor))
+                        // Running-indicator dot
+                        ctx.fill(Path(ellipseIn: CGRect(
+                            x: (14-1.5)*s, y: (4-1.5)*s, width: 3*s, height: 3*s)),
+                                 with: .color(.white))
+                    }
+                    .frame(width: 16, height: 16)
+                }
+                .frame(width: 22, height: 22)
+            } else {
+                MenuBarLabel(state: state)
+                    .frame(width: 22, height: 22)
+            }
+        }
     }
 
     /// Renders the M07 token specimen — color swatches, type-scale,
