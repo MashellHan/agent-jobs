@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Agent Jobs menubar glyph (cycle-1 placeholder).
+  16pt logical canvas, monoline black-on-clear; AppKit's template-render
+  path strips color and tints by appearance. Glyph: a layered "stack"
+  (three rounded rows = the running service list) with a status dot
+  on the trailing row to hint at the count-badge anchor point.
+  Real glyph design lands cycle-2 after ui-critic feedback (per
+  architecture §7).
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
+  <!-- top row -->
+  <rect x="2" y="3"  width="9" height="2" rx="1" fill="black"/>
+  <!-- middle row -->
+  <rect x="2" y="7"  width="12" height="2" rx="1" fill="black"/>
+  <!-- bottom row -->
+  <rect x="2" y="11" width="7" height="2" rx="1" fill="black"/>
+  <!-- trailing badge anchor on top row (status dot) -->
+  <circle cx="13" cy="4" r="1.5" fill="black"/>
+</svg>

@@ -22,7 +22,8 @@ let package = Package(
         .target(
             name: "AgentJobsMacUI",
             dependencies: ["AgentJobsCore"],
-            path: "Sources/AgentJobsMacUI"
+            path: "Sources/AgentJobsMacUI",
+            resources: [.process("Resources")]
         ),
         .target(
             name: "AgentJobsVisualHarness",

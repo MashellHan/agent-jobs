@@ -41,4 +41,6 @@ yarn-error.log*
 .test/
 .demo-recordings/
 scripts/
+!macapp/AgentJobsMac/scripts/
+!macapp/AgentJobsMac/scripts/**
 demo-recorder.yaml
