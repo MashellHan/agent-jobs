@@ -1,20 +1,20 @@
 ---
-milestone: M06
-phase: ACCEPTED
-cycle: 2
+milestone: M07
+phase: SPECCING
+cycle: 1
 owner: null
 lock_acquired_at: null
 lock_expires_at: null
-last_transition: 2026-04-28T00:30:00Z
-last_actor: ui-critic
+last_transition: 2026-04-27T01:00:00Z
+last_actor: workflow-coordinator
 ---
 
 # Current Workflow State
 
-**Milestone:** M06 — Information Architecture
-**Phase:** UI-CRITIC
-**Cycle:** 2 (after tester cycle-2 PASS 19/19 testable, T-017/T-018 verified closed)
-**Owner:** none — ui-critic pick up
+**Milestone:** M07 — Visual Identity
+**Phase:** SPECCING
+**Cycle:** 1 (fresh start)
+**Owner:** none — pm pick up
 
 ## Phase History (workflow-wide)
 - M01 SHIPPED 2026-04-24T00:30:00Z
@@ -34,15 +34,7 @@ last_actor: ui-critic
 - M06 REVIEWING cycle-2 complete 2026-04-27T23:55:00Z (reviewer) — verdict **PASS 94/100**; T-017 P0 + T-018 P1 both verified closed in source (Snapshot.swift `isDark` gating on all 4 fixes; DashboardView dark-only `paneBackground`; MenuBarPopoverView `emptyGroupedServices` ForEach with `includeEmpty: true` and per-group microcopy); 6/6 light M06 baselines pixel-identical to cb31392 (PIL byte-compare); M02/M03/M04 directories show empty diff since milestone start; 332/332 tests green; dark-frame luma sample at 10 points across scenarios 02/05/08 (incl. top header band + inspector pane) all 31–46/255 — well under the 0.3 rubric threshold; 4 nits filed (carry-forward dead code in MenuBarPopoverView; ~150ms dark-capture overhead; `forceAppearance` lacks internal dark guard; baseline JSON timestamp churn) — none blocking; advances to TESTING cycle 2.
 - M06 UI-CRITIC cycle-2 complete 2026-04-28T00:30:00Z (ui-critic) — verdict **PASS-with-tickets 27/30** (threshold 24/30); axes Clarity 5 / Density 4 / Identity 5 / Affordance 4 / Empty-Error 5 / Polish 4 (deltas +1/0/+2/0/+3/+1 vs cycle-1); AC-D-07 rubric REJECT trigger cleared (scenarios 02/05/08 fully dark, no white-bleed in sidebar/top-band/inspector); T-017 P0 + T-018 P1 visually verified closed (DESIGN-TICKETS.md Closed migration deferred to retro per protocol); T-019 + T-020 remain open P2 carry-forward to M07; cycle-1 wins (01/02/04/06/07/09/10) all held without regression; no new tickets filed; M06 advances to ACCEPTED.
 - M06 TESTING cycle-2 complete 2026-04-28T00:10:00Z (tester) — verdict **PASS 19/19 testable ACs** (7 AC-D-* deferred to ui-critic); build green, 332 tests pass on clean run, capture-all 10/10 byte-stable across two reruns, 10/10 PNGs byte-identical to committed cycle-2 baselines (0% pixel diff); dark-frame luma sampling **expanded to 30 points across scenarios 02/05/08** (corners + top header band y≈30 left/mid/right + sidebar mid + inspector mid) — max luma 0.221 ≪ 0.3 threshold, so the cycle-1 ui-critic REJECT condition (sidebar/top-band/inspector white-bleed) demonstrably does NOT recur; T-017 P0 + T-018 P1 both verified closed at the pixel level (scenario 03 empty popover now renders RUNNING/SCHEDULED/FAILED scaffolding with per-section microcopy); environmental flakes observed and self-resolved across 3 test runs (AC-V-06 menubar wallpaper sampling per AC-F-19 allowance, AC-P-02 perf 550ms vs 500ms threshold) — neither blocks; advances to UI-CRITIC cycle 2.
-
-## M06 priorities (cycle 2)
-- T-017 P0 closed — dark dashboard chrome + inspector header now render fully (verified by reading regenerated baselines 05 + 08).
-- T-018 P1 closed — empty popover restores group-header scaffolding + per-section microcopy.
-- T-019 P2, T-020 P2 — deferred to M07.
-
-## Carry-forward (unchanged)
-- WL-1 / WL-2 / WL-3 status from cycle 1 holds (all PASS).
+- M06 SHIPPED 2026-04-27T01:00:00Z (workflow-coordinator) — first ENFORCING ui-critic milestone; cycle-1 REJECT 20/30 → cycle-2 PASS 27/30; 8 tickets closed (T-002/T-003/T-008/T-014/T-015/T-016/T-017/T-018); 0 new tickets this milestone; T-019/T-020 P2 carry-forward to M07.
 
 ## Next
-- ui-critic cycle 2: re-score the 10 PNGs in `.workflow/m06/screenshots/critique/` against the 6-axis rubric. Cycle-1 REJECT trigger (AC-D-07 dark-frame bleed) demonstrably eliminated at pixel-luma level; cycle-1 Empty/Error 2/5 surface (scenario 03) restored with group-header scaffolding + per-section microcopy. PASS threshold ≥ 24/30 (was 20/30 in cycle 1).
-
+- pm enters SPECCING for M07 (Visual Identity): custom `agent-jobs.icns` glyph + running-count badge variant (closes T-001), 1024 master, color tokens (status palette, source colors), typography scale, density modes (compact/comfortable), spacing tokens. Carry-forward P2: T-019 (Name column width at 1280pt), T-020 (bucket-strip header alignment with sidebar). Watch-list from M06 retro: `Snapshot.forceAppearance` lacks internal dark guard (rename to `forceDarkAppearance`?); JSON sidecar timestamp churn (skip rewrite when PNG byte-stable?); dead helpers in `MenuBarPopoverView` + latent `ServiceRowCompact.swift` cleanup; AC-F-15 sidecar schema spec-impl alignment.
