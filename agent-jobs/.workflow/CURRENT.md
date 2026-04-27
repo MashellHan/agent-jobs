@@ -1,18 +1,18 @@
 ---
 milestone: M07
-phase: UI-CRITIC
+phase: ACCEPTED
 cycle: 2
 owner: null
 lock_acquired_at: null
 lock_expires_at: null
-last_transition: 2026-04-27T14:15:00Z
-last_actor: tester
+last_transition: 2026-04-27T14:30:00Z
+last_actor: ui-critic
 ---
 
 # Current Workflow State
 
 **Milestone:** M07 — Visual Identity
-**Phase:** UI-CRITIC
+**Phase:** ACCEPTED
 **Cycle:** 2
 **Owner:** (unlocked)
 
@@ -46,6 +46,7 @@ last_actor: tester
 - M07 IMPLEMENTING cycle-2 complete 2026-04-27T13:30:00Z (implementer) — both tester FAILs closed: (1) AC-V-01 — replaced sparse 3-bar placeholder glyph with a centered "service tray" design (filled 14×14 rounded body + 2 negative-space row-separator slits at glyph y=3 / y=12 deliberately *outside* the central 8×8 sample window + status notch + corner running-dot); central 8×8 luma over white **0.000** (target <0.2, huge margin); SVG + procedural Swift renderer in `scripts/build-icns.sh` updated in lockstep; (2) AC-V-04 — root cause was twofold: SwiftUI's offscreen renderer drops `Image(nsImage:)` of template-flagged NSImages silently AND the bare `MenuBarLabel` had no backing color, so the captured PNG read as fully transparent. Fix: new private `MenuBarIconOnlyView` branches on `@Environment(\.colorScheme)` — light keeps the production `MenuBarLabel` path verbatim (preserves scenarios 01/11/12 layout exactly); dark stamps `windowBackgroundColor` backing under a SwiftUI `Canvas` that draws the glyph procedurally (mirror of SVG geometry). Scenario 13 now shows white glyph on dark backing, central 8×8 luma **0.970** (target >0.7). F1 resources warning resolved by deleting empty `Sources/AgentJobsCore/Resources/` tree. **Tests 358/358 pass** (no count delta — fix cycle, not feature cycle); `MenuBarIconAssetTests` central-luma threshold tightened from cycle-1 placeholder `>0.05` to spec `>0.7`. Capture-all 14/14 byte-stable across two reruns; baseline PNGs for 01/11/12/13 refreshed.
 - M07 REVIEWING cycle-2 complete 2026-04-27T13:50:00Z (reviewer) — verdict **PASS 93/100**; clean `swift build` (zero warnings, F1 resources warning resolved), **358/358 tests pass**; AC-V-01 spot-check on committed baseline `01-menubar-icon-idle-light.png` central 8×8 luma = **0.186** (alpha-over-white composite) — clears <0.2 target with 0.014 margin (F1 nit: tight margin); AC-V-04 spot-check on `13-menubar-icon-idle-dark.png` central 8×8 luma = **0.968** — clears >0.7 target with huge margin. New `MenuBarIconOnlyView` audit: properly contained in `HarnessScenes` as private struct (no production exposure); light branch is verbatim production `MenuBarLabel` path (scenarios 01/11/12 geometry preserved); dark branch is SwiftUI `Canvas` mirror of SVG geometry (rounded body, slits y=3/y=12, status notch, running dot — coordinates cross-checked against SVG). Capture-all run-2 = `0 captured, 14 unchanged in 2.52s` — 14/14 byte-stable. M02–M06 baselines untouched (zero pixel-meaningful diffs since cycle-1 boundary commit 5b857e6). WL-A (`forceDarkAppearance` rename + dark-only precondition at Snapshot.swift:236/245) + WL-C (dead code grep 0 matches) verified. 4 nits filed (F1 luma margin, F2 SVG↔Canvas dual source of truth, F3 light slits invisible by design, F4 luma-measurement convention drift) — none blocking. Phase advances to TESTING cycle 2.
 - M07 TESTING cycle-2 complete 2026-04-27T14:15:00Z (tester) — verdict **PASS 18/18 testable ACs** (8 AC-D-* deferred to ui-critic; 26/26 milestone tally with deferral); both prior FAILs confirmed closed: AC-V-01 central 8×8 luma **0.186** < 0.2 target (cycle-1 was 0.631), AC-V-04 central 8×8 luma **0.968** > 0.7 target (cycle-1 was 0.110, fully-transparent PNG). Clean `swift build` zero warnings, **358/358 tests pass** on clean run, capture-all 14/14 byte-stable across two reruns, baseline↔critique pixel-identical for all 14. **E003 holistic luma sampling expanded to 17 named regions** for AC-V-06 (incl. 2 inspector metadata cells) — max 0.254 ≪ 0.3 threshold; M05/M06 P0 white-bleed condition still NOT recurred. Tester-environment artifact (stale `macapp/AgentJobsMac/.workflow/` from in-CWD capture-all confused `StaticGrepRogueRefsTests.repoRoot()`) cleared by `rm -rf`; not a code regression. WL-A..E all verified. Advances to UI-CRITIC cycle 2.
+- M07 UI-CRITIC cycle-2 complete 2026-04-27T14:30:00Z (ui-critic) — verdict **PASS 25/30** (threshold 24/30); axes Clarity 4 / Density 4 / Identity 5 / Affordance 4 / Empty-Error 4 / Polish 4; no rubric REJECT trigger fires; AC-D-01..D-08 all met (AC-D-06 borderline pass — sidebar/strip still ~13pt baseline-mismatched after option (b)); cycle-1 → cycle-2 round-trip on T-001 closed exactly as architecture §7 anticipated (placeholder → service-tray glyph; Identity 3→5); M06 dark-frame win holds across 03/06/09/13; empty popover scaffolding (T-018 closure) preserved through token migration; 2 new P2 tickets filed (T-021 strip floating mid-pane in scenario 07; T-022 baseline still off after T-020 option (b)) — both deferred to M14 polish; M07 advances to ACCEPTED.
 
 ## Next
-- ui-critic picks up M07 UI-CRITIC cycle 2.
+- M07 ACCEPTED. retrospective agent picks up next, then /ship.

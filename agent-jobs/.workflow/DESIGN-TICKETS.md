@@ -88,6 +88,16 @@
        Why: In critique 04/06/07, the horizontal bucket strip (registered/claude-sched/claude-loop/launchd/live-proc/total N) starts at the list pane's left edge. The sidebar pane shows a separate "Filters" header at top that does not visually align with the strip. The strip looks orphaned above only the list pane; a visual rhythm break for a chrome element that conceptually applies to all sources.
        Done-when: Either (a) the bucket strip extends to span the full window width (becomes a global toolbar above the split view), or (b) the sidebar's "Filters" header band is heightened to match the strip's top edge so they read as one chrome row.
 
+- [ ] T-021  P2  dashboard-empty-state  Bucket strip floats mid-pane in empty dashboard (scenario 07)
+       Source: ui-critic  Filed: 2026-04-27T14:25:00Z  Target: M14
+       Why: In `07-dashboard-empty-light.png` (M07) the source-bucket strip renders inside the content area at y~315, between the empty-state icon and its title. In the populated case (`05-dashboard-populated-light.png`) the same strip lives at y~20 as window chrome. The strip is conceptually chrome (filter scope across all sources), so it should anchor at top regardless of empty/populated state — Things 3 and Activity Monitor both keep filter chrome anchored.
+       Done-when: `07-dashboard-empty-light.png` shows the bucket strip at top of the list pane (y < 40), with the empty-state illustration centered in the remaining vertical space below it.
+
+- [ ] T-022  P2  dashboard-chrome  Bucket-strip / sidebar-header baseline still ~13pt off after T-020 option (b)
+       Source: ui-critic  Filed: 2026-04-27T14:25:00Z  Target: M14
+       Why: T-020 chose option (b) — sidebar "Filters" header band heightened to 40pt to match bucket-strip top edge. In M07 `05-dashboard-populated-light.png` the bucket-strip pills sit at y~20 while the sidebar "Filters" caption sits at y~33 — a visible ~13pt vertical-baseline mismatch persists. Acceptance AC-F-12 passes (architect's option (b) is implemented), but the visual intent — "read as a unified header band" — is only partially achieved.
+       Done-when: In the dashboard-populated baseline, the visible top edges (or text baselines) of the sidebar "Filters" caption and the bucket-strip pills are within ±2pt of each other, OR the architect re-evaluates option (a) (window-spanning toolbar) for M14.
+
 ## Closed
 
 - [x] T-002  P0  popover  Popover too cramped, list rows information-poor
