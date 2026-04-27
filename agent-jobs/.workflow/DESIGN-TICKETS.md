@@ -13,11 +13,6 @@
 
 ## Open
 
-- [ ] T-001  P0  menu-bar-icon  Icon doesn't communicate "background tasks"
-       Source: user  Filed: 2026-04-27  Target: M07
-       Why: Current placeholder SF Symbol (circle) is generic; users can't tell what the app does from the icon. Peers: Stats uses a layered chart glyph, Bartender uses a stylized bar.
-       Done-when: Custom icon that reads as "background services / tasks watcher" at 16pt; running-count badge optional but tested in two states (0 / N).
-
 - [ ] T-004  P0  data  Cron source bucket shows 0 entries
        Source: user  Filed: 2026-04-27  Target: M05
        Why: claude-sched bucket displays 0 even when scheduled_tasks.json contains entries; need to root-cause (provider not wired? bucket mapping broken? path resolution?).
@@ -63,11 +58,6 @@
        Why: JSONL polling is ground truth but lags ~1-2s. Claude Code hooks (PreToolUse/PostToolUse/Notification/Stop) push events with <100ms latency. Research warning: SubagentStop hook drops events for parallel Task spawns (anthropics/claude-code#27755) — never use as sole source.
        Done-when: Optional Swift hook handler writes to a ring buffer SQLite; UI merges hook events with JSONL tail, dedup by uuid. Strictly additive.
 
-- [ ] T-019  P2  dashboard-list  Name column too narrow at 1280pt default; "Last Run" header clipped
-       Source: ui-critic  Filed: 2026-04-27T22:45:00Z  Target: M07
-       Why: At 1280pt with sidebar 220 + inspector 360 + 5 visible columns (Status, Schedule, Created, CPU, Memory) plus Last Run, the Name column gets ~80pt and truncates every row title to 8-9 chars ("daily-cle...", "claude-t...", "claude-l...", "npm run..."). The Last Run header text is also clipped to "Last R...". Activity Monitor's Process Name column is the widest by default; ours is the narrowest.
-       Done-when: Name column claims at least 30% of the list pane's horizontal width (proportional or `min:` constraint); Last Run header reads in full at 1280pt default; lower-priority columns (Created, Last Run) are demotable / hideable behind a column-config menu.
-
 - [ ] T-T01  P1  tokens-color  Centralize status + source-bucket palette as `DesignTokens.Color`
        Source: pm  Filed: 2026-04-27T08:22:49Z  Target: M07
        Why: Status pills + source chips currently use scattered `Color(.systemX)` literals + ad-hoc tints. M07 visual identity needs one source of truth so the palette can be tuned once and re-applied across popover, dashboard, inspector. Also unblocks light/dark + accessibility-variant work in M14.
@@ -83,11 +73,6 @@
        Why: Inconsistent padding magic numbers across popover row internals and dashboard chrome. A 5-step scale covers every gap the M07 surfaces need; incremental adoption is fine.
        Done-when: `DesignTokens.Spacing` exposes the 5 values; adopted in ≥2 callsites; not required to be exhaustive.
 
-- [ ] T-020  P2  dashboard-chrome  Bucket-strip header bar does not span sidebar pane
-       Source: ui-critic  Filed: 2026-04-27T22:45:00Z  Target: M07
-       Why: In critique 04/06/07, the horizontal bucket strip (registered/claude-sched/claude-loop/launchd/live-proc/total N) starts at the list pane's left edge. The sidebar pane shows a separate "Filters" header at top that does not visually align with the strip. The strip looks orphaned above only the list pane; a visual rhythm break for a chrome element that conceptually applies to all sources.
-       Done-when: Either (a) the bucket strip extends to span the full window width (becomes a global toolbar above the split view), or (b) the sidebar's "Filters" header band is heightened to match the strip's top edge so they read as one chrome row.
-
 - [ ] T-021  P2  dashboard-empty-state  Bucket strip floats mid-pane in empty dashboard (scenario 07)
        Source: ui-critic  Filed: 2026-04-27T14:25:00Z  Target: M14
        Why: In `07-dashboard-empty-light.png` (M07) the source-bucket strip renders inside the content area at y~315, between the empty-state icon and its title. In the populated case (`05-dashboard-populated-light.png`) the same strip lives at y~20 as window chrome. The strip is conceptually chrome (filter scope across all sources), so it should anchor at top regardless of empty/populated state — Things 3 and Activity Monitor both keep filter chrome anchored.
@@ -99,6 +84,21 @@
        Done-when: In the dashboard-populated baseline, the visible top edges (or text baselines) of the sidebar "Filters" caption and the bucket-strip pills are within ±2pt of each other, OR the architect re-evaluates option (a) (window-spanning toolbar) for M14.
 
 ## Closed
+
+- [x] T-001  P0  menu-bar-icon  Icon doesn't communicate "background tasks"
+       Source: user  Filed: 2026-04-27  Target: M07  Closed: 2026-04-27
+       Why: Current placeholder SF Symbol (circle) is generic; users can't tell what the app does from the icon. Peers: Stats uses a layered chart glyph, Bartender uses a stylized bar.
+       Done-when: Custom icon that reads as "background services / tasks watcher" at 16pt; running-count badge optional but tested in two states (0 / N).
+
+- [x] T-019  P2  dashboard-list  Name column too narrow at 1280pt default; "Last Run" header clipped
+       Source: ui-critic  Filed: 2026-04-27T22:45:00Z  Target: M07  Closed: 2026-04-27
+       Why: At 1280pt with sidebar 220 + inspector 360 + 5 visible columns (Status, Schedule, Created, CPU, Memory) plus Last Run, the Name column gets ~80pt and truncates every row title to 8-9 chars ("daily-cle...", "claude-t...", "claude-l...", "npm run..."). The Last Run header text is also clipped to "Last R...". Activity Monitor's Process Name column is the widest by default; ours is the narrowest.
+       Done-when: Name column claims at least 30% of the list pane's horizontal width (proportional or `min:` constraint); Last Run header reads in full at 1280pt default; lower-priority columns (Created, Last Run) are demotable / hideable behind a column-config menu.
+
+- [x] T-020  P2  dashboard-chrome  Bucket-strip header bar does not span sidebar pane
+       Source: ui-critic  Filed: 2026-04-27T22:45:00Z  Target: M07  Closed: 2026-04-27
+       Why: In critique 04/06/07, the horizontal bucket strip (registered/claude-sched/claude-loop/launchd/live-proc/total N) starts at the list pane's left edge. The sidebar pane shows a separate "Filters" header at top that does not visually align with the strip. The strip looks orphaned above only the list pane; a visual rhythm break for a chrome element that conceptually applies to all sources.
+       Done-when: Either (a) the bucket strip extends to span the full window width (becomes a global toolbar above the split view), or (b) the sidebar's "Filters" header band is heightened to match the strip's top edge so they read as one chrome row. **Closed via option (b)**; ~13pt residual baseline mismatch tracked in T-022 → M14.
 
 - [x] T-002  P0  popover  Popover too cramped, list rows information-poor
        Source: user  Filed: 2026-04-27  Target: M06  Closed: 2026-04-27
