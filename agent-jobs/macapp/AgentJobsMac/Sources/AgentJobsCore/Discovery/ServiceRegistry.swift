@@ -96,7 +96,11 @@ public actor ServiceRegistry {
         provider: any ServiceProvider,
         providerId: String
     ) async -> ProviderHealth? {
-        guard let diag = provider.diagnostics else { return nil }
+        // M06 / WL-3 (AC-F-18): diagnostics is reachable only through the
+        // internal `DiagnosticsBearing` protocol. Pure providers don't
+        // conform and contribute no health snapshot.
+        guard let bearer = provider as? any DiagnosticsBearing,
+              let diag = bearer.diagnostics else { return nil }
         let snap = await diag.snapshot()
         return ProviderHealth(
             providerId: providerId,

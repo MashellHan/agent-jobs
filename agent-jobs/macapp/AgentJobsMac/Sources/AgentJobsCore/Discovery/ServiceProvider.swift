@@ -33,13 +33,6 @@ public protocol ServiceProvider: Sendable {
     func discover() async throws -> [Service]
     func watch() -> AsyncStream<ServiceEvent>?
     func control(_ action: ServiceAction, on service: Service) async throws
-
-    /// Optional per-provider diagnostics actor. Providers that record
-    /// per-file failures or transient I/O errors expose one; pure providers
-    /// that already throw on failure return `nil` (default). Surfaced by
-    /// `ServiceRegistry.discoverAllDetailed()` as `[ProviderHealth]` so the
-    /// view model can render bucket-chip tooltips. Closes T-004.
-    var diagnostics: ProviderDiagnostics? { get }
 }
 
 public extension ServiceProvider {
@@ -47,7 +40,18 @@ public extension ServiceProvider {
     func control(_ action: ServiceAction, on service: Service) async throws {
         throw ProviderError.unsupported("\(Self.providerId) does not support control")
     }
-    var diagnostics: ProviderDiagnostics? { nil }
+}
+
+/// Internal-only marker for providers that record per-file failures or
+/// transient I/O errors during `discover()`. Surfaced by
+/// `ServiceRegistry.discoverAllDetailed()` as `[ProviderHealth]` so the
+/// view model can render bucket-chip tooltips. Closes T-004.
+///
+/// M06 / WL-3 (AC-F-18): kept internal so `ProviderDiagnostics` stays out
+/// of the public ABI — only `ProviderHealth` is exported. Pure providers
+/// that already throw on failure simply don't conform.
+internal protocol DiagnosticsBearing {
+    var diagnostics: ProviderDiagnostics? { get }
 }
 
 public enum ProviderError: Error, Sendable, Equatable, Hashable {
@@ -87,29 +91,32 @@ public struct ProviderHealth: Sendable, Hashable {
 /// to read). Each provider owns one instance and writes to it during
 /// `discover()`. Snapshotted into `ProviderHealth` when the registry
 /// collects results.
-public actor ProviderDiagnostics {
-    public private(set) var lastError: ProviderError?
-    public private(set) var lastSuccessAt: Date?
-    public private(set) var perFileFailures: [String: String] = [:]
+///
+/// M06 / WL-3 (AC-F-18): demoted to internal so the type stops appearing
+/// in the published symbol graph. Tests reach it via `@testable import`.
+internal actor ProviderDiagnostics {
+    internal private(set) var lastError: ProviderError?
+    internal private(set) var lastSuccessAt: Date?
+    internal private(set) var perFileFailures: [String: String] = [:]
 
-    public init() {}
+    internal init() {}
 
-    public func recordSuccess(at date: Date) {
+    internal func recordSuccess(at date: Date) {
         lastError = nil
         lastSuccessAt = date
         perFileFailures.removeAll()
     }
 
-    public func recordFileFailure(_ filename: String, _ description: String) {
+    internal func recordFileFailure(_ filename: String, _ description: String) {
         perFileFailures[filename] = description
         lastError = .ioError("\(perFileFailures.count) source file(s) failed to parse")
     }
 
-    public func recordIOError(_ description: String) {
+    internal func recordIOError(_ description: String) {
         lastError = .ioError(description)
     }
 
-    public func snapshot() -> (ProviderError?, Date?, [String: String]) {
+    internal func snapshot() -> (ProviderError?, Date?, [String: String]) {
         (lastError, lastSuccessAt, perFileFailures)
     }
 }

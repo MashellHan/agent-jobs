@@ -8,7 +8,7 @@ import os
 /// and durable surfaces only via `ClaudeScheduledTasksProvider`).
 ///
 /// Mirrors `scanSessionCronTasks` in src/scanner.ts:542-622.
-public struct ClaudeSessionCronProvider: ServiceProvider {
+public struct ClaudeSessionCronProvider: ServiceProvider, DiagnosticsBearing {
     public static let providerId = "claude.session-cron"
     public static let displayName = "Claude session cron tasks"
     public static let category = ServiceSource.Category.claude
@@ -17,7 +17,7 @@ public struct ClaudeSessionCronProvider: ServiceProvider {
     public let durableTasksPath: URL
     private let now: @Sendable () -> Date
     private let lineReader: LineReader
-    public let diagnostics: ProviderDiagnostics?
+    let diagnostics: ProviderDiagnostics?
     private let logger = Logger(
         subsystem: "com.agentjobs.mac",
         category: "ClaudeSessionCronProvider"
@@ -52,8 +52,26 @@ public struct ClaudeSessionCronProvider: ServiceProvider {
         projectsRoot: URL? = nil,
         durableTasksPath: URL? = nil,
         now: @escaping @Sendable () -> Date = { Date() },
+        lineReader: LineReader? = nil
+    ) {
+        self.init(
+            projectsRoot: projectsRoot,
+            durableTasksPath: durableTasksPath,
+            now: now,
+            lineReader: lineReader,
+            diagnostics: ProviderDiagnostics()
+        )
+    }
+
+    /// Internal init that lets tests inject (or null out) the diagnostics
+    /// box. M06 / WL-3: kept internal because `ProviderDiagnostics` is no
+    /// longer part of the public ABI.
+    internal init(
+        projectsRoot: URL? = nil,
+        durableTasksPath: URL? = nil,
+        now: @escaping @Sendable () -> Date = { Date() },
         lineReader: LineReader? = nil,
-        diagnostics: ProviderDiagnostics? = ProviderDiagnostics()
+        diagnostics: ProviderDiagnostics?
     ) {
         let home = FileManager.default.homeDirectoryForCurrentUser
         self.projectsRoot = projectsRoot

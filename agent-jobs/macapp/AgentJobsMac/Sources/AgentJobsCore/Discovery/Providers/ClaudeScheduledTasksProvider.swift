@@ -6,14 +6,14 @@ import os
 /// `Service`. Tolerant of every disk failure mode: missing, empty,
 /// malformed JSON, non-array root all degrade to `[]` rather than throw.
 /// Only a hung read raises `ProviderError.timeout`.
-public struct ClaudeScheduledTasksProvider: ServiceProvider {
+public struct ClaudeScheduledTasksProvider: ServiceProvider, DiagnosticsBearing {
     public static let providerId = "claude.scheduled-tasks"
     public static let displayName = "Claude scheduled tasks"
     public static let category = ServiceSource.Category.claude
 
     public let tasksPath: URL
     private let loader: Loader?
-    public let diagnostics: ProviderDiagnostics?
+    let diagnostics: ProviderDiagnostics?
     private let now: @Sendable () -> Date
     private let logger = Logger(subsystem: "com.agentjobs.mac", category: "ClaudeScheduledTasksProvider")
 
@@ -25,8 +25,20 @@ public struct ClaudeScheduledTasksProvider: ServiceProvider {
     public init(
         tasksPath: URL? = nil,
         loader: Loader? = nil,
+        now: @escaping @Sendable () -> Date = { Date() }
+    ) {
+        self.init(tasksPath: tasksPath, loader: loader, now: now,
+                  diagnostics: ProviderDiagnostics())
+    }
+
+    /// Internal init that lets tests inject (or null out) the diagnostics
+    /// box. M06 / WL-3: kept internal because `ProviderDiagnostics` is no
+    /// longer part of the public ABI.
+    internal init(
+        tasksPath: URL? = nil,
+        loader: Loader? = nil,
         now: @escaping @Sendable () -> Date = { Date() },
-        diagnostics: ProviderDiagnostics? = ProviderDiagnostics()
+        diagnostics: ProviderDiagnostics?
     ) {
         if let p = tasksPath {
             self.tasksPath = p
