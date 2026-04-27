@@ -3,13 +3,16 @@ import AppKit
 import AgentJobsCore
 
 /// The menubar popover. Aggregates the discovery view model into a compact
-/// 360pt-wide layout: header → summary strip → optional error banner →
+/// layout: header → summary strip → optional error banner →
 /// scrollable section list (Active Now, Scheduled Soon) → footer.
 ///
 /// Reusable atoms (`SummaryChip`, `MemoryBadge`, `HoverableIconButton`,
 /// `ErrorBanner`, `ServiceRowCompact`, `EmptyHintView`, `SkeletonRow`,
-/// `MenuBarLabel`) were extracted into `Sources/AgentJobsMac/Components/`
-/// so this file only owns the popover composition (code-003 P1 #2).
+/// `MenuBarLabel`) live in `Sources/AgentJobsMacUI/Components/` so this
+/// file only owns the popover composition.
+///
+/// M06 / WL-2: split out of `MenuBarViews.swift` to clear room for the
+/// rich-row + grouping rewrite without bloating any one file past 600 LOC.
 struct MenuBarPopoverView: View {
     @Environment(ServiceRegistryViewModel.self) private var registry
     @Environment(\.openWindow) private var openWindow
