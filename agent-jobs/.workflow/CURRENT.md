@@ -1,20 +1,20 @@
 ---
 milestone: M06
-phase: REVIEWING
+phase: TESTING
 cycle: 2
 owner: null
 lock_acquired_at: null
 lock_expires_at: null
-last_transition: 2026-04-27T23:30:00Z
-last_actor: implementer
+last_transition: 2026-04-27T23:55:00Z
+last_actor: reviewer
 ---
 
 # Current Workflow State
 
 **Milestone:** M06 — Information Architecture
-**Phase:** REVIEWING
-**Cycle:** 2 (after implementer cycle 2 closed T-017 P0 + T-018 P1)
-**Owner:** none — reviewer pick up
+**Phase:** TESTING
+**Cycle:** 2 (after reviewer cycle-2 PASS 94/100)
+**Owner:** none — tester pick up
 
 ## Phase History (workflow-wide)
 - M01 SHIPPED 2026-04-24T00:30:00Z
@@ -31,6 +31,7 @@ last_actor: implementer
 - M06 TESTING cycle-1 complete 2026-04-27T22:30:00Z (tester) — verdict PASS 19/19 testable ACs (7 AC-D-* deferred to ui-critic); build green, 332 tests pass, capture-all 10/10 byte-stable across two reruns, 10/10 PNGs byte-identical to committed baselines (0% pixel diff vs AC-V-01..05 1% threshold), 4-corner luma on dark scenarios (02/05/08) max 0.141 < 0.3; AC-F-15 sidecar schema delta flagged borderline (semantic intent met; field names diverge from spec wording); empty-popover scenario 03 has no group headers (reviewer Finding #2 carried forward to ui-critic); advances to UI-CRITIC.
 - M06 UI-CRITIC cycle-1 complete 2026-04-27T22:50:00Z (ui-critic) — verdict **REJECT 20/30**; AC-D-07 rubric REJECT trigger fires (white-bleed dark frame + half-rendered inspector — M05 P0 condition recurs in scenarios 05 and 08); empty-popover (03) regressed vs. M05 (Empty/Error 2/5); 4 new tickets filed (T-017 P0, T-018 P1, T-019 P2, T-020 P2); cycle 2 IMPLEMENTING required — focus on T-017 (dark dashboard chrome + inspector header). Tester's 4-corner luma sample missed the bleed because it lives in the sidebar interior + top header band + inspector header, not at the corners.
 - M06 IMPLEMENTING cycle-2 complete 2026-04-27T23:30:00Z (implementer) — T-017 P0 + T-018 P1 closed; root cause for T-017 was NavigationSplitView per-pane NSHostingView children failing to inherit window appearance while offscreen + not key/main, fixed via 4 dark-only changes (NSApp.appearance pin, opaque resolved-against-target window bg, ordered-front offscreen, recursive forceAppearance walk + layer invalidation) + DashboardView pane `.background(paneBackground)` gated to dark via `@Environment(\.colorScheme)`; T-018 wired `PopoverGrouping.groupByStatus(includeEmpty: true)` so the empty popover renders RUNNING/SCHEDULED/FAILED scaffolding with per-group microcopy; **all 332 tests pass, M02/M03/M04 light baselines byte-stable** after restoring via `git checkout`; 10 m06 baselines + 10 critique PNGs regenerated; visual confirmation of scenarios 03, 05, 08 attached in `.workflow/m06/impl-cycle-002.md`.
+- M06 REVIEWING cycle-2 complete 2026-04-27T23:55:00Z (reviewer) — verdict **PASS 94/100**; T-017 P0 + T-018 P1 both verified closed in source (Snapshot.swift `isDark` gating on all 4 fixes; DashboardView dark-only `paneBackground`; MenuBarPopoverView `emptyGroupedServices` ForEach with `includeEmpty: true` and per-group microcopy); 6/6 light M06 baselines pixel-identical to cb31392 (PIL byte-compare); M02/M03/M04 directories show empty diff since milestone start; 332/332 tests green; dark-frame luma sample at 10 points across scenarios 02/05/08 (incl. top header band + inspector pane) all 31–46/255 — well under the 0.3 rubric threshold; 4 nits filed (carry-forward dead code in MenuBarPopoverView; ~150ms dark-capture overhead; `forceAppearance` lacks internal dark guard; baseline JSON timestamp churn) — none blocking; advances to TESTING cycle 2.
 
 ## M06 priorities (cycle 2)
 - T-017 P0 closed — dark dashboard chrome + inspector header now render fully (verified by reading regenerated baselines 05 + 08).
@@ -41,5 +42,5 @@ last_actor: implementer
 - WL-1 / WL-2 / WL-3 status from cycle 1 holds (all PASS).
 
 ## Next
-- reviewer cycle 2: read `.workflow/m06/impl-cycle-002.md` + run `swift test` + spot-check the 10 m06 baselines; then advance to TESTING cycle 2.
+- tester cycle 2: re-run capture-all twice for byte-stability; re-execute dark-frame luma rubric on scenarios 02/05/08 sampling top header band y≈30 + inspector mid-pane (not just 4 corners — that was the cycle-1 miss); re-evaluate AC-D-07; advance to UI-CRITIC cycle 2 on PASS.
 
