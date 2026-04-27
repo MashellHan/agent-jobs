@@ -1,20 +1,20 @@
 ---
 milestone: M06
-phase: REVIEWING
+phase: TESTING
 cycle: 1
 owner: null
 lock_acquired_at: null
 lock_expires_at: null
-last_transition: 2026-04-27T21:30:00Z
-last_actor: implementer
+last_transition: 2026-04-27T22:00:00Z
+last_actor: reviewer
 ---
 
 # Current Workflow State
 
 **Milestone:** M06 — Information Architecture
-**Phase:** REVIEWING
+**Phase:** TESTING
 **Cycle:** 1
-**Owner:** none — reviewer pick up
+**Owner:** none — tester pick up
 
 ## Phase History (workflow-wide)
 - M01 SHIPPED 2026-04-24T00:30:00Z
@@ -27,6 +27,7 @@ last_actor: implementer
 - M06 SPECCING complete 2026-04-27T19:45:00Z (pm) — spec/acceptance/competitive-analysis written; T-014 sequenced as gating task #1
 - M06 ARCHITECTING complete 2026-04-27T20:15:00Z (architect) — architecture.md + tasks.md written; T-014 is task #1; WL-2 pre-committed to split before T-002 rewrite; WL-3 demotes `ProviderDiagnostics` to internal via new `DiagnosticsBearing` protocol; popover grouping lives in view layer (pure `PopoverGrouping` helper), not view model.
 - M06 IMPLEMENTING cycle-1 complete 2026-04-27T21:30:00Z (implementer) — all 9 tasks landed in 8 commits; tests 317 → 332 (+15); AgentJobsMacUI.swift 504 LOC (<600); 10/10 m06 baselines fresh + 10/10 byte-stable; ProviderDiagnostics demoted to internal; implementer self-check 19/19 functional+visual ACs pass, 7 design ACs deferred to ui-critic.
+- M06 REVIEWING cycle-1 complete 2026-04-27T22:00:00Z (reviewer) — verdict PASS-with-nits 89/100; all 19 verifiable functional ACs PASS; build/tests green (332 tests); T-014 harness fix verified (rows render + dark-frame corners luma < 0.3); WL-1/2/3 honored; 4 architect deviations accepted; 7 nits flagged (dead code in MenuBarPopoverView; empty-popover skips includeEmpty:true headers; ServiceRowCompact latent dead) — none blocking; advances to TESTING.
 
 ## M06 priorities (architect should respect)
 **This is the first milestone with ui-critic in ENFORCING mode** (per PROTOCOL.md §UI-CRITIC). UI quality issues found in critique can REJECT the milestone back to IMPLEMENTING.
@@ -49,4 +50,4 @@ last_actor: implementer
 - Capture-all scenarios MUST be regenerated at new sizes (popover ≥480pt, dashboard 1280x800). M05 baselines do not transfer.
 
 ## Next
-- reviewer: code-review the M06 IMPL cycle-1 commit range. Confirm each task commit honors its scope; flag any architecture deviation. See `.workflow/m06/impl-cycle-001.md` for tasks completed, deviations, and AC self-check. After review either advance to TESTING (if pass) or send back to IMPLEMENTING with findings.
+- tester: pixel-diff visual baselines (AC-V-01..05); run AC-F-03 launch smoke + AC-F-19 byte-stability rerun; verify JSON sidecar field-name semantics vs `acceptance.md` AC-F-15. See `.workflow/m06/review-cycle-001.md` for findings + followups. After test PASS, transition to UI-CRITIC.
