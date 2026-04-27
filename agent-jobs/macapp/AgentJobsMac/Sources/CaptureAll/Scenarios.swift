@@ -59,7 +59,7 @@ enum Scenarios {
             name: "04-dashboard-populated-light",
             kind: .dashboard,
             appearance: .aqua,
-            size: CGSize(width: 1200, height: 700),
+            size: CGSize(width: 1280, height: 800),
             datasetTag: "fixtures.populated.v1",
             buildViewModel: { populatedViewModel() },
             buildView: { vm in HarnessScenes.dashboard(viewModel: vm) }
@@ -69,7 +69,7 @@ enum Scenarios {
             name: "05-dashboard-populated-dark",
             kind: .dashboard,
             appearance: .darkAqua,
-            size: CGSize(width: 1200, height: 700),
+            size: CGSize(width: 1280, height: 800),
             datasetTag: "fixtures.populated.v1",
             buildViewModel: { populatedViewModel() },
             buildView: { vm in HarnessScenes.dashboard(viewModel: vm) }
@@ -79,7 +79,7 @@ enum Scenarios {
             name: "06-dashboard-empty-light",
             kind: .dashboard,
             appearance: .aqua,
-            size: CGSize(width: 1200, height: 700),
+            size: CGSize(width: 1280, height: 800),
             datasetTag: "fixtures.empty.v1",
             buildViewModel: { emptyViewModel() },
             buildView: { vm in HarnessScenes.dashboard(viewModel: vm) }
@@ -89,7 +89,7 @@ enum Scenarios {
             name: "07-dashboard-inspector-light",
             kind: .inspector,
             appearance: .aqua,
-            size: CGSize(width: 1200, height: 700),
+            size: CGSize(width: 1280, height: 800),
             datasetTag: "fixtures.populated.v1",
             buildViewModel: { populatedViewModel() },
             buildView: { vm in
@@ -102,7 +102,7 @@ enum Scenarios {
             name: "08-dashboard-inspector-dark",
             kind: .inspector,
             appearance: .darkAqua,
-            size: CGSize(width: 1200, height: 700),
+            size: CGSize(width: 1280, height: 800),
             datasetTag: "fixtures.populated.v1",
             buildViewModel: { populatedViewModel() },
             buildView: { vm in
@@ -115,13 +115,13 @@ enum Scenarios {
             name: "09-dashboard-narrow-light",
             kind: .dashboard,
             appearance: .aqua,
-            size: CGSize(width: 900, height: 600),
+            size: CGSize(width: 1024, height: 700),
             datasetTag: "fixtures.populated.v1",
             buildViewModel: { populatedViewModel() },
             buildView: { vm in
                 HarnessScenes.dashboard(
                     viewModel: vm,
-                    size: CGSize(width: 900, height: 600)
+                    size: CGSize(width: 1024, height: 700)
                 )
             }
         ),

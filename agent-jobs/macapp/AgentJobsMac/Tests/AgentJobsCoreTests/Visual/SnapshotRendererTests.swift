@@ -72,41 +72,45 @@ struct SnapshotRendererTests {
         }
     }
 
-    /// Heuristic: count distinct horizontal rows by run-length scanning the
-    /// list region for alternating-luminance bands. The `tableStyle(.inset(
-    /// alternatesRowBackgrounds: true))` lays out distinguishable bands; if
-    /// rows aren't realized at all, the region is single-tone and we count 0.
-    private static func countRowBands(bytes: [UInt8], width: Int, height: Int, stride: Int, region: CGRect) -> Int {
+    /// Heuristic: detect rows by counting horizontal scanlines that contain
+    /// saturated color (status pills) or non-trivial content. A blank list
+    /// region is mostly white/gray with low saturation; rendered rows
+    /// contain colored status badges (green Running, blue Scheduled, red
+    /// Failed) which give a strong saturation signal.
+    private static func saturatedRowCount(bytes: [UInt8], width: Int, height: Int, stride: Int, region: CGRect) -> Int {
         let xStart = max(0, Int(region.origin.x))
         let xEnd   = min(width - 1, xStart + Int(region.size.width))
         let yStart = max(0, Int(region.origin.y))
         let yEnd   = min(height - 1, yStart + Int(region.size.height))
         guard xEnd > xStart, yEnd > yStart else { return 0 }
-        // Compute mean luminance for each scanline within the region.
-        var scanlineLuma: [Double] = []
-        scanlineLuma.reserveCapacity(yEnd - yStart)
+        var saturatedScanlines: [Bool] = []
+        saturatedScanlines.reserveCapacity(yEnd - yStart)
         for y in yStart..<yEnd {
-            var sum = 0.0
-            var n = 0
-            // Sample every 4th pixel for speed.
+            var hasSaturation = false
             var x = xStart
             while x < xEnd {
                 let i = y * stride + x * 4
-                sum += luminance(r: bytes[i], g: bytes[i + 1], b: bytes[i + 2])
-                n += 1
-                x += 4
+                let r = Int(bytes[i]), g = Int(bytes[i + 1]), b = Int(bytes[i + 2])
+                let maxC = max(r, max(g, b))
+                let minC = min(r, min(g, b))
+                // Saturation > ~25% AND not too dim/bright (avoid pure
+                // white/black).
+                if maxC > 80 && (maxC - minC) > 60 {
+                    hasSaturation = true
+                    break
+                }
+                x += 2
             }
-            scanlineLuma.append(sum / Double(max(n, 1)))
+            saturatedScanlines.append(hasSaturation)
         }
-        // Bin scanlines into bands by quantizing luma into buckets, then
-        // count run-length transitions.
-        let buckets = scanlineLuma.map { Int(($0 * 20.0).rounded()) }
-        var transitions = 0
-        for i in 1..<buckets.count {
-            if buckets[i] != buckets[i - 1] { transitions += 1 }
+        // Count contiguous saturated runs (each run ≈ one row's status pill).
+        var runs = 0
+        var inRun = false
+        for sat in saturatedScanlines {
+            if sat && !inRun { runs += 1; inRun = true }
+            if !sat { inRun = false }
         }
-        // Each row contributes ~2 transitions (top + bottom edge); estimate.
-        return max(0, transitions / 2)
+        return runs
     }
 
     // MARK: - AC-F-13: dashboard rows actually render
@@ -122,22 +126,21 @@ struct SnapshotRendererTests {
         let data = try Snapshot.capture(view, size: CGSize(width: 1280, height: 800))
         let (_, w, h, bytes, stride) = try Self.pixels(of: data)
 
-        // The list region sits roughly in the right two-thirds of the
-        // window, below the toolbar/header strip and above the bottom edge.
-        // Use a generous box so the heuristic doesn't depend on exact
-        // pixel-level layout.
+        // The list region: middle-column rows (status pills are colored).
+        // x: skip sidebar (~220) and inspector area; y: above the toolbar
+        // and above the bottom of the realized rows.
         let listRegion = CGRect(
-            x: Double(w) * 0.30,
-            y: Double(h) * 0.25,
+            x: Double(w) * 0.20,
+            y: Double(h) * 0.06,
             width: Double(w) * 0.55,
-            height: Double(h) * 0.55
+            height: Double(h) * 0.40
         )
-        let bands = Self.countRowBands(
+        let rows = Self.saturatedRowCount(
             bytes: bytes, width: w, height: h, stride: stride,
             region: listRegion
         )
-        #expect(bands >= 3,
-                Comment(rawValue: "Dashboard table must render ≥3 distinguishable row bands; got \(bands). " +
+        #expect(rows >= 3,
+                Comment(rawValue: "Dashboard table must render ≥3 rows with colored status pills; got \(rows). " +
                 "If this fails, NSTableView row realization regressed (T-014)."))
     }
 

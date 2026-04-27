@@ -18,6 +18,11 @@ struct DashboardView: View {
     var body: some View {
         NavigationSplitView {
             sidebar
+                .navigationSplitViewColumnWidth(
+                    min: 180,
+                    ideal: DashboardWindowConfig.sidebarWidth,
+                    max: 280
+                )
         } content: {
             VStack(spacing: 0) {
                 SourceBucketStrip(
@@ -28,23 +33,34 @@ struct DashboardView: View {
                 Divider()
                 serviceTable
             }
+            .navigationSplitViewColumnWidth(
+                min: DashboardWindowConfig.listMinWidth,
+                ideal: 700
+            )
             .toolbar { dashboardToolbar }
         } detail: {
-            if let id = selection,
-               let svc = registry.services.first(where: { $0.id == id }) {
-                ServiceInspector(
-                    service: svc,
-                    isHidden: registry.hiddenIds.contains(svc.id),
-                    errorMessage: registry.errorByServiceId[svc.id],
-                    onStop: { pendingStop = $0 },
-                    onHide: { svc in Task { await registry.hide(svc.id) } },
-                    onUnhide: { svc in Task { await registry.unhide(svc.id) } }
-                )
-            } else {
-                ContentUnavailableView("Select a service",
-                                       systemImage: "sidebar.right",
-                                       description: Text("Pick something from the list to inspect."))
+            Group {
+                if let id = selection,
+                   let svc = registry.services.first(where: { $0.id == id }) {
+                    ServiceInspector(
+                        service: svc,
+                        isHidden: registry.hiddenIds.contains(svc.id),
+                        errorMessage: registry.errorByServiceId[svc.id],
+                        onStop: { pendingStop = $0 },
+                        onHide: { svc in Task { await registry.hide(svc.id) } },
+                        onUnhide: { svc in Task { await registry.unhide(svc.id) } }
+                    )
+                } else {
+                    ContentUnavailableView("Select a service",
+                                           systemImage: "sidebar.right",
+                                           description: Text("Pick something from the list to inspect."))
+                }
             }
+            .navigationSplitViewColumnWidth(
+                min: 280,
+                ideal: DashboardWindowConfig.inspectorWidth,
+                max: 460
+            )
         }
         .stopConfirmation(pending: $pendingStop) { svc in
             Task { await registry.stop(svc) }

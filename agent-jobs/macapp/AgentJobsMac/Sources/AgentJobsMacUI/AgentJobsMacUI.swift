@@ -25,7 +25,8 @@ public struct AgentJobsAppScene: Scene {
         Window("Agent Jobs", id: "dashboard") {
             DashboardView()
                 .environment(registry)
-                .frame(minWidth: 900, minHeight: 560)
+                .frame(minWidth: DashboardWindowConfig.minSize.width,
+                       minHeight: DashboardWindowConfig.minSize.height)
                 .task { await registry.startWatchers() }
                 // M05 T06: in-process visual-harness fallback. The
                 // AgentJobsVisualHarness MenuBarInteraction posts these
@@ -48,6 +49,8 @@ public struct AgentJobsAppScene: Scene {
                     registry.popoverOpen = false
                 }
         }
+        .defaultSize(DashboardWindowConfig.defaultSize)
+        .windowResizability(.contentMinSize)
     }
 }
 
@@ -476,7 +479,7 @@ public enum HarnessScenes {
 
     public static func dashboard(viewModel: ServiceRegistryViewModel,
                                  initialSelection: Service.ID? = nil,
-                                 size: CGSize = CGSize(width: 1200, height: 700)) -> AnyView {
+                                 size: CGSize = DashboardWindowConfig.defaultSize) -> AnyView {
         AnyView(
             DashboardView(initialSelection: initialSelection)
                 .environment(viewModel)
