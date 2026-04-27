@@ -36,7 +36,7 @@ Package surgery (T01) lands first so every subsequent task builds against the ri
 - **Acceptance:** `swift build --target AgentJobsVisualHarness` exits 0 with no warnings. M02-M04 visual baselines stay green (within 1% pixel diff). **Enables AC-F-01, AC-V-03 (the directory exists once executable lands).**
 - **Estimated diff size:** S
 
-## T03 — `ServiceFormatter` (closes T-005)
+## T03 — `ServiceFormatter` (closes T-005) [DONE]
 
 - **Files:**
   - `Sources/AgentJobsCore/Formatting/ServiceFormatter.swift` (new — `FormattedService` + `ServiceFormatter` + `bundleIdMap`)
