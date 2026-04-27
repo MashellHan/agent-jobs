@@ -95,7 +95,7 @@ Package surgery (T01) lands first so every subsequent task builds against the ri
 - **Acceptance:** AC-F-05 (sidecar keys: scenarioName, capturedAt, appCommit, osVersion, colorScheme, datasetHash).
 - **Estimated diff size:** S
 
-## T08 — `capture-all` CLI executable + 10 scenarios
+## T08 — `capture-all` CLI executable + 10 scenarios [DONE]
 
 - **Files:**
   - `Sources/CaptureAll/main.swift` (new — argparse + 10 scenario closures)

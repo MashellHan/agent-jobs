@@ -247,6 +247,16 @@ public final class ServiceRegistryViewModel {
         }
     }
 
+    /// Internal mutator backing the public `seedForCapture(services:)`
+    /// extension method. Lives on the class so it can write the
+    /// `private(set)` properties.
+    public func applyCaptureSeed(services: [Service]) {
+        self.services = services
+        self.summary = MenuBarSummary.from(services: services)
+        self.phase = .loaded
+        self.lastRefresh = Date()
+    }
+
     /// Stop the auto-refresh loop. Call before discarding the view model.
     /// Cancels: scheduler, all 3 watchers, periodic ticker, visibility task.
     func stop() {
@@ -395,5 +405,46 @@ public struct MenuBarSummary: Sendable, Hashable {
             if let m = svc.metrics { memory &+= m.memoryRSS }
         }
         return MenuBarSummary(running: running, scheduled: scheduled, failed: failed, totalMemoryBytes: memory)
+    }
+}
+
+// MARK: - Public scenario factories (M05 T08)
+//
+// Wrappers exposing internal SwiftUI views to the headless `capture-all`
+// CLI executable, which lives in a separate SPM target and therefore can
+// only see `public` symbols. Each factory takes a `ServiceRegistryViewModel`
+// the caller has prepared (typically via `StubServiceRegistry`-backed
+// init) and returns an `AnyView` ready to feed into `Snapshot.write`.
+
+@MainActor
+public enum HarnessScenes {
+    public static func menuBarPopover(viewModel: ServiceRegistryViewModel,
+                                      width: CGFloat = 360) -> AnyView {
+        AnyView(
+            MenuBarPopoverView()
+                .environment(viewModel)
+                .frame(width: width)
+        )
+    }
+
+    public static func dashboard(viewModel: ServiceRegistryViewModel,
+                                 initialSelection: Service.ID? = nil,
+                                 size: CGSize = CGSize(width: 1200, height: 700)) -> AnyView {
+        AnyView(
+            DashboardView(initialSelection: initialSelection)
+                .environment(viewModel)
+                .frame(width: size.width, height: size.height)
+        )
+    }
+}
+
+@MainActor
+public extension ServiceRegistryViewModel {
+    /// Test/CLI seam: seed the view model with a deterministic service list
+    /// without going through the registry. The capture-all CLI uses this
+    /// to render scenarios against the bundled fixture set so the resulting
+    /// PNGs are reproducible across machines.
+    func seedForCapture(services: [Service]) {
+        applyCaptureSeed(services: services)
     }
 }
